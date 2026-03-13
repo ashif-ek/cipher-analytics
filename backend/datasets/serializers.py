@@ -1,0 +1,9 @@
+from rest_framework import serializers
+from .models import Dataset
+
+
+class DatasetUploadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Dataset
+        fields = ["id", "name", "original_file"]
