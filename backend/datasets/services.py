@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 from pathlib import Path
 import numpy as np
+import tenseal as ts
 
 from .encryption import create_context, encrypt_vector
 
@@ -18,6 +19,16 @@ def process_and_encrypt_dataset(dataset):
     keys_dir.mkdir(parents=True, exist_ok=True)
 
     context_path = keys_dir / "context.seal"
+
+    # Load existing context OR create a new one
+    if context_path.exists():
+        with open(context_path, "rb") as f:
+            context = ts.context_from(f.read())
+    else:
+        context = create_context()
+
+        with open(context_path, "wb") as f:
+            f.write(context.serialize(save_secret_key=True))
 
     # Read CSV
     df = pd.read_csv(file_path)
@@ -39,14 +50,6 @@ def process_and_encrypt_dataset(dataset):
     dataset.columns = df.shape[1]
     dataset.status = "processing"
     dataset.save()
-
-    # Create encryption context
-    context = create_context()
-
-    # Save context only once (so same key is reused)
-    if not context_path.exists():
-        with open(context_path, "wb") as f:
-            f.write(context.serialize(save_secret_key=True))
 
     encrypted_rows = []
 

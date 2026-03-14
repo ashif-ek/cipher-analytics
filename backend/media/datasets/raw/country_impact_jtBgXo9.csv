@@ -1,0 +1,18 @@
+Country,Region,Oil_Import_Pct,GDP_Impact_Pct,Inflation_Risk,Stock_Market_Change,Currency_Pressure,Policy_Response,Vulnerability,Population_M
+Pakistan,South Asia,85,-1.8,Very High,-4.2,Severe,Emergency fuel price hike,Critical,240
+India,South Asia,85,-1.2,High,-3.1,High,Strategic reserves released; prices frozen,High,1440
+Bangladesh,South Asia,95,-2.0,Very High,-3.8,Severe,University closures to save electricity,Critical,175
+Sri Lanka,South Asia,100,-2.5,Very High,-5.0,Severe,Rationing measures introduced,Critical,22
+Nepal,South Asia,100,-1.5,High,-2.8,High,Price adjustment; subsidies for transport,High,30
+China,East Asia,72,-0.8,Moderate,-2.5,Moderate,Strategic petroleum reserve drawdown,Moderate,1425
+Japan,East Asia,90,-1.3,High,-5.1,High,Fuel subsidies extended,High,124
+South Korea,East Asia,92,-1.4,High,-6.0,High,Domestic fuel price caps implemented,High,52
+Turkey,Europe/Asia,89,-1.6,Very High,-4.5,Severe,Emergency economic measures,High,86
+Germany,Europe,65,-0.6,Moderate,-3.5,Low,Energy diversification accelerated,Moderate,84
+United Kingdom,Europe,45,-0.5,Moderate,-2.9,Low,North Sea production increase planned,Moderate,68
+USA,North America,5,-0.3,Moderate,-2.0,Low,SPR release; shale production ramp-up,Low,340
+Saudi Arabia,Middle East,0,1.5,Low,-1.2,Low,Red Sea export rerouting,Low,37
+UAE,Middle East,0,0.8,Low,-1.5,Low,Production cuts due to export constraints,Low,10
+Iran,Middle East,0,-8.0,Extreme,-15.0,Extreme,Military retaliation; Hormuz closure,Critical,90
+Australia,Oceania,70,-0.7,High,-3.2,Moderate,Inflation expected near 5%; petrol +$1/L,Moderate,27
+Egypt,Africa,40,-1.5,Very High,-4.0,Severe,Fuel subsidy concerns,High,110
