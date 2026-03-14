@@ -12,18 +12,23 @@ class DatasetUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         serializer = DatasetUploadSerializer(data=request.data)
 
         if serializer.is_valid():
-
             dataset = serializer.save(user=request.user)
 
-            process_and_encrypt_dataset(dataset)
+            try:
+                process_and_encrypt_dataset(dataset)
+                return Response({
+                    "message": "Dataset uploaded and encrypted",
+                    "dataset_id": dataset.id
+                    }, status=201)
+            except Exception as e:
+                dataset.status = "failed"
+                dataset.save()
+                return Response({
+                    "error": f"Encryption failed: {str(e)}"
+                }, status=500)
 
-            return Response({
-                "message": "Dataset uploaded and encrypted",
-                "dataset_id": dataset.id
-            })
-
-        return Response(serializer.errors)
+        return Response(serializer.errors, status=400)
+       
