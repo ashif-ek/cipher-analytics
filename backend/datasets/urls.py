@@ -1,6 +1,10 @@
-from django.urls import path
-from .views import DatasetUploadView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import DatasetViewSet
+
+router = DefaultRouter()
+router.register(r'', DatasetViewSet, basename='dataset')
 
 urlpatterns = [
-    path("upload/", DatasetUploadView.as_view(), name="dataset_upload"),
+    path('', include(router.urls)),
 ]
