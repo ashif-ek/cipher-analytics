@@ -7,10 +7,10 @@ User = get_user_model()
 class Dataset(models.Model):
 
     STATUS_CHOICES = [
-        ("uploaded", "Uploaded"),
-        ("processing", "Processing"),
-        ("encrypted", "Encrypted"),
-        ("failed", "Failed"),
+        ("UPLOADING", "Uploading"),
+        ("PROCESSING", "Processing"),
+        ("READY", "Ready"),
+        ("FAILED", "Failed"),
     ]
 
     class AccessLevel(models.TextChoices):
@@ -30,8 +30,8 @@ class Dataset(models.Model):
         blank=True
     )
 
-    rows = models.IntegerField(default=0)
-    columns = models.IntegerField(default=0)
+    rows_count = models.IntegerField(default=0)
+    columns_count = models.IntegerField(default=0)
 
     is_shared_for_research = models.BooleanField(default=False)
     access_level = models.CharField(
@@ -43,7 +43,7 @@ class Dataset(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="uploaded"
+        default="UPLOADING"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

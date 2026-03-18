@@ -1,9 +1,9 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, serializers
 from rest_framework.response import Response
 
 from .serializers import DatasetUploadSerializer
 from .models import Dataset
-from .services import process_and_encrypt_dataset
+from .services.dataset_processing import process_and_encrypt_dataset
 from .permissions import IsDataOwner, IsResearcher, IsAdmin, CanAccessDataset
 
 
@@ -34,14 +34,14 @@ class DatasetViewSet(viewsets.ModelViewSet):
         return Dataset.objects.none()
 
     def perform_create(self, serializer):
-        # Save the dataset with the current user as owner
-        dataset = serializer.save(owner=self.request.user)
+        # Save the dataset with the current user as owner and status PROCESSING
+        dataset = serializer.save(owner=self.request.user, status="PROCESSING")
         
         # Trigger encryption process
         try:
             process_and_encrypt_dataset(dataset)
         except Exception as e:
-            dataset.status = "failed"
+            dataset.status = "FAILED"
             dataset.save()
-            raise e
+            raise serializers.ValidationError({"detail": f"Encryption failed: {str(e)}"})
        
