@@ -6,6 +6,7 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('DATA_OWNER');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -13,7 +14,7 @@ const Register = () => {
     e.preventDefault();
     setError('');
     try {
-      await client.post('accounts/register/', { username, email, password });
+      await client.post('accounts/register/', { username, email, password, role });
       navigate('/login');
     } catch (err) {
       setError('Registration failed. Username or email might be taken.');
@@ -53,6 +54,14 @@ const Register = () => {
             onChange={(e) => setPassword(e.target.value)} 
             required 
           />
+        </div>
+        <br />
+        <div>
+          <label>Role: </label>
+          <select value={role} onChange={(e) => setRole(e.target.value)} required>
+            <option value="DATA_OWNER">Data Owner</option>
+            <option value="RESEARCHER">Researcher</option>
+          </select>
         </div>
         <br />
         <button type="submit">Register</button>
