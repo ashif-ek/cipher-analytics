@@ -1,23 +1,41 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
 from .serializers import DatasetUploadSerializer
 from .models import Dataset
 from .services import process_and_encrypt_dataset
+from .permissions import IsDataOwner, IsResearcher, IsAdmin, CanAccessDataset
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetUploadSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsDataOwner()]
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsDataOwner()]
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticated(), CanAccessDataset()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
-        # Users can only see their own datasets
-        return Dataset.objects.filter(user=self.request.user).order_by("-created_at")
+        user = self.request.user
+        
+        if user.is_staff or user.role == "ADMIN":
+            return Dataset.objects.all().order_by("-created_at")
+            
+        if user.role == "DATA_OWNER":
+            return Dataset.objects.filter(owner=user).order_by("-created_at")
+            
+        if user.role == "RESEARCHER":
+            return Dataset.objects.filter(is_shared_for_research=True).order_by("-created_at")
+            
+        return Dataset.objects.none()
 
     def perform_create(self, serializer):
-        # Save the dataset with the current user
-        dataset = serializer.save(user=self.request.user)
+        # Save the dataset with the current user as owner
+        dataset = serializer.save(owner=self.request.user)
         
         # Trigger encryption process
         try:
@@ -25,9 +43,5 @@ class DatasetViewSet(viewsets.ModelViewSet):
         except Exception as e:
             dataset.status = "failed"
             dataset.save()
-            # We don't raise the exception here to allow the viewset to return 
-            # the created object with the 'failed' status, or we could raise 
-            # a ValidationError if we want to block the creation. 
-            # Given the existing logic, we'll keep the failure status.
             raise e
        

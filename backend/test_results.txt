@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\DELL\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+django: version: 6.0, settings: config.settings.test (from ini)
+rootdir: D:\cipher-analytics\backend
+configfile: pytest.ini
+plugins: django-4.12.0
+collecting ... collected 5 items
+
+tests/test_rbac.py::TestRBAC::test_data_owner_cannot_see_others_datasets PASSED [ 20%]
+tests/test_rbac.py::TestRBAC::test_researcher_cannot_POST_dataset PASSED [ 40%]
+tests/test_rbac.py::TestRBAC::test_researcher_can_see_shared_datasets PASSED [ 60%]
+tests/test_rbac.py::TestRBAC::test_researcher_cannot_access_raw_computation PASSED [ 80%]
+tests/test_rbac.py::TestRBAC::test_researcher_can_access_aggregated_summary PASSED [100%]
+
+============================== 5 passed in 3.27s ==============================

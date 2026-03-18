@@ -22,6 +22,16 @@ class User(AbstractUser):
     profile_picture = models.FileField(
         upload_to="profile_pics/", null=True, blank=True
     )
+    class Role(models.TextChoices):
+        DATA_OWNER = "DATA_OWNER", "Data Owner"
+        RESEARCHER = "RESEARCHER", "Researcher"
+        ADMIN = "ADMIN", "Admin"
+
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.DATA_OWNER,
+    )
     is_blocked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

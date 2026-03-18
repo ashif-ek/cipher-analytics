@@ -6,7 +6,7 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "profile_picture", "is_staff"]
+        fields = ["id", "username", "email", "profile_picture", "is_staff", "role"]
         read_only_fields = ["id", "is_staff"]
 
 
@@ -15,13 +15,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password"]
+        fields = ["id", "email", "username", "password", "role"]
 
     def create(self, validated_data):
         return User.objects.create_user(
             email=validated_data["email"],
             username=validated_data["username"],
             password=validated_data["password"],
+            role=validated_data.get("role", User.Role.DATA_OWNER),
         )
 
 
@@ -35,6 +36,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["email"] = user.email
         token["is_staff"] = user.is_staff
         token["is_superuser"] = user.is_superuser
+        token["role"] = user.role
 
         return token
 
