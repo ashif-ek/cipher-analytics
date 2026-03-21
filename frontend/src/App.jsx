@@ -2,10 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem('access_token');
-
   return (
     <Router>
       <Routes>
@@ -14,21 +14,12 @@ function App() {
         <Route 
           path="/" 
           element={
-            isAuthenticated ? (
-              <div style={{ padding: '20px' }}>
-                <h1>Dashboard</h1>
-                <p>Welcome to Cipher Analytics!</p>
-                <button onClick={() => {
-                  localStorage.removeItem('access_token');
-                  localStorage.removeItem('refresh_token');
-                  window.location.href = '/login';
-                }}>Logout</button>
-              </div>
-            ) : (
-              <Navigate to="/login" />
-            )
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
           } 
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
