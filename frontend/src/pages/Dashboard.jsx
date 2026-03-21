@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import client from '../api/client';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -45,32 +46,25 @@ const Dashboard = () => {
     data.append('original_file', formData.original_file);
 
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://127.0.0.1:8000/api/datasets/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: data,
-      });
+      const response = await client.post('datasets/', data);
 
-      if (response.ok) {
-        const responseData = await response.json();
-        setMessage({ type: 'success', text: `Dataset uploaded successfully. Identifier: ${responseData.id}` });
-        setFormData({
-          name: '',
-          access_level: 'PRIVATE',
-          is_shared_for_research: false,
-          original_file: null,
-        });
-        const fileInput = document.getElementById('original_file');
-        if (fileInput) fileInput.value = '';
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: `Upload exception: ${JSON.stringify(errorData)}` });
-      }
+      const responseData = response.data;
+      setMessage({ type: 'success', text: `Dataset uploaded successfully. Identifier: ${responseData.id}` });
+      setFormData({
+        name: '',
+        access_level: 'PRIVATE',
+        is_shared_for_research: false,
+        original_file: null,
+      });
+      const fileInput = document.getElementById('original_file');
+      if (fileInput) fileInput.value = '';
+
     } catch (error) {
-      setMessage({ type: 'error', text: `System Error: ${error.message}` });
+      if (error.response) {
+        setMessage({ type: 'error', text: `Upload exception: ${JSON.stringify(error.response.data)}` });
+      } else {
+        setMessage({ type: 'error', text: `System Error: ${error.message}` });
+      }
     } finally {
       setLoading(false);
     }
@@ -82,8 +76,7 @@ const Dashboard = () => {
       {/* Top Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Cipher Control Panal</h1>
-          <span className="text-xs text-gray-500 uppercase tracking-widest mt-1 block">Engineering Console</span>
+          <h1 className="text-xl font-bold tracking-tight">cipher-analytics</h1>
         </div>
         <button 
           onClick={handleLogout}
