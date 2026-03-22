@@ -3,11 +3,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.db import transaction
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .models import User
+from .services.otp import generate_otp, validate_otp
+from .services.email import send_otp_email
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
@@ -51,23 +54,89 @@ class MeAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
 
+    @transaction.atomic
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
+        
+        # Generate OTP
+        otp_code = generate_otp(user)
+        
+        # Send OTP Email
+        send_otp_email(user.email, otp_code)
+
         user_serializer = UserSerializer(user, context={"request": request})
 
         return Response(
             {
-                "message": "User registered successfully",
+                "message": "User registered successfully. Please verify your email.",
                 "user": user_serializer.data,
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class VerifyOTPAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        otp_code = request.data.get("otp")
+
+        if not email or not otp_code:
+            return Response({"detail": "Email and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_verified:
+            return Response({"detail": "User is already verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_valid, error_msg = validate_otp(user, otp_code)
+
+        if not is_valid:
+            return Response({"detail": error_msg}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.is_verified = True
+        user.save()
+
+        return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
+
+
+class ResendOTPAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        email = request.data.get("email")
+
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_verified:
+            return Response({"detail": "User is already verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate new OTP
+        otp_code = generate_otp(user)
+        
+        # Send OTP Email
+        send_otp_email(user.email, otp_code)
+
+        return Response({"message": "A new OTP has been sent to your email."}, status=status.HTTP_200_OK)
 
 
 class UserDetailView(APIView):

@@ -19,7 +19,11 @@ const Login = () => {
       localStorage.setItem('refresh_token', response.data.refresh);
       navigate('/');
     } catch (err) {
-      setError('Login failed. Please verify your credentials.');
+      if (err.response?.data?.detail === "Verify your email first") {
+        setError('verification_required');
+      } else {
+        setError('Login failed. Please verify your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -33,7 +37,11 @@ const Login = () => {
         
         {error && (
           <div className="mb-4 p-3 border-l-4 border-gray-900 bg-gray-100 text-sm">
-            {error}
+            {error === 'verification_required' ? (
+              <span>Unverified account. <Link to={`/verify-otp?email=${encodeURIComponent(email)}`} className="font-bold underline">Validate Access Code</Link></span>
+            ) : (
+              error
+            )}
           </div>
         )}
         

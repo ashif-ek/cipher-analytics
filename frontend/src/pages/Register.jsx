@@ -24,7 +24,7 @@ const Register = () => {
     setLoading(true);
     try {
       await client.post('accounts/register/', formData);
-      navigate('/login');
+      navigate('/verify-otp?email=' + encodeURIComponent(formData.email));
     } catch (err) {
       setError('Registration failed. Username or email might be taken.');
     } finally {
