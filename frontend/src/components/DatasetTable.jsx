@@ -31,7 +31,25 @@ const StatusBadge = ({ status }) => {
 const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
   const [deletingId, setDeletingId] = useState(null);
   const [computingId, setComputingId] = useState(null);
-  const [results, setResults] = useState({});
+  
+  // Initialize from LocalStorage for persistence
+  const [results, setResults] = useState(() => {
+    const saved = localStorage.getItem('cipher_computation_results');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Save to LocalStorage whenever results change
+  React.useEffect(() => {
+    localStorage.setItem('cipher_computation_results', JSON.stringify(results));
+  }, [results]);
+
+  const handleClearResult = (id) => {
+    setResults(prev => {
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
+  };
 
   const handleCompute = async (id, operation) => {
     try {
@@ -116,8 +134,15 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                     <div className="text-sm font-medium text-gray-900">{dataset.name}</div>
                     <div className="text-xs text-gray-500">ID: {dataset.id}</div>
                     {results[dataset.id] && (
-                      <div className="mt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded inline-block">
-                        Result: {results[dataset.id]}
+                      <div className="mt-2 flex items-center shadow-sm text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded inline-block">
+                        <span>Result: {results[dataset.id]}</span>
+                        <button 
+                          onClick={() => handleClearResult(dataset.id)}
+                          className="ml-2 text-emerald-600 hover:text-emerald-900 focus:outline-none"
+                          title="Clear Result"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                       </div>
                     )}
                   </td>
