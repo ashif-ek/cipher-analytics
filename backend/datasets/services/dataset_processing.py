@@ -61,6 +61,7 @@ def encrypt_dataset(df):
         coeff_mod_bit_sizes=[60, 40, 40, 60]
     )
     context.generate_relin_keys()
+    context.generate_galois_keys()
     context.global_scale = 2**40
     
     # Process as flattened vector for simplicity in initial version
@@ -109,3 +110,43 @@ def process_and_encrypt_dataset(dataset_obj):
         dataset_obj.status = "FAILED"
         dataset_obj.save()
         raise e
+
+def compute_encrypted_aggregation(dataset_obj, operation="sum"):
+    """
+    Load encrypted data, perform homomorphic operation (sum/mean), 
+    decrypt and return the numerical result.
+    """
+    if not dataset_obj.encrypted_file:
+        raise ValueError("Dataset is not yet encrypted.")
+        
+    # 1. Read binary data
+    dataset_obj.encrypted_file.seek(0)
+    binary_data = dataset_obj.encrypted_file.read()
+    
+    # 2. Extract Context and Vector
+    ctx_len = int.from_bytes(binary_data[:4], byteorder='big')
+    serialized_ctx = binary_data[4:4+ctx_len]
+    serialized_vec = binary_data[4+ctx_len:]
+    
+    # 3. Reload into TenSEAL
+    context = ts.context_from(serialized_ctx)
+    encrypted_vector = ts.ckks_vector_from(context, serialized_vec)
+    
+    # 4. Perform operation homomorphically
+    if operation == "sum":
+        result_encrypted = encrypted_vector.sum()
+        result_plaintext = result_encrypted.decrypt()
+        value = result_plaintext[0]
+        return {"operation": "sum", "result": round(value, 4)}
+        
+    elif operation == "mean":
+        result_encrypted = encrypted_vector.sum()
+        total_elements = dataset_obj.rows_count * dataset_obj.columns_count
+        if total_elements > 0:
+            result_encrypted = result_encrypted * (1.0 / total_elements)
+            
+        result_plaintext = result_encrypted.decrypt()
+        value = result_plaintext[0]
+        return {"operation": "mean", "result": round(value, 4)}
+    else:
+        raise ValueError("Unsupported operation")

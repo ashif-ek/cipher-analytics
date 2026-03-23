@@ -1,5 +1,7 @@
 from rest_framework import viewsets, permissions, serializers
+from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 
 from .serializers import DatasetUploadSerializer
 from .models import Dataset
@@ -44,4 +46,21 @@ class DatasetViewSet(viewsets.ModelViewSet):
             dataset.status = "FAILED"
             dataset.save()
             raise serializers.ValidationError({"detail": f"Encryption failed: {str(e)}"})
+            
+    @action(detail=True, methods=['post'])
+    def compute(self, request, pk=None):
+        dataset = self.get_object()
+        if dataset.status != "READY":
+            return Response({"detail": "Dataset is not ready for computation."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        operation = request.data.get("operation", "sum")
+        if operation not in ["sum", "mean"]:
+            return Response({"detail": "Invalid operation."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            from .services.dataset_processing import compute_encrypted_aggregation
+            result = compute_encrypted_aggregation(dataset, operation=operation)
+            return Response(result)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
        

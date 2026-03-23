@@ -30,6 +30,20 @@ const StatusBadge = ({ status }) => {
 
 const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
   const [deletingId, setDeletingId] = useState(null);
+  const [computingId, setComputingId] = useState(null);
+  const [results, setResults] = useState({});
+
+  const handleCompute = async (id, operation) => {
+    try {
+      setComputingId(id);
+      const res = await client.post(`datasets/${id}/compute/`, { operation });
+      setResults(prev => ({ ...prev, [id]: `${operation.toUpperCase()}: ${res.data.result}` }));
+    } catch (error) {
+      alert(`Computation failed: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setComputingId(null);
+    }
+  };
 
   const handleDeleteClick = async (id, name) => {
     if (window.confirm(`Are you sure you want to delete dataset "${name}"? This action cannot be undone.`)) {
@@ -101,6 +115,11 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{dataset.name}</div>
                     <div className="text-xs text-gray-500">ID: {dataset.id}</div>
+                    {results[dataset.id] && (
+                      <div className="mt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded inline-block">
+                        Result: {results[dataset.id]}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge status={dataset.status} />
@@ -118,13 +137,33 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                     {new Date(dataset.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleDeleteClick(dataset.id, dataset.name)}
-                      disabled={deletingId === dataset.id}
-                      className="text-red-600 hover:text-red-900 disabled:opacity-50 transition-colors"
-                    >
-                      {deletingId === dataset.id ? 'Deleting...' : 'Delete'}
-                    </button>
+                    <div className="flex items-center justify-end space-x-3">
+                      {dataset.status === 'READY' && (
+                        <>
+                          <button
+                            onClick={() => handleCompute(dataset.id, 'sum')}
+                            disabled={computingId === dataset.id}
+                            className="text-xs font-medium text-blue-600 hover:text-blue-900 bg-blue-50 px-2 py-1 rounded border border-blue-200 transition-colors disabled:opacity-50"
+                          >
+                            {computingId === dataset.id ? '...' : 'Compute Sum'}
+                          </button>
+                          <button
+                            onClick={() => handleCompute(dataset.id, 'mean')}
+                            disabled={computingId === dataset.id}
+                            className="text-xs font-medium text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded border border-indigo-200 transition-colors disabled:opacity-50"
+                          >
+                            {computingId === dataset.id ? '...' : 'Compute Mean'}
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleDeleteClick(dataset.id, dataset.name)}
+                        disabled={deletingId === dataset.id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 transition-colors ml-2"
+                      >
+                        {deletingId === dataset.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
