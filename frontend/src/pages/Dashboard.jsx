@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
+import DatasetTable from '../components/DatasetTable';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -10,12 +11,34 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  
+  // Dataset Management State
+  const [datasets, setDatasets] = useState([]);
+  const [loadingDatasets, setLoadingDatasets] = useState(true);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     window.location.href = '/login';
   };
+
+  const fetchDatasets = useCallback(async () => {
+    try {
+        const response = await client.get('datasets/');
+        setDatasets(response.data);
+    } catch (error) {
+        console.error("Failed to fetch datasets", error);
+    } finally {
+        setLoadingDatasets(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDatasets();
+    // Poll every 10 seconds for status updates
+    const intervalId = setInterval(fetchDatasets, 10000);
+    return () => clearInterval(intervalId);
+  }, [fetchDatasets]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -26,6 +49,10 @@ const Dashboard = () => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleDelete = (deletedId) => {
+    setDatasets(prev => prev.filter(ds => ds.id !== deletedId));
   };
 
   const handleSubmit = async (e) => {
@@ -46,9 +73,13 @@ const Dashboard = () => {
     data.append('original_file', formData.original_file);
 
     try {
-      const response = await client.post('datasets/', data);
-
+      const response = await client.post('datasets/', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       const responseData = response.data;
+      
       setMessage({ type: 'success', text: `Dataset uploaded successfully. Identifier: ${responseData.id}` });
       setFormData({
         name: '',
@@ -58,6 +89,9 @@ const Dashboard = () => {
       });
       const fileInput = document.getElementById('original_file');
       if (fileInput) fileInput.value = '';
+      
+      // Optimistically add to top of list, or just refetch
+      fetchDatasets();
 
     } catch (error) {
       if (error.response) {
@@ -71,7 +105,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900 font-sans">
+    <div className="min-h-screen bg-[#F9FAFB] text-gray-900 font-sans pb-12">
       
       {/* Top Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
@@ -86,9 +120,10 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-5xl mx-auto px-6 py-12">
         
-        <div className="bg-white border border-gray-200 p-8">
+        {/* Upload Form Section */}
+        <div className="bg-white border border-gray-200 p-8 shadow-sm">
           <div className="mb-8 border-b border-gray-100 pb-4">
             <h2 className="text-lg font-semibold tracking-tight">Dataset Ingestion</h2>
             <p className="text-sm text-gray-500 mt-1">Upload files to the secure processing pipeline.</p>
@@ -174,6 +209,14 @@ const Dashboard = () => {
             </div>
           </form>
         </div>
+
+        {/* Dataset Table Section */}
+        <DatasetTable 
+          datasets={datasets} 
+          loading={loadingDatasets} 
+          onRefresh={fetchDatasets} 
+          onDelete={handleDelete}
+        />
         
       </main>
     </div>

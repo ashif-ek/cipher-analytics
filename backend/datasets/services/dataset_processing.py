@@ -31,9 +31,11 @@ def parse_and_validate_csv(file):
         if df.empty:
             raise serializers.ValidationError("CSV file is empty.")
         
-        # Check if all columns are numeric
-        if not df.select_dtypes(include=['number']).columns.equals(df.columns):
-            raise serializers.ValidationError("CSV must contain only numeric data for encryption.")
+        # Keep only numeric columns
+        df = df.select_dtypes(include=['number'])
+        
+        if df.empty:
+            raise serializers.ValidationError("CSV must contain at least one numeric column for encryption.")
         
         # Drop rows with missing values for now (simple approach)
         df = df.dropna()
