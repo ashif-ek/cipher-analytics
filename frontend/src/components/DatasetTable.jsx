@@ -43,10 +43,19 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
     localStorage.setItem('cipher_computation_results', JSON.stringify(results));
   }, [results]);
 
-  const handleClearResult = (id) => {
+  const handleClearResult = (id, operation) => {
     setResults(prev => {
       const updated = { ...prev };
-      delete updated[id];
+      if (updated[id]) {
+        const newDatasetResults = { ...updated[id] };
+        delete newDatasetResults[operation];
+        
+        if (Object.keys(newDatasetResults).length === 0) {
+          delete updated[id];
+        } else {
+          updated[id] = newDatasetResults;
+        }
+      }
       return updated;
     });
   };
@@ -55,7 +64,16 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
     try {
       setComputingId(id);
       const res = await client.post(`datasets/${id}/compute/`, { operation });
-      setResults(prev => ({ ...prev, [id]: `${operation.toUpperCase()}: ${res.data.result}` }));
+      setResults(prev => {
+        const datasetResults = prev[id] || {};
+        return {
+          ...prev,
+          [id]: {
+            ...datasetResults,
+            [operation]: res.data.result
+          }
+        };
+      });
     } catch (error) {
       alert(`Computation failed: ${error.response?.data?.detail || error.message}`);
     } finally {
@@ -133,16 +151,20 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{dataset.name}</div>
                     <div className="text-xs text-gray-500">ID: {dataset.id}</div>
-                    {results[dataset.id] && (
-                      <div className="mt-2 flex items-center shadow-sm text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded inline-block">
-                        <span>Result: {results[dataset.id]}</span>
-                        <button 
-                          onClick={() => handleClearResult(dataset.id)}
-                          className="ml-2 text-emerald-600 hover:text-emerald-900 focus:outline-none"
-                          title="Clear Result"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                    {results[dataset.id] && Object.keys(results[dataset.id]).length > 0 && (
+                      <div className="mt-2 flex flex-col space-y-1.5 items-start">
+                        {Object.entries(results[dataset.id]).map(([op, val]) => (
+                          <div key={op} className="flex items-center shadow-sm text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded">
+                            <span>{op.toUpperCase()}: {val}</span>
+                            <button 
+                              onClick={() => handleClearResult(dataset.id, op)}
+                              className="ml-2 text-emerald-600 hover:text-emerald-900 focus:outline-none"
+                              title={`Clear ${op.toUpperCase()}`}
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </td>
