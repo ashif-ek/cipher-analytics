@@ -1,18 +1,18 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import User
+from .models import User, OTP
 
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
-    list_display = ["email", "username", "is_staff", "is_active"]
-    list_filter = ["email", "is_staff", "is_active"]
+    list_display = ["email", "username", "role", "is_verified", "is_staff", "is_active", "is_blocked"]
+    list_filter = ["role", "is_verified", "is_staff", "is_active", "is_blocked"]
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("username",)}),
+        ("Personal info", {"fields": ("username", "role", "is_verified", "is_blocked", "profile_picture")}),
         (
             "Permissions",
             {
@@ -48,3 +48,9 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
+
+@admin.register(OTP)
+class OTPAdmin(admin.ModelAdmin):
+    list_display = ["user", "otp", "is_used", "created_at"]
+    list_filter = ["is_used", "created_at"]
+    search_fields = ["user__email"]
