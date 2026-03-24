@@ -26,7 +26,14 @@ const Register = () => {
       await client.post('accounts/register/', formData);
       navigate('/verify-otp?email=' + encodeURIComponent(formData.email));
     } catch (err) {
-      setError('Registration failed. Username or email might be taken.');
+      if (err.response && err.response.data) {
+        const errorData = err.response.data;
+        // DRF returns object with array of strings usually
+        const messages = Object.values(errorData).flat().join(' ');
+        setError(`Registration failed: ${messages}`);
+      } else {
+        setError('Registration failed. Username or email might be taken.');
+      }
     } finally {
       setLoading(false);
     }
