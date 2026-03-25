@@ -1,7 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
-import os
 from kombu import Queue
 from celery.schedules import crontab
 
@@ -129,9 +128,9 @@ REST_FRAMEWORK = {
         "accounts.throttling.SecureIPRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "10/minute",
-        "login_ip": "5/minute",
-        "login_user": "5/minute"
+        "anon": "100/minute",
+        "login_ip": "200/minute",
+        "login_user": "100/minute"
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
