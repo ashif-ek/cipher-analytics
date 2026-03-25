@@ -87,29 +87,20 @@ def encrypt_dataset(df):
 def process_and_encrypt_dataset(dataset_obj):
     """
     Main entry point for processing and encryption.
+    Raises exceptions directly to allow Celery to handle retries and state updates.
     """
-    try:
-        dataset_obj.status = "PROCESSING"
-        dataset_obj.save()
-        
-        # 1. Parse
-        df = parse_and_validate_csv(dataset_obj.original_file)
-        
-        # 2. Encrypt
-        encrypted_binary, rows, cols = encrypt_dataset(df)
-        
-        # 3. Save
-        file_name = f"{dataset_obj.id}_encrypted.bin"
-        dataset_obj.encrypted_file.save(file_name, ContentFile(encrypted_binary))
-        dataset_obj.rows_count = rows
-        dataset_obj.columns_count = cols
-        dataset_obj.status = "READY"
-        dataset_obj.save()
-        
-    except Exception as e:
-        dataset_obj.status = "FAILED"
-        dataset_obj.save()
-        raise e
+    # 1. Parse
+    df = parse_and_validate_csv(dataset_obj.original_file)
+    
+    # 2. Encrypt
+    encrypted_binary, rows, cols = encrypt_dataset(df)
+    
+    # 3. Save
+    file_name = f"{dataset_obj.id}_encrypted.bin"
+    dataset_obj.encrypted_file.save(file_name, ContentFile(encrypted_binary))
+    dataset_obj.rows_count = rows
+    dataset_obj.columns_count = cols
+    dataset_obj.save(update_fields=['encrypted_file', 'rows_count', 'columns_count'])
 
 def compute_encrypted_aggregation(dataset_obj, operation="sum"):
     """

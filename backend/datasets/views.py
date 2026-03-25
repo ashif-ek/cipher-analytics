@@ -40,7 +40,20 @@ class DatasetViewSet(viewsets.ModelViewSet):
         
         # Trigger encryption process asynchronously
         from .tasks import process_and_encrypt_dataset_task
-        process_and_encrypt_dataset_task.delay(dataset.id)
+        task = process_and_encrypt_dataset_task.delay(dataset.id)
+        dataset.task_id = task.id
+        dataset.save(update_fields=['task_id'])
+
+    @action(detail=True, methods=['get'])
+    def status(self, request, pk=None):
+        dataset = self.get_object()
+        return Response({
+            "id": dataset.id,
+            "status": dataset.status,
+            "task_id": dataset.task_id,
+            "error_message": dataset.error_message,
+            "updated_at": dataset.updated_at
+        })
     @action(detail=True, methods=['post'])
     def compute(self, request, pk=None):
         dataset = self.get_object()

@@ -2,6 +2,8 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 import os
+from kombu import Queue
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -170,5 +172,27 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Task Routing and Queues
+CELERY_TASK_QUEUES = (
+    Queue('default', routing_key='task.#'),
+    Queue('heavy_tasks', routing_key='heavy.#'),
+)
+CELERY_TASK_ROUTES = {
+    'datasets.tasks.process_and_encrypt_dataset_task': {'queue': 'heavy_tasks', 'routing_key': 'heavy.process'},
+    'datasets.tasks.cleanup_stuck_datasets_task': {'queue': 'default', 'routing_key': 'task.cleanup'},
+}
+
+# Task Time limits and Reliability
+CELERY_TASK_TIME_LIMIT = 3600  # 1 hour
+CELERY_TASK_SOFT_TIME_LIMIT = 3000
+CELERY_TASK_ACKS_LATE = True
+
+# Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-stuck-datasets-every-hour': {
+        'task': 'datasets.tasks.cleanup_stuck_datasets_task',
+        'schedule': crontab(minute=0, hour='*'),
+    },
+}
