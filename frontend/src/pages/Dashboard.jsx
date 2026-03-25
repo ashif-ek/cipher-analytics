@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import DatasetTable from '../components/DatasetTable';
+import UserProfile from '../components/UserProfile';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -108,16 +109,11 @@ const Dashboard = () => {
     <div className="min-h-screen bg-[#F9FAFB] text-gray-900 font-sans pb-12">
       
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-40 relative">
         <div>
           <h1 className="text-xl font-bold tracking-tight">cipher-analytics</h1>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="text-sm border border-gray-300 px-4 py-2 hover:bg-gray-50 transition-colors font-medium"
-        >
-          Terminate Session
-        </button>
+        <UserProfile onLogout={handleLogout} />
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 py-12">

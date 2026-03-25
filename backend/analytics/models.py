@@ -1,6 +1,17 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from datasets.models import Dataset
+
+class Computation(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="computations")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    result = models.FloatField(null=True, blank=True)
+    is_aggregated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Computation for {self.dataset.name} by {self.owner.email}"
 
 class AuditLog(models.Model):
     class Action(models.TextChoices):
