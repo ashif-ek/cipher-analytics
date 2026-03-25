@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
+from .services.security import check_and_unlock_user, record_failed_login, reset_failed_login
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,7 +43,31 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        data = super().validate(attrs)
+        email = attrs.get(self.username_field)
+        
+        # Pre-authenticate Lock Check
+        if email:
+            try:
+                user_check = User.objects.get(email=email)
+                if check_and_unlock_user(user_check):
+                    raise AuthenticationFailed("Account is temporarily locked due to multiple failed login attempts.")
+            except User.DoesNotExist:
+                pass
+                
+        try:
+            data = super().validate(attrs)
+        except AuthenticationFailed:
+            # Post-authenticate Failure Recording
+            if email:
+                try:
+                    user_failed = User.objects.get(email=email)
+                    record_failed_login(user_failed.id)
+                except User.DoesNotExist:
+                    pass
+            raise
+
+        # Login Succeeded
+        reset_failed_login(self.user.id)
         
         if not self.user.is_verified:
             raise serializers.ValidationError({"detail": "Verify your email first"})

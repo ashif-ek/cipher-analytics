@@ -36,6 +36,7 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
+    "core.middleware.traceability.TraceabilityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -125,10 +126,12 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
+        "accounts.throttling.SecureIPRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "10/minute"
+        "anon": "10/minute",
+        "login_ip": "5/minute",
+        "login_user": "5/minute"
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -173,6 +176,21 @@ CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Security & Caching
+TRUSTED_PROXIES = config(
+    "TRUSTED_PROXIES",
+    default="127.0.0.1",
+    cast=lambda v: [s.strip() for s in v.split(",")]
+)
+
+# Use Redis backend for Rate Limiting
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config('CELERY_BROKER_URL', default='redis://redis:6379/0'),
+    }
+}
 
 # Task Routing and Queues
 CELERY_TASK_QUEUES = (

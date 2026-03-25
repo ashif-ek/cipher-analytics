@@ -35,14 +35,48 @@ class DatasetViewSet(viewsets.ModelViewSet):
         return Dataset.objects.none()
 
     def perform_create(self, serializer):
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        req_id = get_current_request_id()
+        ip = get_current_ip()
+        
         # Save the dataset with the current user as owner and status PROCESSING
         dataset = serializer.save(owner=self.request.user, status="PROCESSING")
         
+        log_audit_event(
+            user_id=self.request.user.id,
+            action=AuditLog.Action.DATASET_UPLOAD,
+            severity=AuditLog.Severity.INFO,
+            ip_address=ip,
+            request_id=req_id,
+            metadata={"dataset_id": dataset.id, "name": dataset.name}
+        )
+        
         # Trigger encryption process asynchronously
         from .tasks import process_and_encrypt_dataset_task
-        task = process_and_encrypt_dataset_task.delay(dataset.id)
+        task = process_and_encrypt_dataset_task.delay(dataset.id, request_id=req_id, ip_address=ip)
         dataset.task_id = task.id
         dataset.save(update_fields=['task_id'])
+
+    def perform_destroy(self, instance):
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        req_id = get_current_request_id()
+        ip = get_current_ip()
+        
+        log_audit_event(
+            user_id=self.request.user.id,
+            action=AuditLog.Action.DATASET_DELETE,
+            severity=AuditLog.Severity.WARNING,
+            ip_address=ip,
+            request_id=req_id,
+            metadata={"dataset_id": instance.id, "name": instance.name}
+        )
+        instance.delete()
 
     @action(detail=True, methods=['get'])
     def status(self, request, pk=None):
@@ -70,4 +104,3 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Response(result)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-       
