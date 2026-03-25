@@ -36,6 +36,11 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    failed_login_attempts = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    last_activity = models.DateTimeField(null=True, blank=True)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 

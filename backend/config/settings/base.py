@@ -1,7 +1,8 @@
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
-import os
+from kombu import Queue
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "drf_spectacular",
     "accounts",
     "datasets",
     "analytics",
@@ -33,6 +35,7 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
+    "core.middleware.traceability.TraceabilityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -122,11 +125,22 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
+        "accounts.throttling.SecureIPRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "10/minute"
-    }
+        "anon": "100/minute",
+        "login_ip": "200/minute",
+        "login_user": "100/minute"
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Cipher Analytics API",
+    "DESCRIPTION": "API Collection for the Cipher Analytics backend. Includes Accounts (Auth, OTP, User Management) and Datasets (Upload, Compute, Delete).",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 
@@ -155,3 +169,47 @@ EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+# Celery Configuration Options
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Security & Caching
+TRUSTED_PROXIES = config(
+    "TRUSTED_PROXIES",
+    default="127.0.0.1",
+    cast=lambda v: [s.strip() for s in v.split(",")]
+)
+
+# Use Redis backend for Rate Limiting
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config('CELERY_BROKER_URL', default='redis://redis:6379/0'),
+    }
+}
+
+# Task Routing and Queues
+CELERY_TASK_QUEUES = (
+    Queue('default', routing_key='task.#'),
+    Queue('heavy_tasks', routing_key='heavy.#'),
+)
+CELERY_TASK_ROUTES = {
+    'datasets.tasks.process_and_encrypt_dataset_task': {'queue': 'heavy_tasks', 'routing_key': 'heavy.process'},
+    'datasets.tasks.cleanup_stuck_datasets_task': {'queue': 'default', 'routing_key': 'task.cleanup'},
+}
+
+# Task Time limits and Reliability
+CELERY_TASK_TIME_LIMIT = 3600  # 1 hour
+CELERY_TASK_SOFT_TIME_LIMIT = 3000
+CELERY_TASK_ACKS_LATE = True
+
+# Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-stuck-datasets-every-hour': {
+        'task': 'datasets.tasks.cleanup_stuck_datasets_task',
+        'schedule': crontab(minute=0, hour='*'),
+    },
+}

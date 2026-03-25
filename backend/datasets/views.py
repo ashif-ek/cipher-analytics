@@ -1,12 +1,11 @@
-from rest_framework import viewsets, permissions, serializers
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import DatasetUploadSerializer
 from .models import Dataset
-from .services.dataset_processing import process_and_encrypt_dataset
-from .permissions import IsDataOwner, IsResearcher, IsAdmin, CanAccessDataset
+from .permissions import IsDataOwner, CanAccessDataset
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
@@ -36,17 +35,59 @@ class DatasetViewSet(viewsets.ModelViewSet):
         return Dataset.objects.none()
 
     def perform_create(self, serializer):
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        req_id = get_current_request_id()
+        ip = get_current_ip()
+        
         # Save the dataset with the current user as owner and status PROCESSING
         dataset = serializer.save(owner=self.request.user, status="PROCESSING")
         
-        # Trigger encryption process
-        try:
-            process_and_encrypt_dataset(dataset)
-        except Exception as e:
-            dataset.status = "FAILED"
-            dataset.save()
-            raise serializers.ValidationError({"detail": f"Encryption failed: {str(e)}"})
-            
+        log_audit_event(
+            user_id=self.request.user.id,
+            action=AuditLog.Action.DATASET_UPLOAD,
+            severity=AuditLog.Severity.INFO,
+            ip_address=ip,
+            request_id=req_id,
+            metadata={"dataset_id": dataset.id, "name": dataset.name}
+        )
+        
+        # Trigger encryption process asynchronously
+        from .tasks import process_and_encrypt_dataset_task
+        task = process_and_encrypt_dataset_task.delay(dataset.id, request_id=req_id, ip_address=ip)
+        dataset.task_id = task.id
+        dataset.save(update_fields=['task_id'])
+
+    def perform_destroy(self, instance):
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        req_id = get_current_request_id()
+        ip = get_current_ip()
+        
+        log_audit_event(
+            user_id=self.request.user.id,
+            action=AuditLog.Action.DATASET_DELETE,
+            severity=AuditLog.Severity.WARNING,
+            ip_address=ip,
+            request_id=req_id,
+            metadata={"dataset_id": instance.id, "name": instance.name}
+        )
+        instance.delete()
+
+    @action(detail=True, methods=['get'])
+    def status(self, request, pk=None):
+        dataset = self.get_object()
+        return Response({
+            "id": dataset.id,
+            "status": dataset.status,
+            "task_id": dataset.task_id,
+            "error_message": dataset.error_message,
+            "updated_at": dataset.updated_at
+        })
     @action(detail=True, methods=['post'])
     def compute(self, request, pk=None):
         dataset = self.get_object()
@@ -63,4 +104,3 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Response(result)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-       
