@@ -1,0 +1,20 @@
+# Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+db.sqlite3
+backend/gunicorn.ctl
+backend/*.sock
+backend/*.ctl
+
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Docker & OS
+.DS_Store
+Thumbs.db
+docker-compose.override.yml
