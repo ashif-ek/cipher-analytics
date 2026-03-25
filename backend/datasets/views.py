@@ -1,12 +1,11 @@
-from rest_framework import viewsets, permissions, serializers
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import DatasetUploadSerializer
 from .models import Dataset
-from .services.dataset_processing import process_and_encrypt_dataset
-from .permissions import IsDataOwner, IsResearcher, IsAdmin, CanAccessDataset
+from .permissions import IsDataOwner, CanAccessDataset
 
 
 class DatasetViewSet(viewsets.ModelViewSet):
@@ -39,14 +38,9 @@ class DatasetViewSet(viewsets.ModelViewSet):
         # Save the dataset with the current user as owner and status PROCESSING
         dataset = serializer.save(owner=self.request.user, status="PROCESSING")
         
-        # Trigger encryption process
-        try:
-            process_and_encrypt_dataset(dataset)
-        except Exception as e:
-            dataset.status = "FAILED"
-            dataset.save()
-            raise serializers.ValidationError({"detail": f"Encryption failed: {str(e)}"})
-            
+        # Trigger encryption process asynchronously
+        from .tasks import process_and_encrypt_dataset_task
+        process_and_encrypt_dataset_task.delay(dataset.id)
     @action(detail=True, methods=['post'])
     def compute(self, request, pk=None):
         dataset = self.get_object()
