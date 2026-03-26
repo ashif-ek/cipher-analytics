@@ -17,6 +17,10 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
 )
 
+from analytics.models import AuditLog
+from analytics.services.audit import log_audit_event
+from core.middleware.traceability import get_current_request_id, get_current_ip
+
 
 class LoginAPIView(TokenObtainPairView):
     """
@@ -26,6 +30,20 @@ class LoginAPIView(TokenObtainPairView):
 
     permission_classes = [AllowAny]
     serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            user = User.objects.get(email=request.data.get('email'))
+            log_audit_event(
+                user_id=user.id,
+                action=AuditLog.Action.LOGIN_SUCCESS,
+                severity=AuditLog.Severity.INFO,
+                ip_address=get_current_ip(),
+                request_id=get_current_request_id(),
+                metadata={"user_agent": request.META.get('HTTP_USER_AGENT', 'unknown')}
+            )
+        return response
 
 
 class RefreshAPIView(TokenRefreshView):
@@ -40,6 +58,13 @@ class LogoutAPIView(APIView):
         Client should delete tokens.
         Backend stays stateless (JWT best practice).
         """
+        log_audit_event(
+            user_id=request.user.id,
+            action=AuditLog.Action.LOGOUT,
+            severity=AuditLog.Severity.INFO,
+            ip_address=get_current_ip(),
+            request_id=get_current_request_id()
+        )
         return Response(
             {"message": "Logged out successfully"},
             status=status.HTTP_200_OK,

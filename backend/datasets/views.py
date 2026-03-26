@@ -101,6 +101,20 @@ class DatasetViewSet(viewsets.ModelViewSet):
         try:
             from .services.dataset_processing import compute_encrypted_aggregation
             result = compute_encrypted_aggregation(dataset, operation=operation)
+            
+            from core.middleware.traceability import get_current_request_id, get_current_ip
+            from analytics.services.audit import log_audit_event
+            from analytics.models import AuditLog
+            
+            log_audit_event(
+                user_id=request.user.id,
+                action=AuditLog.Action.DATASET_PROCESS,
+                severity=AuditLog.Severity.INFO,
+                ip_address=get_current_ip(),
+                request_id=get_current_request_id(),
+                metadata={"dataset_id": dataset.id, "operation": operation, "status": "success"}
+            )
+            
             return Response(result)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

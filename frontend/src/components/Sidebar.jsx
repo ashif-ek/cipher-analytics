@@ -8,6 +8,10 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/', icon: 'home' },
     { name: 'My Datasets', path: '/datasets', icon: 'database' },
     { name: 'Upload Dataset', path: '/upload', icon: 'upload' },
+    { name: 'Access Control', path: '/access-control', icon: 'shield' },
+    { name: 'Research Consent', path: '/consent', icon: 'check-circle' },
+    { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list' },
+    { name: 'Settings', path: '/settings', icon: 'cog' },
   ];
 
   const getIcon = (name) => {
