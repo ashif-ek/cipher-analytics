@@ -55,28 +55,42 @@ const Datasets = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dataset Management</h1>
-          <p className="mt-1 text-sm text-slate-500">View, manage, and analyze your encrypted data securely.</p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Link to="/upload" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-            </svg>
-            Upload New
-          </Link>
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <div className="relative -mx-4 px-4 sm:-mx-8 sm:px-8 py-8 bg-slate-50/50 border-b border-slate-200 -mt-8 mb-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Dataset Registry</h1>
+            <p className="text-sm text-slate-500 font-medium max-w-xl leading-relaxed">
+              Consolidated command center for ingestion, metadata governance, and industrial-grade FHE analytics.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex flex-col items-end mr-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Inventory</span>
+              <span className="text-sm font-mono font-bold text-slate-900">{datasets.length} Objects</span>
+            </div>
+            <Link 
+              to="/upload" 
+              className="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-black transition-all shadow-sm group"
+            >
+              <svg className="mr-2 h-4 w-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              Ingest New Asset
+            </Link>
+          </div>
         </div>
       </div>
 
-      <DatasetTable 
-        datasets={datasets} 
-        loading={loadingDatasets} 
-        onRefresh={fetchDatasets} 
-        onDelete={handleDelete}
-      />
+      <div className="px-0 sm:px-0">
+        <DatasetTable 
+          datasets={datasets} 
+          loading={loadingDatasets} 
+          onRefresh={fetchDatasets} 
+          onDelete={handleDelete}
+        />
+      </div>
     </div>
   );
 };

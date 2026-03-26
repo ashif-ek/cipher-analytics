@@ -10,9 +10,9 @@ import Datasets from './pages/Datasets';
 import DatasetDetails from './pages/DatasetDetails';
 import UploadDataset from './pages/UploadDataset';
 import AuditLogs from './pages/AuditLogs';
-
-// Temporary placeholders while components are built
-const Placeholder = ({ title }) => <div className="flex items-center justify-center h-full text-slate-400">{title}</div>;
+import AccessControl from './pages/AccessControl';
+import ResearchConsent from './pages/ResearchConsent';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -34,9 +34,9 @@ function App() {
           <Route path="datasets/:id" element={<DatasetDetails />} />
           <Route path="upload" element={<UploadDataset />} />
           <Route path="audit-logs" element={<AuditLogs />} />
-          <Route path="access-control" element={<Placeholder title="Access Control Management" />} />
-          <Route path="consent" element={<Placeholder title="Research Consent & Policy" />} />
-          <Route path="settings" element={<Placeholder title="System Settings" />} />
+          <Route path="access-control" element={<AccessControl />} />
+          <Route path="consent" element={<ResearchConsent />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
