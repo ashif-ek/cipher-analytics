@@ -10,7 +10,6 @@ import Datasets from './pages/Datasets';
 import DatasetDetails from './pages/DatasetDetails';
 import UploadDataset from './pages/UploadDataset';
 import AuditLogs from './pages/AuditLogs';
-import VerifyOTP from './pages/VerifyOTP';
 
 // Temporary placeholders while components are built
 const Placeholder = ({ title }) => <div className="flex items-center justify-center h-full text-slate-400">{title}</div>;
