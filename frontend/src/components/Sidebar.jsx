@@ -54,10 +54,10 @@ const Sidebar = () => {
               <NavLink
                 key={item.name}
                 to={item.path}
-                className={`flex items-center px-3 py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all group ${
+                className={`flex items-center px-4 py-2 text-sm font-semibold rounded-xl transition-all group ${
                   isActive 
                     ? 'bg-slate-800 text-white shadow-sm' 
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                    : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'
                 }`}
               >
                 <svg 

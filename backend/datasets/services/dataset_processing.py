@@ -13,9 +13,9 @@ def validate_csv_file(file):
     if not file.name.endswith('.csv'):
         raise serializers.ValidationError("File must be a CSV.")
     
-    # 5MB limit
-    if file.size > 5 * 1024 * 1024:
-        raise serializers.ValidationError("File size must be under 5MB.")
+    # 15MB limit
+    if file.size > 15 * 1024 * 1024:
+        raise serializers.ValidationError("File size must be under 15MB.")
     
     return True
 

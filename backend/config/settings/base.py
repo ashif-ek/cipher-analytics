@@ -214,3 +214,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour='*'),
     },
 }
+
+# Upload Limits (15MB requirement, 20MB buffer)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20971520
