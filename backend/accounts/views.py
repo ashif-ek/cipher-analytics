@@ -29,6 +29,7 @@ class LoginAPIView(TokenObtainPairView):
     """
 
     permission_classes = [AllowAny]
+    authentication_classes = []
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
@@ -83,6 +84,7 @@ class MeAPIView(APIView):
 
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @transaction.atomic
     def post(self, request):
@@ -90,6 +92,16 @@ class RegisterAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
+        
+        # Log Registration
+        log_audit_event(
+            user_id=user.id,
+            action=AuditLog.Action.REGISTER,
+            severity=AuditLog.Severity.INFO,
+            ip_address=get_current_ip(),
+            request_id=get_current_request_id(),
+            metadata={"role": user.role}
+        )
         
         # Generate OTP
         otp_code = generate_otp(user)
@@ -110,6 +122,7 @@ class RegisterAPIView(APIView):
 
 class VerifyOTPAPIView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         email = request.data.get("email")
@@ -139,6 +152,7 @@ class VerifyOTPAPIView(APIView):
 
 class ResendOTPAPIView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @transaction.atomic
     def post(self, request):
