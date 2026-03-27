@@ -16,7 +16,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     Admins see everything. Data Owners see their own activities.
     """
     serializer_class = AuditLogSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
