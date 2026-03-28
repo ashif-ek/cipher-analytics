@@ -11,7 +11,6 @@ import PasswordField from '../components/auth/PasswordField';
 import FormFooter from '../components/auth/FormFooter';
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, 'Full name is required'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email protocol'),
   password: z.string()
@@ -90,13 +89,6 @@ const Register = () => {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <InputField
-          label="Full name"
-          placeholder="Jane Doe"
-          error={errors.fullName?.message}
-          {...register('fullName')}
-        />
-
         <div className="grid grid-cols-2 gap-4">
           <InputField
             label="Username"

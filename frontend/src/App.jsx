@@ -14,32 +14,36 @@ import AccessControl from './pages/AccessControl';
 import ResearchConsent from './pages/ResearchConsent';
 import Settings from './pages/Settings';
 
+import { AuthProvider } from './components/auth/AuthLayout';
+
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          } 
-        >
-          <Route index element={<DashboardOverview />} />
-          <Route path="datasets" element={<Datasets />} />
-          <Route path="datasets/:id" element={<DatasetDetails />} />
-          <Route path="upload" element={<UploadDataset />} />
-          <Route path="audit-logs" element={<AuditLogs />} />
-          <Route path="access-control" element={<AccessControl />} />
-          <Route path="consent" element={<ResearchConsent />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            } 
+          >
+            <Route index element={<DashboardOverview />} />
+            <Route path="datasets" element={<Datasets />} />
+            <Route path="datasets/:id" element={<DatasetDetails />} />
+            <Route path="upload" element={<UploadDataset />} />
+            <Route path="audit-logs" element={<AuditLogs />} />
+            <Route path="access-control" element={<AccessControl />} />
+            <Route path="consent" element={<ResearchConsent />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }
