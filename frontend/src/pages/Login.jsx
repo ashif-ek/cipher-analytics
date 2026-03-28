@@ -35,7 +35,8 @@ const Login = () => {
     try {
       const response = await client.post('accounts/login/', { 
         email: data.email, 
-        password: data.password 
+        password: data.password,
+        remember_me: data.rememberMe
       });
       
       localStorage.setItem('access_token', response.data.access);
