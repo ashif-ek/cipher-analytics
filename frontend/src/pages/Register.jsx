@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import client from '../api/client';
 import Toast from '../components/ui/Toast';
-import AuthLayout from '../components/auth/AuthLayout';
+import AuthLayout, { useAuth } from '../components/auth/AuthLayout';
 import InputField from '../components/auth/InputField';
 import PasswordField from '../components/auth/PasswordField';
 import FormFooter from '../components/auth/FormFooter';
@@ -28,7 +28,8 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const Register = ({ openLegal }) => {
+const Register = () => {
+  const { openLegal } = useAuth();
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
@@ -144,12 +145,12 @@ const Register = ({ openLegal }) => {
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-700 px-0.5">Role</label>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-0.5">Role</label>
           <div className="relative">
             <select 
               {...register('role')}
-              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-md text-sm text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 appearance-none cursor-pointer font-medium shadow-sm transition-all"
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 appearance-none cursor-pointer font-medium shadow-sm transition-all"
             >
               <option value="DATA_OWNER">Data Owner</option>
               <option value="RESEARCHER">Researcher</option>

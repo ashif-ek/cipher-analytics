@@ -16,7 +16,7 @@ const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-const Login = ({ openLegal }) => {
+const Login = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
@@ -122,7 +122,6 @@ const Login = ({ openLegal }) => {
         <FormFooter 
           secondaryText="Don't have an account?" 
           secondaryAction={{ text: 'Create an account', to: '/register' }}
-          onLinkClick={openLegal}
           links={[
             { text: 'Privacy Policy', to: '#', type: 'privacy' },
             { text: 'Terms of Service', to: '#', type: 'terms' }
