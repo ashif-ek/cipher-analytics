@@ -82,7 +82,7 @@ const UserProfile = ({ onLogout }) => {
               onClick={onLogout}
               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium rounded-sm"
             >
-              Terminate Session
+              Logout
             </button>
           </div>
         </div>

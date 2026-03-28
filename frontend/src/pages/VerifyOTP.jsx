@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import client from '../api/client';
+import AuthLayout from '../components/auth/AuthLayout';
+import InputField from '../components/auth/InputField';
 
 const VerifyOTP = () => {
   const [searchParams] = useSearchParams();
@@ -15,7 +17,7 @@ const VerifyOTP = () => {
 
   useEffect(() => {
     if (!email) {
-      setMessage({ type: 'error', text: 'Email parameter missing. Please provide your registered email.' });
+      setMessage({ type: 'error', text: 'Email parameter missing.' });
     }
   }, [email]);
 
@@ -26,14 +28,14 @@ const VerifyOTP = () => {
 
     try {
       await client.post('accounts/verify-otp/', { email, otp });
-      setMessage({ type: 'success', text: 'Account verified successfully! Redirecting...' });
+      setMessage({ type: 'success', text: 'Identity verified. Redirecting...' });
       setTimeout(() => {
         navigate('/login');
       }, 1500);
     } catch (err) {
       setMessage({ 
         type: 'error', 
-        text: err.response?.data?.detail || 'Verification failed. Invalid or expired OTP code.' 
+        text: err.response?.data?.detail || 'Verification failed.' 
       });
     } finally {
       setLoading(false);
@@ -42,7 +44,7 @@ const VerifyOTP = () => {
 
   const handleResend = async () => {
     if (!email) {
-      setMessage({ type: 'error', text: 'Email is required to resend OTP.' });
+      setMessage({ type: 'error', text: 'Email required.' });
       return;
     }
     
@@ -51,11 +53,11 @@ const VerifyOTP = () => {
 
     try {
       const response = await client.post('accounts/resend-otp/', { email });
-      setMessage({ type: 'success', text: response.data?.message || 'A new code has been sent.' });
+      setMessage({ type: 'success', text: response.data?.message || 'Code sent.' });
     } catch (err) {
       setMessage({ 
         type: 'error', 
-        text: err.response?.data?.detail || 'Failed to resend code.' 
+        text: err.response?.data?.detail || 'Resend failed.' 
       });
     } finally {
       setResendLoading(false);
@@ -63,74 +65,66 @@ const VerifyOTP = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] text-gray-900 font-sans py-12">
-      <div className="w-full max-w-md p-8 bg-white border border-gray-200">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Security Verification</h1>
-        <p className="text-sm text-gray-500 mb-6">Enter the 6-digit access code sent to your email.</p>
+    <AuthLayout 
+      title="Verify your email" 
+      subtitle="We've sent a 6-digit code to your inbox."
+    >
+      {message.text && (
+        <div className={`mb-6 p-4 rounded-md text-sm font-medium ${
+          message.type === 'success' 
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+            : 'bg-red-50 text-red-700 border border-red-100'
+        }`}>
+          {message.text}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <InputField
+          label="Email address"
+          type="email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          placeholder="name@company.com"
+          readOnly={!!initialEmail}
+        />
         
-        {message.text && (
-          <div className={`mb-4 p-3 border-l-4 text-sm ${message.type === 'success' ? 'border-gray-900 bg-gray-100 text-gray-900' : 'border-gray-900 bg-gray-100'}`}>
-            {message.text}
-          </div>
-        )}
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-700 px-0.5">Verification code</label>
+          <input 
+            type="text" 
+            value={otp} 
+            onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} 
+            maxLength={6}
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-md text-center text-2xl tracking-[0.75em] font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all shadow-sm"
+            placeholder="000000"
+          />
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Target Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm bg-gray-50 mb-2"
-              placeholder="operator@system.com"
-              readOnly={!!initialEmail}
-            />
-            {!initialEmail && (
-              <p className="text-xs text-gray-500">Provide the email bound to your account.</p>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Access Code (OTP)</label>
-            <input 
-              type="text" 
-              value={otp} 
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} 
-              required
-              maxLength={6}
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-center text-lg tracking-[0.5em] font-mono"
-              placeholder="••••••"
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            disabled={loading || otp.length < 6 || !email}
-            className="w-full bg-gray-900 text-white font-medium py-2 px-4 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm mt-4"
-          >
-            {loading ? 'Verifying...' : 'Validate Code'}
-          </button>
-        </form>
+        <button 
+          type="submit" 
+          disabled={loading || otp.length < 6 || !email}
+          className="w-full bg-slate-900 text-white text-sm font-semibold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-2"
+        >
+          {loading ? 'Verifying...' : 'Verify Email'}
+        </button>
+      </form>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 center">
-          <button 
-            type="button"
-            onClick={handleResend}
-            disabled={resendLoading || !email}
-            className="w-full bg-white border border-gray-300 text-gray-900 font-medium py-2 px-4 hover:bg-gray-50 transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed text-sm"
-          >
-            {resendLoading ? 'Transmitting...' : 'Resend Access Code'}
-          </button>
-        </div>
+      <div className="mt-10 pt-8 border-t border-slate-100 flex flex-col gap-4">
+        <button 
+          type="button"
+          onClick={handleResend}
+          disabled={resendLoading || !email}
+          className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-semibold py-3 px-4 rounded-md hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          {resendLoading ? 'Sending...' : 'Resend code'}
+        </button>
         
-        <div className="mt-6 text-center">
-          <Link to="/login" className="text-sm font-medium text-gray-900 hover:underline">
-            Return to Login
-          </Link>
-        </div>
+        <Link to="/login" className="text-sm font-semibold text-slate-500 hover:text-slate-900 text-center transition-colors">
+          Back to sign in
+        </Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
