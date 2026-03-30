@@ -31,19 +31,13 @@ class CanAccessDataset(permissions.BasePermission):
         if not user.is_authenticated:
             return False
             
-        # Admin has full access
-        if user.is_staff or user.role == 'ADMIN':
-            return True
-            
-        # Data Owner can access their own datasets
-        if user.role == 'DATA_OWNER':
-            return obj.owner == user
-            
-        # Researcher can only access shared datasets
-        if user.role == 'RESEARCHER':
-            return obj.is_shared_for_research
-            
-        return False
+        from .services.authorization import check_dataset_permission
+        from rest_framework.exceptions import PermissionDenied
+        
+        try:
+            return check_dataset_permission(user, obj, 'VIEW')
+        except PermissionDenied:
+            return False
 
 class CanAccessComputation(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):

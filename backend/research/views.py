@@ -35,6 +35,43 @@ class DatasetAccessRequestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(researcher=self.request.user)
 
+class DataOwnerRequestViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Data Owners to view and manage requests for their datasets.
+    """
+    serializer_class = DatasetAccessRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Filtering where the dataset owner is the current user
+        return DatasetAccessRequest.objects.filter(dataset__owner=self.request.user).order_by('-created_at')
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        access_request = self.get_object()
+        access_request.status = "APPROVED"
+        access_request.save()
+        
+        # Create a grant
+        from datetime import timedelta
+        DatasetAccessGrant.objects.create(
+            request=access_request,
+            dataset=access_request.dataset,
+            researcher=access_request.researcher,
+            granted_by=request.user,
+            expires_at=timezone.now() + timedelta(days=30),
+            permissions=["read_aggregates"]
+        )
+        
+        return Response({"status": "Request approved, grant created."})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        access_request = self.get_object()
+        access_request.status = "REJECTED"
+        access_request.save()
+        return Response({"status": "Request rejected."})
+
 class ResearcherAnalyticsViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated, IsResearcher, HasActiveDatasetGrant]
 

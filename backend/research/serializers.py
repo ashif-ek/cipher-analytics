@@ -14,11 +14,12 @@ class DatasetBasicSerializer(serializers.ModelSerializer):
 
 class DatasetAccessRequestSerializer(serializers.ModelSerializer):
     dataset_details = DatasetBasicSerializer(source='dataset', read_only=True)
+    researcher_email = serializers.EmailField(source='researcher.email', read_only=True)
     
     class Meta:
         model = DatasetAccessRequest
-        fields = ['id', 'dataset', 'dataset_details', 'status', 'reason', 'created_at']
-        read_only_fields = ['status', 'created_at']
+        fields = ['id', 'dataset', 'dataset_details', 'researcher_email', 'status', 'reason', 'created_at']
+        read_only_fields = ['status', 'created_at', 'researcher_email']
 
 class DatasetAccessGrantSerializer(serializers.ModelSerializer):
     dataset_details = DatasetBasicSerializer(source='dataset', read_only=True)

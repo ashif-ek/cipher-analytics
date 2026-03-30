@@ -2,9 +2,10 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Q
 
-from .serializers import DatasetUploadSerializer
-from .models import Dataset
+from .serializers import DatasetUploadSerializer, ComputationJobSerializer
+from .models import Dataset, ComputationJob
 from .permissions import IsDataOwner, CanAccessDataset
 
 
@@ -30,9 +31,33 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Dataset.objects.filter(owner=user).order_by("-created_at")
             
         if user.role == "RESEARCHER":
-            return Dataset.objects.filter(is_shared_for_research=True).order_by("-created_at")
+            return Dataset.objects.filter(
+                Q(access_level__in=['PUBLIC', 'SHARED', 'COLLABORATIVE']) |
+                Q(datasetaccess__user=user) |
+                Q(is_shared_for_research=True)
+            ).distinct().order_by("-created_at")
             
         return Dataset.objects.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # Log view
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        log_audit_event(
+            user_id=request.user.id,
+            action=AuditLog.Action.DATASET_PROCESS, # Closest to VIEW
+            severity=AuditLog.Severity.INFO,
+            ip_address=get_current_ip(),
+            request_id=get_current_request_id(),
+            metadata={"dataset_id": instance.id, "type": "view"}
+        )
+        
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         from core.middleware.traceability import get_current_request_id, get_current_ip
@@ -42,8 +67,8 @@ class DatasetViewSet(viewsets.ModelViewSet):
         req_id = get_current_request_id()
         ip = get_current_ip()
         
-        # Save the dataset with the current user as owner and status PROCESSING
-        dataset = serializer.save(owner=self.request.user, status="PROCESSING")
+        # Save the dataset with the current user as owner and status READY since ciphertext is pre-encrypted
+        dataset = serializer.save(owner=self.request.user, status="READY")
         
         log_audit_event(
             user_id=self.request.user.id,
@@ -51,14 +76,9 @@ class DatasetViewSet(viewsets.ModelViewSet):
             severity=AuditLog.Severity.INFO,
             ip_address=ip,
             request_id=req_id,
-            metadata={"dataset_id": dataset.id, "name": dataset.name}
+            metadata={"dataset_id": dataset.id, "name": dataset.name, "type": "FHE_CIPHERTEXT"}
         )
-        
-        # Trigger encryption process asynchronously
-        from .tasks import process_and_encrypt_dataset_task
-        task = process_and_encrypt_dataset_task.delay(dataset.id, request_id=req_id, ip_address=ip)
-        dataset.task_id = task.id
-        dataset.save(update_fields=['task_id'])
+
 
     def perform_destroy(self, instance):
         from core.middleware.traceability import get_current_request_id, get_current_ip
@@ -95,13 +115,26 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Dataset is not ready for computation."}, status=status.HTTP_400_BAD_REQUEST)
         
         operation = request.data.get("operation", "sum")
-        if operation not in ["sum", "mean"]:
+        if operation not in ["sum", "mean", "variance"]:
             return Response({"detail": "Invalid operation."}, status=status.HTTP_400_BAD_REQUEST)
             
+        # Extract explicit execution grant boundaries via the zero-trust module.
+        from .services.authorization import check_dataset_permission
+        from rest_framework.exceptions import PermissionDenied
         try:
-            from .services.dataset_processing import compute_encrypted_aggregation
-            result = compute_encrypted_aggregation(dataset, operation=operation)
+             check_dataset_permission(request.user, dataset, 'COMPUTE', operation=operation)
+        except PermissionDenied as pe:
+             return Response({"detail": str(pe)}, status=status.HTTP_403_FORBIDDEN)
             
+        try:
+            from .models import ComputationJob
+            job = ComputationJob.objects.create(
+                dataset=dataset,
+                requested_by=request.user,
+                operation=operation.upper(),
+                status="PENDING"
+            )
+
             from core.middleware.traceability import get_current_request_id, get_current_ip
             from analytics.services.audit import log_audit_event
             from analytics.models import AuditLog
@@ -113,9 +146,25 @@ class DatasetViewSet(viewsets.ModelViewSet):
                 severity=AuditLog.Severity.INFO,
                 ip_address=get_current_ip(),
                 request_id=req_id,
-                metadata={"dataset_id": dataset.id, "operation": operation, "status": "success"}
+                metadata={"dataset_id": dataset.id, "operation": operation, "job_id": job.id}
             )
             
-            return Response({**result, "computation_id": req_id})
+            # Trigger celery FHE task
+            from .tasks import execute_fhe_computation_task
+            execute_fhe_computation_task.delay(job.id, request_id=req_id, ip_address=get_current_ip())
+            
+            return Response({
+                "job_id": job.id, 
+                "status": job.status,
+                "operation": job.operation,
+                "message": "FHE Computation job queued successfully."
+            }, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class ComputationJobViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ComputationJobSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ComputationJob.objects.filter(requested_by=self.request.user)

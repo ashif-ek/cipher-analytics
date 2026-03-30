@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ResearchDatasetViewSet,
     DatasetAccessRequestViewSet,
+    DataOwnerRequestViewSet,
     ResearcherAnalyticsViewSet,
     ExportViewSet
 )
@@ -10,6 +11,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r'datasets', ResearchDatasetViewSet, basename='research-dataset')
 router.register(r'requests', DatasetAccessRequestViewSet, basename='research-request')
+router.register(r'owner-requests', DataOwnerRequestViewSet, basename='owner-request')
 router.register(r'analytics', ResearcherAnalyticsViewSet, basename='research-analytics')
 router.register(r'exports', ExportViewSet, basename='research-export')
 

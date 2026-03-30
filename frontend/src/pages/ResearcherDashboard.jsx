@@ -1,111 +1,109 @@
 import React, { useState, useEffect } from "react";
-import api from "../api/axios";
+import api from "../api/client";
+import DatasetTable from "../components/DatasetTable";
+import Card from "../components/ui/Card";
+import Toast from "../components/ui/Toast";
 
 export default function ResearcherDashboard() {
   const [datasets, setDatasets] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState("");
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [datasetsRes, requestsRes] = await Promise.all([
+        api.get("research/datasets/"),
+        api.get("research/requests/")
+      ]);
+      
+      // Mark datasets with access status
+      const augmentedDatasets = datasetsRes.data.map(ds => ({
+        ...ds,
+        has_access: requestsRes.data.some(r => r.dataset === ds.id && r.status === 'APPROVED'),
+        request_pending: requestsRes.data.some(r => r.dataset === ds.id && r.status === 'PENDING')
+      }));
+
+      setDatasets(augmentedDatasets);
+      setRequests(requestsRes.data);
+    } catch (err) {
+      setError("Failed to load dashboard data. Ensure you have Researcher access.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [datasetsRes, requestsRes] = await Promise.all([
-          api.get("/research/datasets/"),
-          api.get("/research/requests/")
-        ]);
-        setDatasets(datasetsRes.data);
-        setRequests(requestsRes.data);
-      } catch (err) {
-        setError("Failed to load dashboard data. Ensure you have Researcher access.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
   const handleRequestAccess = async (datasetId) => {
     try {
-      await api.post(`/research/requests/`, {
+      await api.post(`research/requests/`, {
         dataset: datasetId,
-        reason: "Academic research purposes"
+        reason: "FHE-based statistical analysis for research purposes."
       });
-      alert("Access request submitted successfully!");
-      // Refetch requests
-      const res = await api.get("/research/requests/");
-      setRequests(res.data);
+      setToast("Governance access request submitted.");
+      fetchDashboardData();
     } catch (err) {
-      alert("Error submitting request");
+      alert("Error submitting request: " + (err.response?.data?.detail || err.message));
     }
   };
 
-  if (loading) return <div className="p-8 text-neutral-400">Loading Researcher Workspace...</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  if (error) return (
+    <div className="p-12 text-center">
+      <div className="text-red-500 font-bold mb-2">AUTH_ERROR</div>
+      <div className="text-slate-500 text-sm">{error}</div>
+    </div>
+  );
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Researcher Workspace</h1>
-        <p className="text-neutral-400">Access governed datasets and extract insights securely.</p>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {toast && <Toast message={toast} onClose={() => setToast("")} />}
+      
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Researcher Workspace</h1>
+          <p className="text-slate-500 font-medium mt-1 text-sm">Securely interact with governed datasets via FHE orchestration.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-100">
+            Node: Verified
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Available Datasets */}
-        <section className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Available Datasets</h2>
-          {datasets.length === 0 ? (
-            <p className="text-neutral-500 text-sm">No shared datasets available currently.</p>
-          ) : (
-            <ul className="space-y-4">
-              {datasets.map(ds => (
-                <li key={ds.id} className="p-4 bg-neutral-950 rounded-lg border border-neutral-800 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-white font-medium">{ds.name}</h3>
-                    <p className="text-xs text-neutral-500">{ds.rows_count} rows • {ds.columns_count} cols</p>
-                  </div>
-                  <button 
-                    onClick={() => handleRequestAccess(ds.id)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors"
-                  >
-                    Request Access
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6 border-slate-200">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Available Assets</span>
+            <h3 className="text-2xl font-bold text-slate-900">{datasets.length}</h3>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Datasets open for research collaboration.</p>
+        </Card>
+        <Card className="p-6 border-slate-200">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Active Grants</span>
+            <h3 className="text-2xl font-bold text-emerald-600">{datasets.filter(d => d.has_access).length}</h3>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Approved cryptographic evaluation contexts.</p>
+        </Card>
+        <Card className="p-6 border-slate-200">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Pending Requests</span>
+            <h3 className="text-2xl font-bold text-amber-500">{datasets.filter(d => d.request_pending).length}</h3>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Awaiting Data Owner verification.</p>
+        </Card>
+      </div>
 
-        {/* My Access Requests */}
-        <section className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">My Access Requests</h2>
-          {requests.length === 0 ? (
-            <p className="text-neutral-500 text-sm">No active access requests.</p>
-          ) : (
-            <ul className="space-y-4">
-              {requests.map(req => (
-                <li key={req.id} className="p-4 bg-neutral-950 rounded-lg border border-neutral-800">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-white font-medium">{req.dataset_details?.name || 'Dataset'}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      req.status === 'APPROVED' ? 'bg-green-500/10 text-green-500' :
-                      req.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500' :
-                      'bg-red-500/10 text-red-500'
-                    }`}>
-                      {req.status}
-                    </span>
-                  </div>
-                  {req.status === 'APPROVED' && (
-                    <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                      Open Analytics Engine &rarr;
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Governed Dataset Registry</h2>
+        </div>
+        <DatasetTable 
+          datasets={datasets} 
+          loading={loading} 
+          onRefresh={fetchDashboardData}
+          onRequestAccess={handleRequestAccess}
+          userRole="RESEARCHER"
+        />
       </div>
     </div>
   );

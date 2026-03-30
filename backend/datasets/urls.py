@@ -1,8 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import DatasetViewSet
+from .views import DatasetViewSet, ComputationJobViewSet
 
 router = DefaultRouter()
+router.register(r'jobs', ComputationJobViewSet, basename='computation-job')
 router.register(r'', DatasetViewSet, basename='dataset')
 
 urlpatterns = [

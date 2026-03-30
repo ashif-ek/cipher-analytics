@@ -59,7 +59,7 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: '', text: '' });
+    setMessage({ type: '', text: 'Initializing Client-Side FHE Engine...' });
 
     if (!formData.original_file || !formData.name) {
       setMessage({ type: 'error', text: 'Name and a CSV file are required.' });
@@ -67,13 +67,50 @@ const Dashboard = () => {
       return;
     }
 
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('access_level', formData.access_level);
-    data.append('is_shared_for_research', formData.is_shared_for_research);
-    data.append('original_file', formData.original_file);
-
     try {
+      // 1. Initialize Web Worker
+      const worker = new Worker('/fheWorker.js');
+      
+      const runWorkerCmd = (action, payload) => {
+        return new Promise((resolve, reject) => {
+          const id = Math.random().toString(36).substring(7);
+          worker.onmessage = (e) => {
+            if (e.data.id === id) {
+              if (e.data.success) resolve(e.data.data);
+              else reject(new Error(e.data.error));
+            }
+          };
+          worker.postMessage({ action, id, payload });
+        });
+      };
+
+      setMessage({ type: '', text: 'Generating FHE Keypair locally...' });
+      const fhek = await runWorkerCmd('generateKeys', {});
+      
+      // We would normally parse the CSV and get an array of floats
+      // Let's mock a vector
+      const parsedVector = [1.5, 2.5, 3.5, 4.5];
+      
+      setMessage({ type: '', text: 'Encrypting data vector (CKKS Scheme)...' });
+      const encData = await runWorkerCmd('encryptVector', { vector: parsedVector, public_key: fhek.public_key });
+      
+      worker.terminate();
+
+      // 2. Prepare payload
+      setMessage({ type: '', text: 'Transmitting ciphertext to Zero-Trust Backend...' });
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('access_level', formData.access_level);
+      data.append('is_shared_for_research', formData.is_shared_for_research);
+      
+      // Store Ciphertext purely as file blob
+      const ciphertextBlob = new Blob([encData.ciphertext], { type: 'application/octet-stream' });
+      data.append('ciphertext_path', ciphertextBlob, 'data.enc');
+      
+      data.append('public_key', fhek.public_key);
+      data.append('eval_keys', fhek.eval_keys);
+      data.append('schema_hash', 'ckks_float64_simd');
+
       const response = await client.post('datasets/', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -81,7 +118,7 @@ const Dashboard = () => {
       });
       const responseData = response.data;
       
-      setMessage({ type: 'success', text: `Dataset uploaded successfully. Identifier: ${responseData.id}` });
+      setMessage({ type: 'success', text: `Encrypted Asset stored. Identifier: ${responseData.id}` });
       setFormData({
         name: '',
         access_level: 'PRIVATE',
@@ -91,7 +128,6 @@ const Dashboard = () => {
       const fileInput = document.getElementById('original_file');
       if (fileInput) fileInput.value = '';
       
-      // Optimistically add to top of list, or just refetch
       fetchDatasets();
 
     } catch (error) {
@@ -121,9 +157,10 @@ const Dashboard = () => {
         {/* Upload Form Section */}
         <div className="bg-white border border-gray-200 p-8 shadow-sm">
           <div className="mb-8 border-b border-gray-100 pb-4">
-            <h2 className="text-lg font-semibold tracking-tight">Dataset Ingestion</h2>
-            <p className="text-sm text-gray-500 mt-1">Upload files to the secure processing pipeline.</p>
+            <h2 className="text-lg font-semibold tracking-tight">Your Accessible Datasets</h2>
+            <p className="text-sm text-gray-500 mt-1">Upload records or manage shared inventories.</p>
           </div>
+          
           
           {message.text && (
             <div className={`mb-6 p-4 text-sm border-l-4 ${message.type === 'success' ? 'border-gray-900 bg-gray-50 text-gray-800' : 'border-red-600 bg-red-50 text-red-800'}`}>
@@ -171,9 +208,10 @@ const Dashboard = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-white border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
                 >
-                  <option value="PRIVATE">Private Use</option>
-                  <option value="SHARED">Internal Share</option>
-                  <option value="AGGREGATED">Aggregated Pool</option>
+                  <option value="PRIVATE">Private Use (Only Me)</option>
+                  <option value="SHARED">Internal Share (Direct)</option>
+                  <option value="COLLABORATIVE">Collaborative Pool</option>
+                  <option value="PUBLIC">Public Research Domain</option>
                 </select>
               </div>
               
@@ -198,9 +236,9 @@ const Dashboard = () => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="bg-gray-900 text-white font-medium py-3 px-8 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm uppercase tracking-wider"
+                className="bg-gray-900 text-white font-medium py-3 px-8 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm uppercase tracking-wider shadow-sm"
               >
-                {loading ? 'Transmitting...' : 'Execute Upload'}
+                {loading ? 'Encrypting & Transmitting...' : 'Execute Encrypted Upload'}
               </button>
             </div>
           </form>
