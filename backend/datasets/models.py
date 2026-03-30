@@ -17,6 +17,7 @@ class Dataset(models.Model):
         PRIVATE = "PRIVATE", "Private"
         SHARED = "SHARED", "Shared"
         COLLABORATIVE = "COLLABORATIVE", "Collaborative"
+        AGGREGATED = "AGGREGATED", "Aggregated"
         PUBLIC = "PUBLIC", "Public"
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)

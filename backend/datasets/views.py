@@ -32,7 +32,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
             
         if user.role == "RESEARCHER":
             return Dataset.objects.filter(
-                Q(access_level__in=['PUBLIC', 'SHARED', 'COLLABORATIVE']) |
+                Q(access_level__in=['PUBLIC', 'SHARED', 'COLLABORATIVE', 'AGGREGATED']) |
                 Q(datasetaccess__user=user) |
                 Q(is_shared_for_research=True)
             ).distinct().order_by("-created_at")
