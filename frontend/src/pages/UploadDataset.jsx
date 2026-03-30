@@ -169,7 +169,7 @@ const UploadDataset = () => {
                       </svg>
                     </div>
                     <p className="text-sm text-slate-800 font-bold tracking-tight">Select Data Asset</p>
-                    <p className="text-xs text-slate-500 mt-2 font-medium">CSV Format Only • 50 MiB Maximum</p>
+                    <p className="text-xs text-slate-500 mt-2 font-medium">CSV Format Only • 15 MiB Maximum</p>
                   </div>
                 )}
               </div>

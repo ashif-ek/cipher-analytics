@@ -1,3 +1,4 @@
+import datetime
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
@@ -29,6 +30,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    remember_me = serializers.BooleanField(required=False, default=False)
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
@@ -44,6 +47,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         email = attrs.get(self.username_field)
+        remember_me = attrs.get('remember_me', False)
         
         # Pre-authenticate Lock Check
         if email:
@@ -71,6 +75,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         if not self.user.is_verified:
             raise serializers.ValidationError({"detail": "Verify your email first"})
+        
+        # Dynamic Token Lifetime for "Remember Me"
+        if remember_me:
+            data['refresh'].set_exp(lifetime=datetime.timedelta(days=30))
+            data['access'].set_exp(lifetime=datetime.timedelta(days=1))  # Keep access token at 1 day
             
         data["user"] = UserSerializer(
             self.user,

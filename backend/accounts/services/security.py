@@ -3,6 +3,9 @@ from django.utils import timezone
 from datetime import timedelta
 from accounts.models import User
 import logging
+from analytics.models import AuditLog
+from analytics.services.audit import log_audit_event
+from core.middleware.traceability import get_current_request_id, get_current_ip
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +24,30 @@ def record_failed_login(user_id):
             
             user.failed_login_attempts += 1
             
+            # Log Failed Attempt
+            log_audit_event(
+                user_id=user_id,
+                action=AuditLog.Action.LOGIN_FAILED,
+                severity=AuditLog.Severity.WARNING,
+                ip_address=get_current_ip(),
+                request_id=get_current_request_id(),
+                metadata={"attempts_count": user.failed_login_attempts}
+            )
+            
             if user.failed_login_attempts >= MAX_FAILED_ATTEMPTS and not user.is_locked:
                 user.is_locked = True
                 user.locked_until = timezone.now() + timedelta(minutes=LOCK_DURATION_MINUTES)
+                
+                # Log Account Lock
+                log_audit_event(
+                    user_id=user_id,
+                    action=AuditLog.Action.ACCOUNT_LOCKED,
+                    severity=AuditLog.Severity.CRITICAL,
+                    ip_address=get_current_ip(),
+                    request_id=get_current_request_id(),
+                    metadata={"reason": "consecutive_failed_attempts", "lock_duration": LOCK_DURATION_MINUTES}
+                )
+                
                 logger.warning("Account locked due to consecutive failed attempts.", extra={'user_id': user_id, 'action': 'ACCOUNT_LOCKED'})
                 
                 # Invalidate all existing sessions securely
@@ -43,10 +67,21 @@ def reset_failed_login(user_id):
         try:
             user = User.objects.select_for_update().get(id=user_id)
             if user.failed_login_attempts > 0 or user.is_locked:
+                was_locked = user.is_locked
                 user.failed_login_attempts = 0
                 user.is_locked = False
                 user.locked_until = None
                 user.save(update_fields=['failed_login_attempts', 'is_locked', 'locked_until'])
+                
+                if was_locked:
+                    # Log Unlock
+                    log_audit_event(
+                        user_id=user_id,
+                        action=AuditLog.Action.ACCOUNT_UNLOCKED,
+                        severity=AuditLog.Severity.INFO,
+                        ip_address=get_current_ip(),
+                        request_id=get_current_request_id()
+                    )
             return user
         except User.DoesNotExist:
             return None

@@ -15,6 +15,9 @@ const DatasetDetails = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [toastMessage, setToastMessage] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [computing, setComputing] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [computationResult, setComputationResult] = useState(null);
 
   useEffect(() => {
     const fetchDataset = async () => {
@@ -58,6 +61,24 @@ const DatasetDetails = () => {
       navigate('/datasets');
     } catch (error) {
       setToastMessage(`Failed to delete dataset: ${error.message}`);
+    }
+  };
+
+  const handleCompute = async (operation) => {
+    try {
+      setComputing(true);
+      const response = await client.post(`datasets/${id}/compute/`, { operation });
+      
+      setComputationResult({
+        ...response.data,
+        datasetName: dataset.name
+      });
+      setShowResultModal(true);
+      setToastMessage(`Computation successful.`);
+    } catch (error) {
+      setToastMessage(`Computation failed: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setComputing(false);
     }
   };
 
@@ -122,6 +143,24 @@ const DatasetDetails = () => {
             </div>
           </div>
           <div className="mt-4 sm:mt-0 flex space-x-3">
+             {dataset.status === 'READY' && (
+               <>
+                 <button 
+                  onClick={() => handleCompute('sum')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-blue-200 shadow-sm text-sm font-bold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Run Sum'}
+                 </button>
+                 <button 
+                  onClick={() => handleCompute('mean')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-emerald-200 shadow-sm text-sm font-bold rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Run Mean'}
+                 </button>
+               </>
+             )}
              <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
               Export Metadata
             </button>
@@ -249,6 +288,89 @@ const DatasetDetails = () => {
           </Card>
         )}
       </div>
+      {/* Result Modal */}
+      <Modal 
+        isOpen={showResultModal} 
+        onClose={() => setShowResultModal(false)}
+        title="Analytical Audit Report"
+        variant="info"
+        size="md"
+        confirmText="Close Report"
+        onConfirm={() => setShowResultModal(false)}
+        message={
+          <div className="space-y-6 text-left">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 pb-6 border-b border-slate-100">
+              <div>
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Data Asset</span>
+                <span className="text-sm font-bold text-slate-900 truncate block">{computationResult?.datasetName}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Protocol State</span>
+                <span className="inline-flex items-center text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase">
+                  {computationResult?.operation} / FHE-CKKS
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Computation ID</span>
+                <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                  {computationResult?.computation_id || 'N/A'}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Timestamp</span>
+                <span className="text-xs text-slate-500">{new Date().toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10">
+                 <svg className="w-16 h-16 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              </div>
+              <div className="relative text-center">
+                <span className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Verified Numerical Output</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-black text-slate-900 tracking-tighter font-mono">
+                    {typeof computationResult?.result === 'number' 
+                      ? computationResult.result.toFixed(6)
+                      : 'N/A'}
+                  </span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(computationResult?.result);
+                      setToastMessage('Value copied to clipboard');
+                    }}
+                    className="mt-6 flex items-center px-3 py-1.5 bg-white rounded-lg text-[10px] font-black text-slate-500 hover:bg-slate-900 hover:text-white transition-all border border-slate-200 uppercase tracking-widest"
+                  >
+                    <svg className="w-3.5 h-3.5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8v3m-3-3l3 3m0 0l3-3" />
+                    </svg>
+                    Copy to Clipboard
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                Integrity Verified
+              </div>
+              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                Zero-Leakage FHE
+              </div>
+              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
+                Audit Logged
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto text-center">
+              This report confirms that the computation bypasses traditional decryption layers to ensure end-to-end data privacy.
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 };

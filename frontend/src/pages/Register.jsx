@@ -1,125 +1,204 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import client from '../api/client';
+import Toast from '../components/ui/Toast';
+import AuthLayout, { useAuth } from '../components/auth/AuthLayout';
+import InputField from '../components/auth/InputField';
+import PasswordField from '../components/auth/PasswordField';
+import FormFooter from '../components/auth/FormFooter';
+
+const registerSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().min(1, 'Email is required').email('Invalid email protocol'),
+  password: z.string()
+    .min(8, 'Minimum 8 characters required')
+    .regex(/[A-Z]/, 'Must contain one uppercase letter')
+    .regex(/[a-z]/, 'Must contain one lowercase letter')
+    .regex(/[0-9]/, 'Must contain one numeric character')
+    .regex(/[^A-Za-z0-9]/, 'Must contain one special character'),
+  confirmPassword: z.string(),
+  role: z.enum(['DATA_OWNER', 'RESEARCHER']),
+  terms: z.boolean().refine(val => val === true, 'Policy acknowledgment required'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'DATA_OWNER'
-  });
-  const [error, setError] = useState('');
+  const { openLegal } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+  });
+
+  const passwordValue = watch('password', '');
+
+  const getStrength = (pass) => {
+    if (!pass) return 0;
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    return score;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const strength = getStrength(passwordValue);
+
+  const onSubmit = async (data) => {
     setLoading(true);
     try {
-      await client.post('accounts/register/', formData);
-      navigate('/verify-otp?email=' + encodeURIComponent(formData.email));
+      const { confirmPassword, terms, ...registerData } = data;
+      await client.post('accounts/register/', registerData);
+      setToast({ message: 'Identity initialized. Awaiting verification...', type: 'success' });
+      
+      setTimeout(() => {
+        navigate('/verify-otp?email=' + encodeURIComponent(data.email));
+      }, 2000);
     } catch (err) {
-      if (err.response && err.response.data) {
-        const errorData = err.response.data;
-        // DRF returns object with array of strings usually
-        const messages = Object.values(errorData).flat().join(' ');
-        setError(`Registration failed: ${messages}`);
-      } else {
-        setError('Registration failed. Username or email might be taken.');
-      }
+      const errorMsg = err.response?.data ? Object.values(err.response.data).flat()[0] : 'Registration failed.';
+      setToast({ message: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] text-gray-900 font-sans py-12">
-      <div className="w-full max-w-md p-8 bg-white border border-gray-200">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Register</h1>
-        <p className="text-sm text-gray-500 mb-6">Create an operational account to access the system.</p>
-        
-        {error && (
-          <div className="mb-4 p-3 border-l-4 border-gray-900 bg-gray-100 text-sm">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input 
-              type="text" 
-              name="username"
-              value={formData.username} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-              placeholder="system_agent_01"
-            />
-          </div>
+    <AuthLayout 
+      title="Create Account" 
+      subtitle="Start your secure data analytics journey today."
+    >
+      {toast.message && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: 'success' })} 
+        />
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <InputField
+            label="Username"
+            placeholder="janedoe"
+            error={errors.username?.message}
+            {...register('username')}
+          />
+          <InputField
+            label="Email address"
+            placeholder="jane@company.com"
+            error={errors.email?.message}
+            {...register('email')}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <PasswordField
+            label="Password"
+            placeholder="••••••••"
+            error={errors.password?.message}
+            {...register('password')}
+          />
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input 
-              type="email"
-              name="email"
-              value={formData.email} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-              placeholder="operator@system.com"
-            />
+          {/* Password Strength Indicator */}
+          <div className="flex space-x-1.5 h-1.5 px-0.5">
+            {[1, 2, 3, 4].map((step) => (
+              <div 
+                key={step} 
+                className={`flex-1 rounded-full transition-all duration-500 ${
+                  strength >= step 
+                    ? strength <= 2 ? 'bg-amber-400' : 'bg-emerald-500' 
+                    : 'bg-slate-100'
+                }`}
+              />
+            ))}
           </div>
+          <p className="text-[11px] font-medium text-slate-500">
+            Use 8 or more characters with a mix of letters, numbers & symbols
+          </p>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input 
-              type="password" 
-              name="password"
-              value={formData.password} 
-              onChange={handleChange} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role Assignment</label>
+          <PasswordField
+            label="Confirm password"
+            placeholder="••••••••"
+            error={errors.confirmPassword?.message}
+            {...register('confirmPassword')}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-0.5">Role</label>
+          <div className="relative">
             <select 
-              name="role"
-              value={formData.role} 
-              onChange={handleChange} 
-              required
-              className="w-full px-3 py-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+              {...register('role')}
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 appearance-none cursor-pointer font-medium shadow-sm transition-all"
             >
               <option value="DATA_OWNER">Data Owner</option>
               <option value="RESEARCHER">Researcher</option>
             </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
-          
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-gray-900 text-white font-medium py-2 px-4 mt-2 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-          >
-            {loading ? 'Processing...' : 'Register Account'}
-          </button>
-        </form>
-        
-        <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-600">
-            Already authorized? <Link to="/login" className="font-medium text-gray-900 hover:underline">Sign In</Link>
-          </p>
         </div>
-      </div>
-    </div>
+
+        <div className="space-y-2">
+          <div className="flex items-start space-x-3 px-0.5">
+            <input
+              type="checkbox"
+              id="terms"
+              className="mt-1 w-4 h-4 border-slate-300 rounded text-slate-900 focus:ring-slate-900/10 cursor-pointer"
+              {...register('terms')}
+            />
+            <label htmlFor="terms" className="text-[11px] font-medium text-slate-500 cursor-pointer leading-relaxed">
+              I agree to the 
+              <button 
+                type="button" 
+                onClick={() => openLegal('Terms of Service', 'terms')}
+                className="text-slate-900 font-bold hover:underline mx-1"
+              >
+                Terms of Service
+              </button> 
+              and 
+              <button 
+                type="button" 
+                onClick={() => openLegal('Privacy Policy', 'privacy')}
+                className="text-slate-900 font-bold hover:underline mx-1"
+              >
+                Privacy Policy
+              </button>
+            </label>
+          </div>
+          {errors.terms && <p className="text-xs text-red-500 font-medium px-0.5">{errors.terms.message}</p>}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !isValid}
+          className="w-full bg-slate-900 text-white text-[11px] uppercase tracking-widest font-bold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-4"
+        >
+          {loading ? 'Initializing...' : 'Create Account'}
+        </button>
+
+        <FormFooter 
+          secondaryText="Already have an account?" 
+          secondaryAction={{ text: 'Sign in instead', to: '/login' }}
+        />
+      </form>
+    </AuthLayout>
   );
 };
 

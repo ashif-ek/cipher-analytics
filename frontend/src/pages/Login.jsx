@@ -1,28 +1,61 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import client from '../api/client';
+import Toast from '../components/ui/Toast';
+import AuthLayout from '../components/auth/AuthLayout';
+import InputField from '../components/auth/InputField';
+import PasswordField from '../components/auth/PasswordField';
+import FormFooter from '../components/auth/FormFooter';
+
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email protocol'),
+  password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional(),
+});
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+  });
+
+  const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await client.post('accounts/login/', { email, password });
+      const response = await client.post('accounts/login/', { 
+        email: data.email, 
+        password: data.password,
+        remember_me: data.rememberMe
+      });
+      
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
-      navigate('/');
+      
+      setToast({ message: 'Authentication successful. Synchronizing session...', type: 'success' });
+      
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     } catch (err) {
       if (err.response?.data?.detail === "Verify your email first") {
-        setError('verification_required');
+        setToast({ message: 'Identity verification required.', type: 'error' });
+        setTimeout(() => {
+          navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+        }, 2000);
       } else {
-        setError('Login failed. Please verify your credentials.');
+        // Industry standard: Do not reveal if email exists or password is wrong
+        setToast({ message: 'Invalid credentials or unauthorized access.', type: 'error' });
       }
     } finally {
       setLoading(false);
@@ -30,61 +63,73 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] text-gray-900 font-sans">
-      <div className="w-full max-w-md p-8 bg-white border border-gray-200">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Login</h1>
-        <p className="text-sm text-gray-500 mb-6">Enter your credentials to access the system.</p>
-        
-        {error && (
-          <div className="mb-4 p-3 border-l-4 border-gray-900 bg-gray-100 text-sm">
-            {error === 'verification_required' ? (
-              <span>Unverified account. <Link to={`/verify-otp?email=${encodeURIComponent(email)}`} className="font-bold underline">Validate Access Code</Link></span>
-            ) : (
-              error
-            )}
+    <AuthLayout 
+      title="Sign In" 
+      subtitle="Welcome back. Please enter your details."
+    >
+      {toast.message && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: 'success' })} 
+        />
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <InputField
+          label="Email address"
+          placeholder="name@company.com"
+          error={errors.email?.message}
+          {...register('email')}
+        />
+
+        <div className="space-y-3">
+          <PasswordField
+            label="Password"
+            placeholder="••••••••"
+            error={errors.password?.message}
+            {...register('password')}
+          />
+          <div className="flex justify-end">
+            <button 
+              type="button" 
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              Forgot password?
+            </button>
           </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-              placeholder="operator@system.com"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-gray-900 text-white font-medium py-2 px-4 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-          >
-            {loading ? 'Authenticating...' : 'Sign In'}
-          </button>
-        </form>
-        
-        <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-          <p className="text-sm text-gray-600">
-            No access granted yet? <Link to="/register" className="font-medium text-gray-900 hover:underline">Request access</Link>
-          </p>
         </div>
-      </div>
-    </div>
+
+        <div className="flex items-center space-x-2.5 py-1">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            className="w-4 h-4 border-slate-300 rounded text-slate-900 focus:ring-slate-900/10 cursor-pointer"
+            {...register('rememberMe')}
+          />
+          <label htmlFor="rememberMe" className="text-sm font-medium text-slate-600 cursor-pointer select-none">
+            Remember me for 30 days
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !isValid}
+          className="w-full bg-slate-900 text-white text-sm font-semibold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-2"
+        >
+          {loading ? 'Signing in...' : 'Sign In'}
+        </button>
+
+        <FormFooter 
+          secondaryText="Don't have an account?" 
+          secondaryAction={{ text: 'Create an account', to: '/register' }}
+          links={[
+            { text: 'Privacy Policy', to: '#', type: 'privacy' },
+            { text: 'Terms of Service', to: '#', type: 'terms' }
+          ]}
+        />
+      </form>
+    </AuthLayout>
   );
 };
 

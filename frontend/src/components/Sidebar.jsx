@@ -8,6 +8,10 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/', icon: 'home' },
     { name: 'My Datasets', path: '/datasets', icon: 'database' },
     { name: 'Upload Dataset', path: '/upload', icon: 'upload' },
+    { name: 'Access Control', path: '/access-control', icon: 'shield' },
+    { name: 'Research Consent', path: '/consent', icon: 'check-circle' },
+    { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list' },
+    { name: 'Settings', path: '/settings', icon: 'cog' },
   ];
 
   const getIcon = (name) => {
@@ -35,8 +39,8 @@ const Sidebar = () => {
     <div className="w-64 bg-slate-900 h-full flex flex-col text-slate-300">
       <div className="h-16 flex items-center px-6 border-b border-slate-800 shrink-0">
         <h1 className="text-xl font-bold tracking-tight text-white flex items-center">
-          <svg className="w-6 h-6 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <svg className="w-6 h-6 mr-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           Cipher Analytics
         </h1>
@@ -50,10 +54,10 @@ const Sidebar = () => {
               <NavLink
                 key={item.name}
                 to={item.path}
-                className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group ${
+                className={`flex items-center px-4 py-2 text-sm font-semibold rounded-xl transition-all group ${
                   isActive 
-                    ? 'bg-indigo-600 text-white' 
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-slate-800 text-white shadow-sm' 
+                    : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'
                 }`}
               >
                 <svg 

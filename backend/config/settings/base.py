@@ -35,8 +35,8 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
-    "core.middleware.traceability.TraceabilityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "core.middleware.traceability.TraceabilityMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -44,6 +44,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "analytics.middleware.SessionMonitoringMiddleware",
 ]
 
 
@@ -155,6 +156,11 @@ SIMPLE_JWT = {
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 
 MEDIA_URL = "/media/"
@@ -213,3 +219,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour='*'),
     },
 }
+
+# Upload Limits (15MB requirement, 20MB buffer)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20971520
