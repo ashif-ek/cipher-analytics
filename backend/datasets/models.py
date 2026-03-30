@@ -16,7 +16,8 @@ class Dataset(models.Model):
     class AccessLevel(models.TextChoices):
         PRIVATE = "PRIVATE", "Private"
         SHARED = "SHARED", "Shared"
-        AGGREGATED = "AGGREGATED", "Aggregated"
+        COLLABORATIVE = "COLLABORATIVE", "Collaborative"
+        PUBLIC = "PUBLIC", "Public"
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -54,3 +55,14 @@ class Dataset(models.Model):
 
     def __str__(self):
         return self.name
+
+class DatasetAccess(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    permission = models.CharField(max_length=50) # 'VIEW', 'ANALYZE'
+
+    class Meta:
+        unique_together = ('dataset', 'user')
+
+    def __str__(self):
+        return f"{self.user} -> {self.dataset} ({self.permission})"
