@@ -6,8 +6,8 @@ import UserProfile from '../components/UserProfile';
 const Dashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
-    access_level: 'PRIVATE',
-    is_shared_for_research: false,
+    visibility: 'PRIVATE',
+    access_policy: 'STRICT',
     original_file: null,
   });
   const [loading, setLoading] = useState(false);
@@ -100,8 +100,8 @@ const Dashboard = () => {
       setMessage({ type: '', text: 'Transmitting ciphertext to Zero-Trust Backend...' });
       const data = new FormData();
       data.append('name', formData.name);
-      data.append('access_level', formData.access_level);
-      data.append('is_shared_for_research', formData.is_shared_for_research);
+      data.append('visibility', formData.visibility);
+      data.append('access_policy', formData.access_policy);
       
       // Store Ciphertext purely as file blob
       const ciphertextBlob = new Blob([encData.ciphertext], { type: 'application/octet-stream' });
@@ -121,8 +121,8 @@ const Dashboard = () => {
       setMessage({ type: 'success', text: `Encrypted Asset stored. Identifier: ${responseData.id}` });
       setFormData({
         name: '',
-        access_level: 'PRIVATE',
-        is_shared_for_research: false,
+        visibility: 'PRIVATE',
+        access_policy: 'STRICT',
         original_file: null,
       });
       const fileInput = document.getElementById('original_file');
@@ -200,34 +200,31 @@ const Dashboard = () => {
                 <p className="mt-2 text-xs text-gray-500">Requires .csv structure.</p>
               </div>
 
-              <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Privacy Clearance</label>
+               <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Discovery Layer</label>
                 <select 
-                  name="access_level" 
-                  value={formData.access_level} 
+                  name="visibility" 
+                  value={formData.visibility} 
                   onChange={handleChange}
                   className="w-full px-4 py-2 bg-white border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
                 >
-                  <option value="PRIVATE">Private Use (Only Me)</option>
-                  <option value="SHARED">Internal Share (Direct)</option>
-                  <option value="COLLABORATIVE">Collaborative Pool</option>
-                  <option value="PUBLIC">Public Research Domain</option>
+                  <option value="PRIVATE">Private (Only Me)</option>
+                  <option value="DISCOVERABLE">Discoverable (Research Directory)</option>
                 </select>
               </div>
-              
-              <div className="col-span-1 flex items-center mt-6">
-                <label className="flex items-center space-x-3 cursor-pointer text-sm text-gray-700 hover:text-gray-900">
-                  <div className="relative flex items-center">
-                    <input 
-                      type="checkbox" 
-                      name="is_shared_for_research" 
-                      checked={formData.is_shared_for_research} 
-                      onChange={handleChange}
-                      className="form-checkbox h-5 w-5 text-gray-900 border-gray-300 rounded-none focus:ring-gray-900 focus:ring-offset-0"
-                    />
-                  </div>
-                  <span className="font-medium">Authorize Research Use</span>
-                </label>
+
+               <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Governance Protocol</label>
+                <select 
+                  name="access_policy" 
+                  value={formData.access_policy} 
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-white border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+                >
+                  <option value="STRICT">Strict (Request Required)</option>
+                  <option value="COLLABORATIVE">Collaborative Pool</option>
+                  <option value="AGGREGATED">Aggregated Analysis</option>
+                </select>
               </div>
               
             </div>

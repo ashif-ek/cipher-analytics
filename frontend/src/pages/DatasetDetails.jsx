@@ -217,9 +217,15 @@ const DatasetDetails = () => {
                     </dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Persistence Policy</dt>
-                    <dd className="mt-2 text-sm font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100 inline-block">
-                      {dataset.access_level}
+                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Discovery Strategy</dt>
+                    <dd className="mt-2">
+                       <StatusBadge status={dataset.visibility} />
+                    </dd>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Governance Protocol</dt>
+                    <dd className="mt-2">
+                      <StatusBadge status={dataset.access_policy} />
                     </dd>
                   </div>
                 </dl>
@@ -241,21 +247,12 @@ const DatasetDetails = () => {
                 <h3 className="text-lg font-medium text-slate-900 mb-4">Policy Settings</h3>
                 <div className="space-y-4">
                   <div>
-                    <span className="block text-sm font-medium text-slate-500 mb-1">Access Level</span>
-                    <StatusBadge status={dataset.access_level} />
+                    <span className="block text-sm font-medium text-slate-500 mb-1">Visibility Layer</span>
+                    <StatusBadge status={dataset.visibility} />
                   </div>
                   <div>
-                    <span className="block text-sm font-medium text-slate-500 mb-1">Research Consent</span>
-                    {dataset.is_shared_for_research ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                        Granted
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        Not Granted
-                      </span>
-                    )}
+                    <span className="block text-sm font-medium text-slate-500 mb-1">Access Policy</span>
+                    <StatusBadge status={dataset.access_policy} />
                   </div>
                 </div>
               </Card>

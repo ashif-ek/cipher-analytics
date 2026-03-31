@@ -13,12 +13,14 @@ class Dataset(models.Model):
         ("FAILED", "Failed"),
     ]
 
-    class AccessLevel(models.TextChoices):
+    class Visibility(models.TextChoices):
         PRIVATE = "PRIVATE", "Private"
-        SHARED = "SHARED", "Shared"
+        DISCOVERABLE = "DISCOVERABLE", "Discoverable"
+
+    class AccessPolicy(models.TextChoices):
+        STRICT = "STRICT", "Strict"
         COLLABORATIVE = "COLLABORATIVE", "Collaborative"
         AGGREGATED = "AGGREGATED", "Aggregated"
-        PUBLIC = "PUBLIC", "Public"
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -34,11 +36,16 @@ class Dataset(models.Model):
     rows_count = models.IntegerField(default=0)
     columns_count = models.IntegerField(default=0)
 
-    is_shared_for_research = models.BooleanField(default=False)
-    access_level = models.CharField(
+    visibility = models.CharField(
         max_length=20,
-        choices=AccessLevel.choices,
-        default=AccessLevel.PRIVATE
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE
+    )
+
+    access_policy = models.CharField(
+        max_length=20,
+        choices=AccessPolicy.choices,
+        default=AccessPolicy.STRICT
     )
 
     status = models.CharField(

@@ -10,7 +10,8 @@ const UploadDataset = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    access_level: 'PRIVATE',
+    visibility: 'PRIVATE',
+    access_policy: 'STRICT',
     original_file: null,
   });
   
@@ -79,7 +80,8 @@ const UploadDataset = () => {
 
     const data = new FormData();
     data.append('name', formData.name);
-    data.append('access_level', formData.access_level);
+    data.append('visibility', formData.visibility);
+    data.append('access_policy', formData.access_policy);
     data.append('original_file', formData.original_file);
 
     try {
@@ -190,20 +192,34 @@ const UploadDataset = () => {
                 />
               </div>
 
+              {/* Discovery Layer */}
               <div className="col-span-1">
-                <div className="flex justify-between items-center mb-2.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Access Protocol <span className="text-red-500 select-none">*</span></label>
-                </div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Discovery Layer</label>
                 <select 
-                  name="access_level" 
-                  value={formData.access_level} 
+                  name="visibility" 
+                  value={formData.visibility} 
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950 focus:border-slate-950 text-sm transition-all font-medium text-slate-900"
+                  className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
                   disabled={loading}
                 >
-                  <option value="PRIVATE">Strictly Private</option>
-                  <option value="SHARED">Internal Collaboration</option>
-                  <option value="AGGREGATED">Aggregated Insights</option>
+                  <option value="PRIVATE">Private (Internal Only)</option>
+                  <option value="DISCOVERABLE">Discoverable (Research Directory)</option>
+                </select>
+              </div>
+
+              {/* Governance Protocol */}
+              <div className="col-span-1">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Governance Protocol</label>
+                <select 
+                  name="access_policy" 
+                  value={formData.access_policy} 
+                  onChange={handleChange}
+                  className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
+                  disabled={loading}
+                >
+                  <option value="STRICT">Strict (Request Required)</option>
+                  <option value="COLLABORATIVE">Collaborative (Team Access)</option>
+                  <option value="AGGREGATED">Aggregated (Analysis Only)</option>
                 </select>
               </div>
               

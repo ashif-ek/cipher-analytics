@@ -18,8 +18,8 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
   }
   const isResearcher = userRole === 'RESEARCHER';
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [accessFilter, setAccessFilter] = useState('ALL');
+  const [visibilityFilter, setVisibilityFilter] = useState('ALL');
+  const [policyFilter, setPolicyFilter] = useState('ALL');
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc');
   
@@ -58,8 +58,11 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
     if (statusFilter !== 'ALL') {
       result = result.filter(ds => ds.status === statusFilter);
     }
-    if (accessFilter !== 'ALL') {
-      result = result.filter(ds => ds.access_level === accessFilter);
+    if (visibilityFilter !== 'ALL') {
+      result = result.filter(ds => ds.visibility === visibilityFilter);
+    }
+    if (policyFilter !== 'ALL') {
+      result = result.filter(ds => ds.access_policy === policyFilter);
     }
 
     // Sort
@@ -197,14 +200,23 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
             <div className="w-px h-4 bg-slate-100"></div>
             <select 
               className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest border-none focus:ring-0 text-slate-600 cursor-pointer"
-              value={accessFilter}
-              onChange={(e) => setAccessFilter(e.target.value)}
+              value={visibilityFilter}
+              onChange={(e) => setVisibilityFilter(e.target.value)}
             >
-              <option value="ALL">All Access Levels</option>
+              <option value="ALL">All Visibility</option>
               <option value="PRIVATE">Private</option>
-              <option value="SHARED">Shared</option>
+              <option value="DISCOVERABLE">Discoverable</option>
+            </select>
+            <div className="w-px h-4 bg-slate-100"></div>
+            <select 
+              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest border-none focus:ring-0 text-slate-600 cursor-pointer"
+              value={policyFilter}
+              onChange={(e) => setPolicyFilter(e.target.value)}
+            >
+              <option value="ALL">All Policies</option>
+              <option value="STRICT">Strict</option>
               <option value="COLLABORATIVE">Collaborative</option>
-              <option value="PUBLIC">Public</option>
+              <option value="AGGREGATED">Aggregated</option>
             </select>
           </div>
 
@@ -235,8 +247,11 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
               <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                 Dimensions
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('access_level')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Access <SortIcon field="access_level" /></div>
+              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('visibility')}>
+                <div className="flex items-center group-hover:text-slate-900 transition-colors">Visibility <SortIcon field="visibility" /></div>
+              </th>
+              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('access_policy')}>
+                <div className="flex items-center group-hover:text-slate-900 transition-colors">Policy <SortIcon field="access_policy" /></div>
               </th>
               <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('created_at')}>
                 <div className="flex items-center group-hover:text-slate-900 transition-colors">Created <SortIcon field="created_at" /></div>
@@ -296,7 +311,10 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                     </div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
-                    <StatusBadge status={dataset.access_level} />
+                    <StatusBadge status={dataset.visibility} />
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <StatusBadge status={dataset.access_policy} />
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
@@ -309,7 +327,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                         <div className="flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-100 group-hover:border-slate-200 transition-colors">
                           <button
                             onClick={() => handleCompute(dataset.id, 'sum')}
-                            disabled={computingId === dataset.id || (dataset.access_level === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
+                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
                             className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
                             title="Sum Aggregation"
                           >
@@ -322,7 +340,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                           <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                           <button
                             onClick={() => handleCompute(dataset.id, 'mean')}
-                            disabled={computingId === dataset.id || (dataset.access_level === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
+                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
                             className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
                             title="Mean Average"
                           >
