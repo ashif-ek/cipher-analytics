@@ -58,7 +58,14 @@ const UploadDataset = () => {
     } else if (type === 'checkbox') {
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        const newState = { ...prev, [name]: value };
+        // Enforce Orthogonal Constraints: Private data cannot have Aggregated policy
+        if (name === 'visibility' && value === 'PRIVATE' && prev.access_policy === 'AGGREGATED') {
+          newState.access_policy = 'STRICT';
+        }
+        return newState;
+      });
     }
   };
 
@@ -219,7 +226,9 @@ const UploadDataset = () => {
                 >
                   <option value="STRICT">Strict (Request Required)</option>
                   <option value="COLLABORATIVE">Collaborative (Team Access)</option>
-                  <option value="AGGREGATED">Aggregated (Analysis Only)</option>
+                  <option value="AGGREGATED" disabled={formData.visibility === 'PRIVATE'}>
+                    Aggregated (Analysis Only) {formData.visibility === 'PRIVATE' && '• Discovery Required'}
+                  </option>
                 </select>
               </div>
               
