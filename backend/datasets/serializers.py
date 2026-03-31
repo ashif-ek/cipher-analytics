@@ -15,6 +15,26 @@ class DatasetUploadSerializer(serializers.ModelSerializer):
             "id", "status", "created_at", "updated_at", "task_id", "error_message", "owner_id"
         ]
 
+    def validate_ciphertext_path(self, value):
+        if not value:
+            return value
+
+        # 1. Size Validation (15MB)
+        limit = 15 * 1024 * 1024
+        if value.size > limit:
+            raise serializers.ValidationError("File size exceeds 15MB limit.")
+        
+        # 2. Extension Validation
+        import os
+        valid_extensions = ['.csv', '.enc', '.shb']
+        ext = os.path.splitext(value.name)[1].lower()
+        if ext not in valid_extensions:
+            raise serializers.ValidationError(
+                f"Unsupported file extension: {ext}. Only .csv, .enc, or .shb are allowed."
+            )
+        
+        return value
+
 class ComputationJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComputationJob

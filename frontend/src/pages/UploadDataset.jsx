@@ -11,7 +11,6 @@ const UploadDataset = () => {
   const [formData, setFormData] = useState({
     name: '',
     access_level: 'PRIVATE',
-    is_shared_for_research: false,
     original_file: null,
   });
   
@@ -81,7 +80,6 @@ const UploadDataset = () => {
     const data = new FormData();
     data.append('name', formData.name);
     data.append('access_level', formData.access_level);
-    data.append('is_shared_for_research', formData.is_shared_for_research);
     data.append('original_file', formData.original_file);
 
     try {
@@ -209,23 +207,8 @@ const UploadDataset = () => {
                 </select>
               </div>
               
-              <div className="col-span-1 md:col-span-2 mt-4">
-                <label className="flex items-start space-x-4 cursor-pointer group p-5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all duration-200">
-                  <div className="flex items-center h-6">
-                    <input 
-                      type="checkbox" 
-                      name="is_shared_for_research" 
-                      checked={formData.is_shared_for_research} 
-                      onChange={handleChange}
-                      className="form-checkbox h-4 w-4 text-slate-950 border-slate-300 rounded focus:ring-slate-950 transition-all cursor-pointer"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900 tracking-tight">Enable Research Authorization</span>
-                    <span className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Permission data for differential privacy analysis and aggregated research queries. Raw rows remain inaccessible.</span>
-                  </div>
-                </label>
+              <div className="col-span-1 md:col-span-2 mt-4 flex items-center justify-center p-8 border border-slate-100 rounded-xl bg-slate-50/30">
+                <p className="text-xs text-slate-400 font-medium italic">Protocol-specific encryption will be applied upon ingestion.</p>
               </div>
               
             </div>

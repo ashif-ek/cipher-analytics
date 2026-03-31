@@ -23,7 +23,11 @@ class ResearchDatasetViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsResearcher]
 
     def get_queryset(self):
-        return Dataset.objects.filter(is_shared_for_research=True)
+        from django.db.models import Q
+        return Dataset.objects.filter(
+            Q(is_shared_for_research=True) | 
+            Q(access_level__in=['SHARED', 'AGGREGATED', 'COLLABORATIVE', 'PUBLIC'])
+        ).distinct()
 
 class DatasetAccessRequestViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetAccessRequestSerializer
