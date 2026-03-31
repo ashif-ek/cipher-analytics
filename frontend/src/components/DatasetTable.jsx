@@ -4,11 +4,22 @@ import client from '../api/client';
 import StatusBadge from './ui/StatusBadge';
 import Modal from './ui/Modal';
 import Toast from './ui/Toast';
+import { jwtDecode } from 'jwt-decode';
 
-const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
+const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess, userRole: propRole }) => {
+  let userRole = propRole;
+  if (!userRole) {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        userRole = jwtDecode(token).role;
+      }
+    } catch(e) {}
+  }
+  const isResearcher = userRole === 'RESEARCHER';
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [accessFilter, setAccessFilter] = useState('ALL');
+  const [visibilityFilter, setVisibilityFilter] = useState('ALL');
+  const [policyFilter, setPolicyFilter] = useState('ALL');
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc');
   
@@ -47,8 +58,11 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
     if (statusFilter !== 'ALL') {
       result = result.filter(ds => ds.status === statusFilter);
     }
-    if (accessFilter !== 'ALL') {
-      result = result.filter(ds => ds.access_level === accessFilter);
+    if (visibilityFilter !== 'ALL') {
+      result = result.filter(ds => ds.visibility === visibilityFilter);
+    }
+    if (policyFilter !== 'ALL') {
+      result = result.filter(ds => ds.access_policy === policyFilter);
     }
 
     // Sort
@@ -96,18 +110,50 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
       const dataset = datasets.find(d => d.id === id);
       const response = await client.post(`datasets/${id}/compute/`, { operation });
       
-      console.log('Computation Result Captured:', response.data);
-      setComputationResult({
-        ...response.data,
-        datasetName: dataset?.name || `Dataset #${id}`
-      });
-      setShowResultModal(true);
-      
-      setToastMessage(`Computation successful for ${dataset?.name}.`);
-      onRefresh();
+      const jobId = response.data.job_id;
+      setToastMessage(`Job #${jobId} queued. Processing FHE operation...`);
+
+      // Polling for completion
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max
+      const pollInterval = setInterval(async () => {
+        try {
+          attempts++;
+          // We need a way to fetch the job status.
+          // For now, let's assume we can fetch it via datasets/compute_status/?job_id=X or similar.
+          // Since I don't have that endpoint yet, I'll add a quick one to DatasetViewSet or 
+          // just use the list endpoint if it includes jobs. 
+          // Actually, let's check a specific job endpoint.
+          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+          
+          if (jobRes.data.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            console.log('Computation Result Captured:', jobRes.data);
+            setComputationResult({
+              ...jobRes.data,
+              result: jobRes.data.result_value,
+              datasetName: dataset?.name || `Dataset #${id}`
+            });
+            setShowResultModal(true);
+            setToastMessage(`Computation successful for ${dataset?.name}.`);
+            setComputingId(null);
+            onRefresh();
+          } else if (jobRes.data.status === 'FAILED') {
+            clearInterval(pollInterval);
+            alert('Computation job failed on backend.');
+            setComputingId(null);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            alert('Computation timed out. Check Audit Logs for status.');
+            setComputingId(null);
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 2000);
+
     } catch (error) {
       alert(`Computation failed: ${error.response?.data?.detail || error.message}`);
-    } finally {
       setComputingId(null);
     }
   };
@@ -154,12 +200,22 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
             <div className="w-px h-4 bg-slate-100"></div>
             <select 
               className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest border-none focus:ring-0 text-slate-600 cursor-pointer"
-              value={accessFilter}
-              onChange={(e) => setAccessFilter(e.target.value)}
+              value={visibilityFilter}
+              onChange={(e) => setVisibilityFilter(e.target.value)}
             >
-              <option value="ALL">All Access Levels</option>
+              <option value="ALL">All Visibility</option>
               <option value="PRIVATE">Private</option>
-              <option value="SHARED">Shared</option>
+              <option value="DISCOVERABLE">Discoverable</option>
+            </select>
+            <div className="w-px h-4 bg-slate-100"></div>
+            <select 
+              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest border-none focus:ring-0 text-slate-600 cursor-pointer"
+              value={policyFilter}
+              onChange={(e) => setPolicyFilter(e.target.value)}
+            >
+              <option value="ALL">All Policies</option>
+              <option value="STRICT">Strict</option>
+              <option value="COLLABORATIVE">Collaborative</option>
               <option value="AGGREGATED">Aggregated</option>
             </select>
           </div>
@@ -191,8 +247,11 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
               <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                 Dimensions
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('access_level')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Access <SortIcon field="access_level" /></div>
+              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('visibility')}>
+                <div className="flex items-center group-hover:text-slate-900 transition-colors">Visibility <SortIcon field="visibility" /></div>
+              </th>
+              <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('access_policy')}>
+                <div className="flex items-center group-hover:text-slate-900 transition-colors">Policy <SortIcon field="access_policy" /></div>
               </th>
               <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer group" onClick={() => handleSort('created_at')}>
                 <div className="flex items-center group-hover:text-slate-900 transition-colors">Created <SortIcon field="created_at" /></div>
@@ -252,7 +311,10 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                     </div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
-                    <StatusBadge status={dataset.access_level} />
+                    <StatusBadge status={dataset.visibility} />
+                  </td>
+                  <td className="px-6 py-5 whitespace-nowrap">
+                    <StatusBadge status={dataset.access_policy} />
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
@@ -265,8 +327,8 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                         <div className="flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-100 group-hover:border-slate-200 transition-colors">
                           <button
                             onClick={() => handleCompute(dataset.id, 'sum')}
-                            disabled={computingId === dataset.id}
-                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 uppercase tracking-tighter"
+                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
+                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
                             title="Sum Aggregation"
                           >
                             {computingId === dataset.id ? '...' : (
@@ -278,8 +340,8 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                           <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                           <button
                             onClick={() => handleCompute(dataset.id, 'mean')}
-                            disabled={computingId === dataset.id}
-                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 uppercase tracking-tighter"
+                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
+                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
                             title="Mean Average"
                           >
                             {computingId === dataset.id ? '...' : (
@@ -300,8 +362,18 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete }) => {
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         </Link>
+                      
+                      {isResearcher && (
+                        <button
+                          onClick={() => onRequestAccess(dataset.id)}
+                          className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-slate-900 transition-all shadow-sm"
+                          title="Request Governance Access"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                        </button>
+                      )}
 
-                      {deletingId !== dataset.id && (
+                      {!isResearcher && deletingId !== dataset.id && ( // Ideally adding && dataset.owner_id === currentUserId
                         <button
                           onClick={() => handleDeleteClick(dataset)}
                           className="text-slate-300 hover:text-red-500 p-2 rounded-xl transition-colors focus:outline-none"

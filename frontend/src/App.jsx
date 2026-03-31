@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleRouter from './components/RoleRouter';
 import DashboardOverview from './pages/DashboardOverview';
 import Datasets from './pages/Datasets';
 import DatasetDetails from './pages/DatasetDetails';
@@ -32,10 +33,26 @@ function App() {
               </ProtectedRoute>
             } 
           >
-            <Route index element={<DashboardOverview />} />
-            <Route path="datasets" element={<Datasets />} />
+            {/* Dynamic Index Route */}
+            <Route index element={<RoleRouter />} />
+            
+            <Route 
+              path="datasets" 
+              element={
+                <ProtectedRoute allowedRoles={['DATA_OWNER']}>
+                  <Datasets />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="datasets/:id" element={<DatasetDetails />} />
-            <Route path="upload" element={<UploadDataset />} />
+            <Route 
+              path="upload" 
+              element={
+                <ProtectedRoute allowedRoles={['DATA_OWNER']}>
+                  <UploadDataset />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="access-control" element={<AccessControl />} />
             <Route path="consent" element={<ResearchConsent />} />

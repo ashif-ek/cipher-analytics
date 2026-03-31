@@ -28,9 +28,11 @@ const DashboardOverview = () => {
         
         let priv = 0, shared = 0, research = 0;
         datasets.forEach(ds => {
-          if (ds.access_level === 'PRIVATE') priv++;
-          if (ds.access_level !== 'PRIVATE') shared++;
-          if (ds.is_shared_for_research) research++;
+          if (ds.visibility === 'PRIVATE') priv++;
+          if (ds.visibility === 'DISCOVERABLE') {
+            shared++;
+            research++; // In this context, discoverable items are for research
+          }
         });
 
         // Mock live sessions based on recent logs in this MVP

@@ -1,17 +1,24 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 const Sidebar = () => {
   const location = useLocation();
 
+  let role = 'DATA_OWNER';
+  try {
+    const token = localStorage.getItem('access_token');
+    if (token) role = jwtDecode(token).role;
+  } catch (e) {}
+
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: 'home' },
-    { name: 'My Datasets', path: '/datasets', icon: 'database' },
-    { name: 'Upload Dataset', path: '/upload', icon: 'upload' },
-    { name: 'Access Control', path: '/access-control', icon: 'shield' },
-    { name: 'Research Consent', path: '/consent', icon: 'check-circle' },
-    { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list' },
-    { name: 'Settings', path: '/settings', icon: 'cog' },
+    { name: 'Dashboard', path: '/', icon: 'home', roles: ['DATA_OWNER', 'RESEARCHER'] },
+    { name: 'My Datasets', path: '/datasets', icon: 'database', roles: ['DATA_OWNER'] },
+    { name: 'Upload Dataset', path: '/upload', icon: 'upload', roles: ['DATA_OWNER'] },
+    { name: 'Access Control', path: '/access-control', icon: 'shield', roles: ['DATA_OWNER', 'ADMIN'] },
+    { name: 'Research Consent', path: '/consent', icon: 'check-circle', roles: ['RESEARCHER', 'DATA_OWNER'] },
+    { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list', roles: ['DATA_OWNER', 'ADMIN'] },
+    { name: 'Settings', path: '/settings', icon: 'cog', roles: ['DATA_OWNER', 'RESEARCHER', 'ADMIN'] },
   ];
 
   const getIcon = (name) => {
@@ -48,7 +55,7 @@ const Sidebar = () => {
       
       <div className="flex-1 py-6 overflow-y-auto">
         <nav className="space-y-1 px-3">
-          {navItems.map((item) => {
+          {navItems.filter(i => i.roles.includes(role)).map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <NavLink

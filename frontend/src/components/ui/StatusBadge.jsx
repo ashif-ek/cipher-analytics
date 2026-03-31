@@ -16,8 +16,10 @@ const StatusBadge = ({ status }) => {
     READY: { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', text: 'Ready', icon: null },
     FAILED: { color: 'bg-red-50 text-red-600 border-red-200', text: 'Failed', icon: null },
     PRIVATE: { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', text: 'Private', icon: null },
-    SHARED: { color: 'bg-blue-50 text-blue-600 border-blue-200', text: 'Collaborative', icon: null },
-    AGGREGATED: { color: 'bg-slate-900 text-white border-slate-900', text: 'Aggregated', icon: null },
+    DISCOVERABLE: { color: 'bg-blue-50 text-blue-600 border-blue-200', text: 'Discoverable', icon: null },
+    STRICT: { color: 'bg-red-50 text-red-600 border-red-200', text: 'Strict', icon: null },
+    COLLABORATIVE: { color: 'bg-purple-50 text-purple-600 border-purple-200', text: 'Collaboration', icon: null },
+    AGGREGATED: { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', text: 'Aggregated', icon: null },
   };
 
   const config = statusConfig[status] || statusConfig.UPLOADING;

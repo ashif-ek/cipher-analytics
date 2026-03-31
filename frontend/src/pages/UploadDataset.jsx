@@ -10,8 +10,8 @@ const UploadDataset = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    access_level: 'PRIVATE',
-    is_shared_for_research: false,
+    visibility: 'PRIVATE',
+    access_policy: 'STRICT',
     original_file: null,
   });
   
@@ -58,7 +58,14 @@ const UploadDataset = () => {
     } else if (type === 'checkbox') {
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        const newState = { ...prev, [name]: value };
+        // Enforce Orthogonal Constraints: Private data cannot have Aggregated policy
+        if (name === 'visibility' && value === 'PRIVATE' && prev.access_policy === 'AGGREGATED') {
+          newState.access_policy = 'STRICT';
+        }
+        return newState;
+      });
     }
   };
 
@@ -80,8 +87,8 @@ const UploadDataset = () => {
 
     const data = new FormData();
     data.append('name', formData.name);
-    data.append('access_level', formData.access_level);
-    data.append('is_shared_for_research', formData.is_shared_for_research);
+    data.append('visibility', formData.visibility);
+    data.append('access_policy', formData.access_policy);
     data.append('original_file', formData.original_file);
 
     try {
@@ -192,40 +199,41 @@ const UploadDataset = () => {
                 />
               </div>
 
+              {/* Discovery Layer */}
               <div className="col-span-1">
-                <div className="flex justify-between items-center mb-2.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Access Protocol <span className="text-red-500 select-none">*</span></label>
-                </div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Discovery Layer</label>
                 <select 
-                  name="access_level" 
-                  value={formData.access_level} 
+                  name="visibility" 
+                  value={formData.visibility} 
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950 focus:border-slate-950 text-sm transition-all font-medium text-slate-900"
+                  className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
                   disabled={loading}
                 >
-                  <option value="PRIVATE">Strictly Private</option>
-                  <option value="SHARED">Internal Collaboration</option>
-                  <option value="AGGREGATED">Aggregated Insights</option>
+                  <option value="PRIVATE">Private (Internal Only)</option>
+                  <option value="DISCOVERABLE">Discoverable (Research Directory)</option>
+                </select>
+              </div>
+
+              {/* Governance Protocol */}
+              <div className="col-span-1">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Governance Protocol</label>
+                <select 
+                  name="access_policy" 
+                  value={formData.access_policy} 
+                  onChange={handleChange}
+                  className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
+                  disabled={loading}
+                >
+                  <option value="STRICT">Strict (Request Required)</option>
+                  <option value="COLLABORATIVE">Collaborative (Team Access)</option>
+                  <option value="AGGREGATED" disabled={formData.visibility === 'PRIVATE'}>
+                    Aggregated (Analysis Only) {formData.visibility === 'PRIVATE' && '• Discovery Required'}
+                  </option>
                 </select>
               </div>
               
-              <div className="col-span-1 md:col-span-2 mt-4">
-                <label className="flex items-start space-x-4 cursor-pointer group p-5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all duration-200">
-                  <div className="flex items-center h-6">
-                    <input 
-                      type="checkbox" 
-                      name="is_shared_for_research" 
-                      checked={formData.is_shared_for_research} 
-                      onChange={handleChange}
-                      className="form-checkbox h-4 w-4 text-slate-950 border-slate-300 rounded focus:ring-slate-950 transition-all cursor-pointer"
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900 tracking-tight">Enable Research Authorization</span>
-                    <span className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Permission data for differential privacy analysis and aggregated research queries. Raw rows remain inaccessible.</span>
-                  </div>
-                </label>
+              <div className="col-span-1 md:col-span-2 mt-4 flex items-center justify-center p-8 border border-slate-100 rounded-xl bg-slate-50/30">
+                <p className="text-xs text-slate-400 font-medium italic">Protocol-specific encryption will be applied upon ingestion.</p>
               </div>
               
             </div>
