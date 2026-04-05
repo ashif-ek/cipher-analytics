@@ -13,6 +13,7 @@ import UploadDataset from './pages/UploadDataset';
 import AuditLogs from './pages/AuditLogs';
 import AccessControl from './pages/AccessControl';
 import ResearchConsent from './pages/ResearchConsent';
+import MyRequests from './pages/MyRequests';
 import Settings from './pages/Settings';
 
 import { AuthProvider } from './components/auth/AuthLayout';
@@ -55,6 +56,14 @@ function App() {
             />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="access-control" element={<AccessControl />} />
+            <Route 
+              path="research-requests" 
+              element={
+                <ProtectedRoute allowedRoles={['RESEARCHER', 'ADMIN']}>
+                  <MyRequests />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="consent" element={<ResearchConsent />} />
             <Route path="settings" element={<Settings />} />
           </Route>

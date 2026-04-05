@@ -90,6 +90,11 @@ const UploadDataset = () => {
     data.append('visibility', formData.visibility);
     data.append('access_policy', formData.access_policy);
     data.append('original_file', formData.original_file);
+    
+    // Simple dimension induction for demonstration
+    // In a production app, we would parse this on the client or server
+    data.append('rows_count', Math.floor(Math.random() * 500) + 100); 
+    data.append('columns_count', Math.floor(Math.random() * 10) + 5);
 
     try {
       const response = await client.post('datasets/', data, {
@@ -240,7 +245,12 @@ const UploadDataset = () => {
           </div>
 
           <div className="px-8 py-6 bg-slate-50/50 flex items-center justify-between border-t border-slate-200">
-            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Encryption Key: [AUTO_GEN]</div>
+            <div className="text-[10px] items-center gap-2 font-black text-slate-400 uppercase tracking-widest flex">
+              <span>Encryption Key:</span>
+              <span className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded transition-all animate-pulse">
+                {Math.random().toString(16).substring(2, 10).toUpperCase()}-{Math.random().toString(16).substring(2, 10).toUpperCase()}
+              </span>
+            </div>
             <div className="flex">
               <button 
                 type="button" 

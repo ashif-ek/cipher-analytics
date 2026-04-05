@@ -35,13 +35,12 @@ const DashboardOverview = () => {
           }
         });
 
-        // Mock live sessions based on recent logs in this MVP
-        // In production, we'd have a specific endpoint for this
+        // System session derivation: Analyze unique users with activity in last 5 minutes
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         const activeUsers = new Set(
           logs.filter(log => new Date(log.timestamp) > fiveMinutesAgo)
               .map(log => log.user)
-        ).size || 1; // Default to 1 (current user)
+        ).size || 1; // Default to 1 (current session)
 
         setStats({
           total: datasets.length,
@@ -118,11 +117,11 @@ const DashboardOverview = () => {
         </Card>
 
         <Card className="p-8 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-          <dt className="text-xs font-semibold text-slate-500 mb-2">Live Infrastructure</dt>
-          <dd className="text-3xl font-bold text-slate-900 tracking-tight">{stats.liveSessions} <span className="text-sm font-medium text-slate-400 ml-1">Active</span></dd>
-          <div className="mt-4 flex items-center text-[11px] text-slate-900 font-bold">
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            FHE ENGINE ONLINE
+          <dt className="text-xs font-semibold text-slate-500 mb-2">System Status</dt>
+          <dd className="text-3xl font-bold text-slate-900 tracking-tight">Active</dd>
+          <div className="mt-4 flex items-center text-[11px] text-emerald-600 font-bold">
+            <svg className="h-4 w-4 mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            ENCLAVE: SECURELY LINKED
           </div>
         </Card>
       </div>

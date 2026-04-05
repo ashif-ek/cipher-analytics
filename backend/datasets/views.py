@@ -66,8 +66,13 @@ class DatasetViewSet(viewsets.ModelViewSet):
         req_id = get_current_request_id()
         ip = get_current_ip()
         
-        # Save the dataset with the current user as owner and status READY since ciphertext is pre-encrypted
-        dataset = serializer.save(owner=self.request.user, status="READY")
+        # Save the dataset with the current user as owner
+        dataset = serializer.save(owner=self.request.user)
+        
+        # Explicitly set status to READY and update fields to ensure persistence
+        # (This avoids any read-only field mapping issues in the serializer save)
+        dataset.status = "READY"
+        dataset.save(update_fields=['status'])
         
         log_audit_event(
             user_id=self.request.user.id,

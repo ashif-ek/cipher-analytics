@@ -1,7 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import client from '../api/client';
 import Card from '../components/ui/Card';
 
 const Settings = () => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await client.get('accounts/me/');
+        setProfile(response.data);
+      } catch (err) {
+        console.error("Failed to fetch settings profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return <div className="animate-pulse py-12 text-slate-400 font-bold uppercase tracking-widest text-center">Syncing Configuration...</div>;
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -19,29 +41,29 @@ const Settings = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Display Alias</label>
-                <div className="text-sm font-bold text-slate-900">Administrator_Primary</div>
+                <div className="text-sm font-bold text-slate-900">{profile?.username || 'N/A'}</div>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Authenticated Entity</label>
-                <div className="text-sm font-mono text-slate-500">ROOT::CIPHER_ADMIN_01</div>
+                <div className="text-sm font-mono text-slate-500">ID::{profile?.id?.toString().padStart(4, '0')}</div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-8 border-slate-200">
+          <Card className="p-8 border-slate-200 shadow-sm">
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.3em] mb-8 pb-4 border-b border-slate-100">Security Primitives</h3>
             <div className="space-y-6">
                <div className="flex items-center justify-between">
                  <div>
                    <span className="block text-sm font-bold text-slate-900 tracking-tight">Multi-Factor Authentication</span>
-                   <span className="block text-xs text-slate-500 mt-1 font-medium">Verify login attempts via TOTP mobile app.</span>
+                   <span className="block text-xs text-slate-500 mt-1 font-medium">Verify login attempts via TOTP secondary layer.</span>
                  </div>
-                 <span className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 uppercase tracking-widest leading-none">Enabled</span>
+                 <span className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 uppercase tracking-widest leading-none">Healthy</span>
                </div>
                <div className="flex items-center justify-between">
                  <div>
                    <span className="block text-sm font-bold text-slate-900 tracking-tight">Real-time Session Monitoring</span>
-                   <span className="block text-xs text-slate-500 mt-1 font-medium">Active telemetry tracking for all administrative sessions.</span>
+                   <span className="block text-xs text-slate-500 mt-1 font-medium">Active telemetry tracking for the current session.</span>
                  </div>
                  <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded border border-indigo-100 uppercase tracking-widest leading-none">Active</span>
                </div>
@@ -51,7 +73,7 @@ const Settings = () => {
           <Card className="p-8 border-dashed border-slate-200 bg-slate-50/20">
              <div className="text-center py-6">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Encryption Subsystem</span>
-                <p className="text-xs text-slate-500 font-medium">Advanced cryptographic key rotation and FHE parameter tuning is currently locked to system default.</p>
+                <p className="text-xs text-slate-500 font-medium">Advanced cryptographic key rotation and FHE parameter tuning is managed by the core orchestrator.</p>
              </div>
           </Card>
         </div>
@@ -69,11 +91,11 @@ const Settings = () => {
               </div>
               <div className="flex justify-between items-center text-xs">
                  <span className="text-slate-400">Uptime</span>
-                 <span className="font-mono">99.982%</span>
+                 <span className="font-mono text-emerald-100">Live</span>
               </div>
               <div className="flex justify-between items-center text-xs pt-4 border-t border-slate-800">
-                 <span className="text-slate-400">Region</span>
-                 <span className="font-mono">US-EAST-01-V2</span>
+                 <span className="text-slate-400">Environment</span>
+                 <span className="font-mono uppercase tracking-widest text-[10px]">Production</span>
               </div>
             </div>
           </Card>

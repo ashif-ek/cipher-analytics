@@ -18,6 +18,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
   }
   const isResearcher = userRole === 'RESEARCHER';
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [visibilityFilter, setVisibilityFilter] = useState('ALL');
   const [policyFilter, setPolicyFilter] = useState('ALL');
   const [sortField, setSortField] = useState('created_at');
@@ -81,7 +82,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
     });
 
     return result;
-  }, [datasets, searchQuery, statusFilter, accessFilter, sortField, sortDirection]);
+  }, [datasets, searchQuery, statusFilter, visibilityFilter, policyFilter, sortField, sortDirection]);
 
   const handleDeleteClick = (ds) => {
     setDatasetToDelete(ds);
@@ -327,9 +328,16 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                         <div className="flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-100 group-hover:border-slate-200 transition-colors">
                           <button
                             onClick={() => handleCompute(dataset.id, 'sum')}
-                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
-                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
-                            title="Sum Aggregation"
+                            disabled={
+                              computingId === dataset.id || 
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER') // Gated until grant
+                            }
+                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter ${
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                            }`}
+                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Sum Aggregation"}
                           >
                             {computingId === dataset.id ? '...' : (
                               <span className="flex items-center italic">
@@ -340,9 +348,16 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                           <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
                           <button
                             onClick={() => handleCompute(dataset.id, 'mean')}
-                            disabled={computingId === dataset.id || (dataset.visibility === 'PRIVATE' && userRole !== 'DATA_OWNER' && userRole !== 'ADMIN')}
-                            className="text-[10px] font-black text-slate-600 hover:text-slate-900 hover:bg-white px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
-                            title="Mean Average"
+                            disabled={
+                              computingId === dataset.id || 
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                            }
+                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter ${
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                            }`}
+                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Mean Average"}
                           >
                             {computingId === dataset.id ? '...' : (
                               <span className="flex items-center italic">

@@ -68,17 +68,38 @@ const DatasetDetails = () => {
     try {
       setComputing(true);
       const response = await client.post(`datasets/${id}/compute/`, { operation });
+      const jobId = response.data.job_id;
       
-      setComputationResult({
-        ...response.data,
-        datasetName: dataset.name
-      });
-      setShowResultModal(true);
-      setToastMessage(`Computation successful.`);
+      // Poll for completion
+      const pollInterval = setInterval(async () => {
+        try {
+          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+          if (jobRes.data.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            setComputationResult({
+              ...jobRes.data,
+              result: jobRes.data.result_value, // Ensure field name consistency
+              datasetName: dataset.name
+            });
+            setShowResultModal(true);
+            setComputing(false);
+            setToastMessage('');
+          } else if (jobRes.data.status === 'FAILED') {
+            clearInterval(pollInterval);
+            setComputing(false);
+            setToastMessage('Computation failed during FHE execution.');
+          }
+        } catch (err) {
+          clearInterval(pollInterval);
+          setComputing(false);
+          console.error("Polling error", err);
+        }
+      }, 2000);
+
+      setToastMessage(`FHE job ${jobId} queued...`);
     } catch (error) {
-      setToastMessage(`Computation failed: ${error.response?.data?.detail || error.message}`);
-    } finally {
       setComputing(false);
+      setToastMessage(`Queue failed: ${error.response?.data?.detail || error.message}`);
     }
   };
 

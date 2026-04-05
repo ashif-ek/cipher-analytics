@@ -109,6 +109,8 @@ const Dashboard = () => {
       data.append('name', formData.name);
       data.append('visibility', formData.visibility);
       data.append('access_policy', formData.access_policy);
+      data.append('rows_count', parsedVector.length);
+      data.append('columns_count', 1); // For this vector-based demonstration
       
       // Store Ciphertext purely as file blob
       const ciphertextBlob = new Blob([encData.ciphertext], { type: 'application/octet-stream' });

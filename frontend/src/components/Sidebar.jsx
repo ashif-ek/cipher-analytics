@@ -16,6 +16,7 @@ const Sidebar = () => {
     { name: 'My Datasets', path: '/datasets', icon: 'database', roles: ['DATA_OWNER'] },
     { name: 'Upload Dataset', path: '/upload', icon: 'upload', roles: ['DATA_OWNER'] },
     { name: 'Access Control', path: '/access-control', icon: 'shield', roles: ['DATA_OWNER', 'ADMIN'] },
+    { name: 'Research Requests', path: '/research-requests', icon: 'clipboard-list', roles: ['RESEARCHER'] },
     { name: 'Research Consent', path: '/consent', icon: 'check-circle', roles: ['RESEARCHER', 'DATA_OWNER'] },
     { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list', roles: ['DATA_OWNER', 'ADMIN'] },
     { name: 'Settings', path: '/settings', icon: 'cog', roles: ['DATA_OWNER', 'RESEARCHER', 'ADMIN'] },

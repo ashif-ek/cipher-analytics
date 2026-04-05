@@ -10,7 +10,7 @@ class DatasetBasicSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Dataset
-        fields = ['id', 'name', 'rows_count', 'columns_count', 'owner_email', 'status', 'created_at']
+        fields = ['id', 'name', 'rows_count', 'columns_count', 'owner_email', 'status', 'visibility', 'access_policy', 'created_at']
 
 class DatasetAccessRequestSerializer(serializers.ModelSerializer):
     dataset_details = DatasetBasicSerializer(source='dataset', read_only=True)

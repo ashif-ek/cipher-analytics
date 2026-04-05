@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/client";
 import DatasetTable from "../components/DatasetTable";
 import Card from "../components/ui/Card";
 import Toast from "../components/ui/Toast";
+import StatusBadge from "../components/ui/StatusBadge";
 
 export default function ResearcherDashboard() {
   const [datasets, setDatasets] = useState([]);
@@ -43,7 +45,7 @@ export default function ResearcherDashboard() {
     try {
       await api.post(`research/requests/`, {
         dataset: datasetId,
-        reason: "FHE-based statistical analysis for research purposes."
+        reason: `Standard cryptographic evaluation requested for dataset ID: ${datasetId}`
       });
       setToast("Governance access request submitted.");
       fetchDashboardData();
@@ -69,8 +71,9 @@ export default function ResearcherDashboard() {
           <p className="text-slate-500 font-medium mt-1 text-sm">Securely interact with governed datasets via FHE orchestration.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-100">
-            Node: Verified
+          <div className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100 flex items-center">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+            Identity: Verified
           </div>
         </div>
       </div>
@@ -88,7 +91,15 @@ export default function ResearcherDashboard() {
         </Card>
         <Card className="p-6 border-slate-200">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Pending Requests</span>
-            <h3 className="text-2xl font-bold text-amber-500">{datasets.filter(d => d.request_pending).length}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-amber-500">{datasets.filter(d => d.request_pending).length}</h3>
+              <Link 
+                to="/research-requests" 
+                className="text-[10px] font-black text-slate-900 uppercase tracking-widest hover:underline"
+              >
+                View History →
+              </Link>
+            </div>
             <p className="text-xs text-slate-500 mt-1 font-medium">Awaiting Data Owner verification.</p>
         </Card>
       </div>
