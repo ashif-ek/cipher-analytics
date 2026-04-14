@@ -365,6 +365,46 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                               </span>
                             )}
                           </button>
+                          <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                          <button
+                            onClick={() => handleCompute(dataset.id, 'variance')}
+                            disabled={
+                              computingId === dataset.id || 
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                            }
+                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter ${
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                            }`}
+                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Variance (Variation)"}
+                          >
+                            {computingId === dataset.id ? '...' : (
+                              <span className="flex items-center italic">
+                                <span className="mr-0.5 not-italic text-sm">σ²</span> Var
+                              </span>
+                            )}
+                          </button>
+                          <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                          <button
+                            onClick={() => handleCompute(dataset.id, 'std_deviation')}
+                            disabled={
+                              computingId === dataset.id || 
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                            }
+                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter ${
+                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                            }`}
+                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Standard Deviation"}
+                          >
+                            {computingId === dataset.id ? '...' : (
+                              <span className="flex items-center italic">
+                                <span className="mr-0.5 not-italic text-sm">σ</span> Dev
+                              </span>
+                            )}
+                          </button>
                         </div>
                       )}
                       

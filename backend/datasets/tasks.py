@@ -41,6 +41,14 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
         elif job.operation == 'MEAN':
             job.result_value = (base_val / dataset.rows_count) if dataset.rows_count > 0 else 1.0
             job.result_value += random.uniform(-0.1, 0.1)
+        elif job.operation == 'VARIANCE':
+            # Simulated variance based on a spread around the mean
+            job.result_value = random.uniform(2.0, 15.0)
+        elif job.operation == 'STD_DEVIATION':
+            # Simulated standard deviation as sqrt of a simulated variance
+            simulated_variance = random.uniform(2.0, 15.0)
+            import math
+            job.result_value = math.sqrt(simulated_variance)
         else:
             job.result_value = random.uniform(0, 100)
 

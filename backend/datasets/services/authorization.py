@@ -57,9 +57,9 @@ def check_dataset_permission(user, dataset, action: str, operation=None) -> bool
 
         elif dataset.access_policy == 'AGGREGATED':
             # For aggregated policy data, researchers may run simple aggregate mathematics
-            allowed_ops = ['SUM', 'MEAN', 'VARIANCE']
+            allowed_ops = ['SUM', 'MEAN', 'VARIANCE', 'STD_DEVIATION']
             if operation and operation.upper() not in allowed_ops:
-                raise PermissionDenied(f"Operation {operation} not permitted. Aggregated policy limits queries to SUM/MEAN/VARIANCE.")
+                raise PermissionDenied(f"Operation {operation} not permitted. Aggregated policy limits queries to SUM/MEAN/VARIANCE/STD_DEVIATION.")
                 
         return True
 

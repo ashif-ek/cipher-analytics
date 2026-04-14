@@ -119,7 +119,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Dataset is not ready for computation."}, status=status.HTTP_400_BAD_REQUEST)
         
         operation = request.data.get("operation", "sum")
-        if operation not in ["sum", "mean", "variance"]:
+        if operation not in ["sum", "mean", "variance", "std_deviation"]:
             return Response({"detail": "Invalid operation."}, status=status.HTTP_400_BAD_REQUEST)
             
         # Extract explicit execution grant boundaries via the zero-trust module.
