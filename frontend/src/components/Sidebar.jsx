@@ -53,7 +53,7 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-slate-900 h-full flex flex-col text-slate-300">
       <div className="h-16 flex items-center px-6 border-b border-slate-800 shrink-0">
-        <h1 className="text-xl font-semibold tracking-tight text-white flex items-center">
+        <h1 className="text-xl font-semibold text-white flex items-center">
           <svg className="w-6 h-6 mr-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>

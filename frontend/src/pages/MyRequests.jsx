@@ -30,7 +30,7 @@ const MyRequests = () => {
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Access Requests</h1>
+          <h1 className="text-2xl font-bold text-slate-900">My Access Requests</h1>
           <p className="mt-1 text-sm text-slate-500 font-medium">Track your outbound applications for governed dataset access.</p>
         </div>
       </div>
@@ -38,7 +38,7 @@ const MyRequests = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+            <span className="text-[10px] font-bold text-slate-400">Pending</span>
             <div className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-full">
               {requests.filter(r => r.status === 'PENDING').length}
             </div>
@@ -49,7 +49,7 @@ const MyRequests = () => {
         
         <Card className="p-6 border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Approved</span>
+            <span className="text-[10px] font-bold text-slate-400">Approved</span>
             <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full">
               {requests.filter(r => r.status === 'APPROVED').length}
             </div>
@@ -60,7 +60,7 @@ const MyRequests = () => {
 
         <Card className="p-6 border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rejected</span>
+            <span className="text-[10px] font-bold text-slate-400">Rejected</span>
             <div className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full">
               {requests.filter(r => r.status === 'REJECTED').length}
             </div>
@@ -71,39 +71,39 @@ const MyRequests = () => {
       </div>
 
       <Card className="overflow-hidden border-slate-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Outbound Request History</h3>
-          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Verified Log</span>
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-xs font-bold text-slate-900">Outbound Request History</h3>
+          <span className="text-[10px] font-mono text-slate-400">Verified Log</span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100">
             <thead className="bg-slate-50/30">
               <tr>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Asset</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Submitted</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Rationale</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Data Asset</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Submitted</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Rationale</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 bg-white">
               {loading ? (
-                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">Establishing secure link...</td></tr>
+                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">Establishing secure link...</td></tr>
               ) : requests.length === 0 ? (
-                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">No outbound requests found</td></tr>
+                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">No outbound requests found</td></tr>
               ) : (
                 requests.map(req => (
                   <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-xs font-bold text-slate-900 uppercase tracking-tight">{req.dataset_details?.name || 'Unknown Asset'}</div>
+                      <div className="text-xs font-bold text-slate-900">{req.dataset_details?.name || 'Unknown Asset'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        {new Date(req.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <div className="text-[10px] font-bold text-slate-500">
+                        {new Date(req.created_at).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-[10px] text-slate-500 font-medium line-clamp-1 max-w-xs uppercase">{req.reason}</div>
+                      <div className="text-[10px] text-slate-500 font-medium line-clamp-1 max-w-xs">{req.reason}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={req.status} />

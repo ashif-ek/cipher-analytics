@@ -67,11 +67,11 @@ export default function ResearcherDashboard() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Researcher Workspace</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Researcher Workspace</h1>
           <p className="text-slate-500 font-medium mt-1 text-sm">Securely interact with governed datasets via FHE orchestration.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100 flex items-center">
+          <div className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100 flex items-center">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
             Identity: Verified
           </div>
@@ -80,22 +80,22 @@ export default function ResearcherDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Available Assets</span>
+            <span className="text-[10px] font-bold text-slate-400 block mb-4">Available Assets</span>
             <h3 className="text-2xl font-bold text-slate-900">{datasets.length}</h3>
             <p className="text-xs text-slate-500 mt-1 font-medium">Datasets open for research collaboration.</p>
         </Card>
         <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Active Grants</span>
+            <span className="text-[10px] font-bold text-slate-400 block mb-4">Active Grants</span>
             <h3 className="text-2xl font-bold text-emerald-600">{datasets.filter(d => d.has_access).length}</h3>
             <p className="text-xs text-slate-500 mt-1 font-medium">Approved cryptographic evaluation contexts.</p>
         </Card>
         <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Pending Requests</span>
+            <span className="text-[10px] font-bold text-slate-400 block mb-4">Pending Requests</span>
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-bold text-amber-500">{datasets.filter(d => d.request_pending).length}</h3>
               <Link 
                 to="/research-requests" 
-                className="text-[10px] font-black text-slate-900 uppercase tracking-widest hover:underline"
+                className="text-[10px] font-bold text-slate-900 hover:underline"
               >
                 View History →
               </Link>
@@ -106,7 +106,7 @@ export default function ResearcherDashboard() {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
-            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Governed Dataset Registry</h2>
+            <h2 className="text-xs font-bold text-slate-900">Governed Dataset Registry</h2>
         </div>
         <DatasetTable 
           datasets={datasets} 

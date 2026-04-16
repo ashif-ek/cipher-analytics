@@ -29,7 +29,7 @@ const StatusBadge = ({ status }) => {
   const config = statusConfig[status] || { color: 'bg-slate-50 text-slate-500 border-slate-200', text: status, icon: null };
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${config.color} shadow-sm`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border ${config.color} shadow-sm`}>
       {config.icon}
       {config.text}
     </span>

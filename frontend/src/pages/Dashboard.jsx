@@ -156,7 +156,7 @@ const Dashboard = () => {
       {/* Top Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-40 relative">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">cipher-analytics</h1>
+          <h1 className="text-xl font-bold">cipher-analytics</h1>
         </div>
         <UserProfile onLogout={handleLogout} />
       </nav>
@@ -166,7 +166,7 @@ const Dashboard = () => {
         {/* Upload Form Section */}
         <div className="bg-white border border-gray-200 p-8 shadow-sm">
           <div className="mb-8 border-b border-gray-100 pb-4">
-            <h2 className="text-lg font-semibold tracking-tight">Your Accessible Datasets</h2>
+            <h2 className="text-lg font-semibold">Your Accessible Datasets</h2>
             <p className="text-sm text-gray-500 mt-1">Upload records or manage shared inventories.</p>
           </div>
           
@@ -181,7 +181,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Dataset Identifier</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-xs">Dataset Identifier</label>
                 <input 
                   type="text" 
                   name="name" 
@@ -194,7 +194,7 @@ const Dashboard = () => {
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Source File</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-xs">Source File</label>
                 <div className="flex items-center">
                   <input 
                     type="file" 
@@ -210,7 +210,7 @@ const Dashboard = () => {
               </div>
 
                <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Discovery Layer</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-xs">Discovery Layer</label>
                 <select 
                   name="visibility" 
                   value={formData.visibility} 
@@ -223,7 +223,7 @@ const Dashboard = () => {
               </div>
 
                <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide text-xs">Governance Protocol</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-xs">Governance Protocol</label>
                 <select 
                   name="access_policy" 
                   value={formData.access_policy} 
@@ -244,7 +244,7 @@ const Dashboard = () => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="bg-gray-900 text-white font-medium py-3 px-8 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm uppercase tracking-wider shadow-sm"
+                className="bg-gray-900 text-white font-medium py-3 px-8 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm shadow-sm"
               >
                 {loading ? 'Encrypting & Transmitting...' : 'Execute Encrypted Upload'}
               </button>

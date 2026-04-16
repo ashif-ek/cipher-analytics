@@ -60,14 +60,14 @@ const Datasets = () => {
       <div className="relative -mx-4 px-4 sm:-mx-8 sm:px-8 py-8 bg-slate-50/50 border-b border-slate-200 -mt-8 mb-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dataset Registry</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Dataset Registry</h1>
             <p className="text-sm text-slate-500 font-medium max-w-xl leading-relaxed">
               Consolidated command center for ingestion, metadata governance, and secure FHE analytics.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden lg:flex flex-col items-end mr-6">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active Inventory</span>
+              <span className="text-[11px] font-semibold text-slate-400">Active Inventory</span>
               <span className="text-sm font-bold text-slate-900">{datasets.length} Objects</span>
             </div>
             <Link 

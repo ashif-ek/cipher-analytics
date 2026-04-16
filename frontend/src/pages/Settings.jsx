@@ -21,7 +21,7 @@ const Settings = () => {
   }, []);
 
   if (loading) {
-    return <div className="animate-pulse py-12 text-slate-400 font-bold uppercase tracking-wider text-center">Syncing Configuration...</div>;
+    return <div className="animate-pulse py-12 text-slate-400 font-bold text-center">Syncing Configuration...</div>;
   }
 
   return (
@@ -37,42 +37,42 @@ const Settings = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
           <Card className="p-8 border-slate-200">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-8 pb-4 border-b border-slate-100">Profile Architecture</h3>
+            <h3 className="text-xs font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">Profile Architecture</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Display Alias</label>
+                <label className="block text-[10px] font-bold text-slate-400 mb-2">Display Alias</label>
                 <div className="text-sm font-bold text-slate-900">{profile?.username || 'N/A'}</div>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Authenticated Entity</label>
+                <label className="block text-[10px] font-bold text-slate-400 mb-2">Authenticated Entity</label>
                 <div className="text-sm font-mono text-slate-500">ID::{profile?.id?.toString().padStart(4, '0')}</div>
               </div>
             </div>
           </Card>
 
           <Card className="p-8 border-slate-200 shadow-sm">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-8 pb-4 border-b border-slate-100">Security Primitives</h3>
+            <h3 className="text-xs font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">Security Primitives</h3>
             <div className="space-y-6">
                <div className="flex items-center justify-between">
                  <div>
                    <span className="block text-sm font-bold text-slate-900">Multi-Factor Authentication</span>
                    <span className="block text-xs text-slate-500 mt-1 font-medium">Verify login attempts via TOTP secondary layer.</span>
                  </div>
-                 <span className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 uppercase tracking-wider leading-none">Healthy</span>
+                 <span className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 leading-none">Healthy</span>
                </div>
                <div className="flex items-center justify-between">
                  <div>
                    <span className="block text-sm font-bold text-slate-900">Real-time Session Monitoring</span>
                    <span className="block text-xs text-slate-500 mt-1 font-medium">Active telemetry tracking for the current session.</span>
                  </div>
-                 <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded border border-indigo-100 uppercase tracking-wider leading-none">Active</span>
+                 <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded border border-indigo-100 leading-none">Active</span>
                </div>
             </div>
           </Card>
 
           <Card className="p-8 border-dashed border-slate-200 bg-slate-50/20">
              <div className="text-center py-6">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Encryption Subsystem</span>
+                <span className="text-[10px] font-bold text-slate-400 block mb-2">Encryption Subsystem</span>
                 <p className="text-xs text-slate-500 font-medium">Advanced cryptographic key rotation and FHE parameter tuning is managed by the core orchestrator.</p>
              </div>
           </Card>
@@ -80,7 +80,7 @@ const Settings = () => {
 
         <div className="col-span-1 space-y-6">
           <Card className="p-6 border-slate-200 bg-slate-900 text-white">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-6">Compute Infrastructure</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 mb-6">Compute Infrastructure</h3>
             <div className="space-y-6">
               <div className="flex justify-between items-center text-xs">
                  <span className="text-slate-400">Node Status</span>
@@ -95,7 +95,7 @@ const Settings = () => {
               </div>
               <div className="flex justify-between items-center text-xs pt-4 border-t border-slate-800">
                  <span className="text-slate-400">Environment</span>
-                 <span className="font-mono uppercase tracking-widest text-[10px]">Production</span>
+                 <span className="font-mono text-[10px]">Production</span>
               </div>
             </div>
           </Card>

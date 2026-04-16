@@ -12,7 +12,6 @@ const DashboardOverview = () => {
     liveSessions: 0
   });
   const [recentLogs, setRecentLogs] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,16 +30,15 @@ const DashboardOverview = () => {
           if (ds.visibility === 'PRIVATE') priv++;
           if (ds.visibility === 'DISCOVERABLE') {
             shared++;
-            research++; // In this context, discoverable items are for research
+            research++;
           }
         });
 
-        // System session derivation: Analyze unique users with activity in last 5 minutes
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         const activeUsers = new Set(
           logs.filter(log => new Date(log.timestamp) > fiveMinutesAgo)
               .map(log => log.user)
-        ).size || 1; // Default to 1 (current session)
+        ).size || 1;
 
         setStats({
           total: datasets.length,
@@ -76,10 +74,10 @@ const DashboardOverview = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">System Overview</h1>
-          <p className="mt-1 text-sm text-slate-500">Monitor your encrypted datasets and platform health.</p>
+          <p className="mt-1 text-sm text-slate-500 font-medium">Monitor your encrypted datasets and platform health.</p>
         </div>
         <div className="mt-4 sm:mt-0">
-          <Link to="/upload" className="inline-flex items-center px-5 py-2.5 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm text-white bg-slate-900 hover:bg-black transition-all">
+          <Link to="/upload" className="inline-flex items-center px-5 py-2.5 border border-transparent text-xs font-bold rounded-xl shadow-sm text-white bg-slate-900 hover:bg-black transition-all">
             <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v16m8-8H4" />
             </svg>
@@ -90,38 +88,38 @@ const DashboardOverview = () => {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-8 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-          <dt className="text-xs font-semibold text-slate-500 mb-2">Total Datasets</dt>
-          <dd className="text-3xl font-bold text-slate-900 tracking-tight">{stats.total}</dd>
-          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-medium">
+          <dt className="text-xs font-bold text-slate-500 mb-2">Total Datasets</dt>
+          <dd className="text-3xl font-bold text-slate-900">{stats.total}</dd>
+          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-bold">
             <svg className="h-4 w-4 mr-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             Live Registry
           </div>
         </Card>
         
         <Card className="p-8 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-          <dt className="text-xs font-semibold text-slate-500 mb-2">Internal Share</dt>
-          <dd className="text-3xl font-bold text-slate-900 tracking-tight">{stats.shared} <span className="text-sm font-medium text-slate-400 ml-1">/ {stats.total}</span></dd>
-          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-medium">
+          <dt className="text-xs font-bold text-slate-500 mb-2">Internal Share</dt>
+          <dd className="text-3xl font-bold text-slate-900">{stats.shared}</dd>
+          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-bold">
             <svg className="h-4 w-4 mr-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             Cross-Unit Access
           </div>
         </Card>
 
         <Card className="p-8 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-          <dt className="text-xs font-semibold text-slate-500 mb-2">Research Data</dt>
-          <dd className="text-3xl font-bold text-slate-900 tracking-tight">{stats.researchReady}</dd>
-          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-medium">
+          <dt className="text-xs font-bold text-slate-500 mb-2">Research Data</dt>
+          <dd className="text-3xl font-bold text-slate-900">{stats.researchReady}</dd>
+          <div className="mt-4 flex items-center text-[11px] text-slate-400 font-bold">
             <svg className="h-4 w-4 mr-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             Analysis Capability
           </div>
         </Card>
 
         <Card className="p-8 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-          <dt className="text-xs font-semibold text-slate-500 mb-2">System Status</dt>
-          <dd className="text-3xl font-bold text-slate-900 tracking-tight">Active</dd>
+          <dt className="text-xs font-bold text-slate-500 mb-2">System Status</dt>
+          <dd className="text-3xl font-bold text-slate-900">Active</dd>
           <div className="mt-4 flex items-center text-[11px] text-emerald-600 font-bold">
             <svg className="h-4 w-4 mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            ENCLAVE: SECURELY LINKED
+            Enclave: Securely linked
           </div>
         </Card>
       </div>
@@ -129,14 +127,14 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-10 border-slate-200">
-            <h3 className="text-xs font-bold text-slate-900 mb-8 uppercase tracking-wider">System Quick Actions</h3>
+            <h3 className="text-xs font-bold text-slate-900 mb-8">System Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <Link to="/upload" className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all group">
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-4 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" /></svg>
                 </div>
                 <span className="text-sm font-bold text-slate-900">Upload Dataset</span>
-                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold tracking-wider">Ingest CSV</span>
+                <span className="text-[10px] text-slate-400 mt-1.5 font-bold">Ingest CSV</span>
               </Link>
               
               <Link to="/audit-logs" className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all group">
@@ -144,14 +142,14 @@ const DashboardOverview = () => {
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                 </div>
                 <span className="text-sm font-bold text-slate-900">Security Audit</span>
-                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold tracking-wider">View Activity Logs</span>
+                <span className="text-[10px] text-slate-400 mt-1.5 font-bold">View Activity Logs</span>
               </Link>
             </div>
           </Card>
         </div>
 
         <Card className="p-8 border-slate-200">
-          <h3 className="text-[10px] font-bold text-slate-400 mb-8 uppercase tracking-wider">Recent Activity</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 mb-8 transition-all">Recent Activity</h3>
           <div className="flow-root">
             <ul className="-mb-8">
               {recentLogs.map((log, idx) => (
@@ -166,7 +164,7 @@ const DashboardOverview = () => {
                           log.action.includes('LOGIN') ? 'bg-emerald-100 text-emerald-600' : 
                           log.action.includes('DELETE') ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
                         }`}>
-                          <span className="text-[10px] font-black">{log.action[0]}</span>
+                          <span className="text-[10px] font-bold">{log.action[0]}</span>
                         </span>
                       </div>
                       <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
@@ -188,7 +186,7 @@ const DashboardOverview = () => {
             </ul>
           </div>
           <div className="mt-6">
-            <Link to="/audit-logs" className="w-full inline-flex justify-center items-center px-4 py-2 border border-slate-200 shadow-sm text-xs font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all uppercase tracking-wider">
+            <Link to="/audit-logs" className="w-full inline-flex justify-center items-center px-4 py-2 border border-slate-200 shadow-sm text-xs font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all">
               View full audit
             </Link>
           </div>
