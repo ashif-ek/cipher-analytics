@@ -50,7 +50,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
       </div>
       
       {/* Footer - Fixed position at bottom of viewport area */}
-      <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider flex-shrink-0 opacity-60">
+      <p className="mt-4 text-[10px] text-slate-400 font-bold flex-shrink-0 opacity-60">
         © 2026 Cipher Analytics • Industrial Standard
       </p>
     </div>

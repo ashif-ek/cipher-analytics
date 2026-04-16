@@ -178,7 +178,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
             </div>
             <input
               type="text"
-              className="bg-white block w-full pl-11 pr-4 py-2.5 text-[10px] font-bold uppercase tracking-wider border-slate-200 rounded-xl focus:ring-0 focus:border-slate-900 transition-all placeholder:text-slate-400"
+              className="bg-white block w-full pl-11 pr-4 py-2.5 text-[10px] font-bold border-slate-200 rounded-xl focus:ring-0 focus:border-slate-900 transition-all placeholder:text-slate-400"
               placeholder="Filter assets by ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -189,7 +189,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1">
             <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold uppercase tracking-wider border-none focus:ring-0 text-slate-600 cursor-pointer"
+              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -200,7 +200,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
             </select>
             <div className="w-px h-4 bg-slate-100"></div>
             <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold uppercase tracking-wider border-none focus:ring-0 text-slate-600 cursor-pointer"
+              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
               value={visibilityFilter}
               onChange={(e) => setVisibilityFilter(e.target.value)}
             >
@@ -210,7 +210,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
             </select>
             <div className="w-px h-4 bg-slate-100"></div>
             <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold uppercase tracking-wider border-none focus:ring-0 text-slate-600 cursor-pointer"
+              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
               value={policyFilter}
               onChange={(e) => setPolicyFilter(e.target.value)}
             >
@@ -224,7 +224,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
           <button
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-wider rounded-xl text-slate-900 hover:bg-slate-50 transition-all disabled:opacity-50 group"
+            className="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 text-[10px] font-bold rounded-xl text-slate-900 hover:bg-slate-50 transition-all disabled:opacity-50 group"
           >
             <svg className={`mr-2 h-4 w-4 text-slate-400 group-hover:text-slate-900 transition-colors ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -239,7 +239,6 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
         <table className="min-w-full divide-y divide-slate-100">
           <thead className="bg-white">
             <tr>
-              <th scope="col" className="px-8 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer group" onClick={() => handleSort('name')}>
               <th scope="col" className="px-8 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('name')}>
                 <div className="flex items-center group-hover:text-slate-900 transition-colors">Dataset Identity <SortIcon field="name" /></div>
               </th>
@@ -255,10 +254,10 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
               <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('access_policy')}>
                 <div className="flex items-center group-hover:text-slate-900 transition-colors">Policy <SortIcon field="access_policy" /></div>
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer group" onClick={() => handleSort('created_at')}>
+              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('created_at')}>
                 <div className="flex items-center group-hover:text-slate-900 transition-colors">Created <SortIcon field="created_at" /></div>
               </th>
-              <th scope="col" className="px-8 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <th scope="col" className="px-8 py-4 text-right text-[10px] font-bold text-slate-400">
                 Analytical Actions
               </th>
             </tr>
@@ -269,7 +268,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                 <td colSpan="6" className="px-8 py-24 text-center">
                   <div className="flex flex-col items-center justify-center space-y-4">
                     <svg className="animate-spin h-6 w-6 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Synching Data Registry...</span>
+                    <span className="text-[10px] font-bold text-slate-400">Synching Data Registry...</span>
                   </div>
                 </td>
               </tr>
@@ -281,7 +280,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-3.586a1 1 0 01-.707-.293l-1.414-1.414a1 1 0 00-.707-.293h-3.172a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H4" /></svg>
                     </div>
                     <h3 className="text-sm font-bold text-slate-900">No data assets found</h3>
-                    <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider leading-relaxed">Adjust your filters or initiate a new ingestion pipeline.</p>
+                    <p className="text-[10px] text-slate-500 mt-1 font-bold leading-relaxed">Adjust your filters or initiate a new ingestion pipeline.</p>
                    </div>
                 </td>
               </tr>
@@ -295,10 +294,10 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                       </div>
                       <div className="ml-5">
                         <div className="flex items-center gap-2">
-                          <Link to={`/datasets/${dataset.id}`} className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors uppercase">{dataset.name}</Link>
-                          <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold text-slate-500 uppercase">#{dataset.id}</span>
+                          <Link to={`/datasets/${dataset.id}`} className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">{dataset.name}</Link>
+                          <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold text-slate-500">#{dataset.id}</span>
                         </div>
-                        <div className="text-[10px] text-slate-400 mt-1 font-bold tracking-wider uppercase">Verified CKKS-Object</div>
+                        <div className="text-[10px] text-slate-400 mt-1 font-bold">Verified CKKS-Object</div>
                       </div>
                     </div>
                   </td>
@@ -319,7 +318,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                     <StatusBadge status={dataset.access_policy} />
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-slate-500">
                       {new Date(dataset.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                     </span>
                   </td>
@@ -333,7 +332,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                               computingId === dataset.id || 
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER') // Gated until grant
                             }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase ${
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-white'
@@ -356,7 +355,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                               computingId === dataset.id || 
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                             }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase ${
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-white'
@@ -376,7 +375,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                               computingId === dataset.id || 
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                             }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase ${
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-white'
@@ -396,7 +395,7 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                               computingId === dataset.id || 
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                             }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase ${
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
                               (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
                                 ? 'text-slate-300 cursor-not-allowed'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-white'

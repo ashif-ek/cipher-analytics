@@ -43,16 +43,16 @@ const UserProfile = ({ onLogout }) => {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="font-bold rounded-xl focus:ring-0 focus:border-slate-900 transition-all placeholder:text-slate-400"
+        className="flex items-center space-x-3 focus:outline-none hover:opacity-80 transition-opacity"
       >
         <div className="hidden sm:block text-right">
           <p className="text-sm font-semibold text-gray-900">{profile.username}</p>
           <p className="text-xs text-gray-500 capitalize">{profile.role.replace('_', ' ').toLowerCase()}</p>
         </div>
         {profile.profile_picture ? (
-          <img src={profile.profile_picture} alt="Profile" className="h-10 w-10 rounded-font-bold border-none focus:ring-0 text-slate-600 cursor-pointer" />
+          <img src={profile.profile_picture} alt="Profile" className="h-10 w-10 rounded-full object-cover border border-gray-300 shadow-sm" />
         ) : (
-          <div className="h-10 w-10 rounded-full bg-gray-900 flex items-center justify-center text-[10px] text-slate-400 mt-1 font-bold">
+          <div className="h-10 w-10 rounded-full bg-gray-900 flex items-center justify-center text-white text-lg font-bold shadow-sm">
             {profile.username.charAt(0).toUpperCase()}
           </div>
         )}
@@ -61,8 +61,8 @@ const UserProfile = ({ onLogout }) => {
       {isOpen && (
         <div className="absolute right-0 mt-3 w-64 bg-white border border-gray-200 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 rounded-sm">
           <div className="p-5 border-b border-gray-100 bg-gray-50">
-            <h3 className="text-base font-bold text-slate-400 cursor-pointer group">{profile.username}</h3>
-            <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{profile.email}</p>
+            <h3 className="text-base font-bold text-gray-900 truncate">{profile.username}</h3>
+            <p className="text-xs text-gray-500 truncate mt-1">{profile.email}</p>
             
             <div className="mt-4 flex items-center justify-between">
               <span className="text-xs font-semibold px-2.5 py-1 bg-gray-200 text-gray-800 border border-gray-300 rounded-sm">
@@ -80,7 +80,7 @@ const UserProfile = ({ onLogout }) => {
           <div className="p-2">
             <button 
               onClick={onLogout}
-              className="w-full text-[10px] font-bold rounded-xl text-slate-900 hover:bg-slate-50 transition-all disabled:opacity-50 group"
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium rounded-sm"
             >
               Logout
             </button>
