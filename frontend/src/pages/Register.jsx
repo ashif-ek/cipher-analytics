@@ -33,6 +33,13 @@ const Register = () => {
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   const {
     register,
     handleSubmit,
@@ -125,7 +132,7 @@ const Register = () => {
               />
             ))}
           </div>
-          <p className="text-[11px] font-medium text-slate-500">
+          <p className="text-[11px] font-medium text-slate-500 px-0.5">
             Use 8 or more characters with a mix of letters, numbers & symbols
           </p>
           
@@ -188,7 +195,7 @@ const Register = () => {
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 text-white text-[11px] uppercase tracking-widest font-bold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-4"
+          className="w-full bg-slate-900 text-white text-[11px] uppercase tracking-wider font-bold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-4"
         >
           {loading ? 'Initializing...' : 'Create Account'}
         </button>

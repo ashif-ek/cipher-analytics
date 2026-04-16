@@ -57,7 +57,7 @@ const Modal = ({
                 </div>
               )}
               <div className={`mt-0 text-center sm:text-left ${showIcon ? 'sm:ml-6' : ''}`}>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase" id="modal-title">
+                <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wider" id="modal-title">
                   {title}
                 </h3>
                 <div className="mt-4">
@@ -69,14 +69,14 @@ const Modal = ({
           <div className="bg-slate-50/50 px-8 py-5 sm:flex sm:flex-row-reverse gap-3 border-t border-slate-100">
             <button
               type="button"
-              className="w-full inline-flex justify-center rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all shadow-sm bg-slate-900 hover:bg-black text-white"
+              className="w-full inline-flex justify-center rounded-xl px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all shadow-sm bg-slate-900 hover:bg-black text-white"
               onClick={onConfirm}
             >
               {confirmText}
             </button>
             <button
               type="button"
-              className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-xl px-6 py-2.5 bg-white text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 transition-all sm:w-auto"
+              className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-xl px-6 py-2.5 bg-white text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 transition-all sm:w-auto"
               onClick={onClose}
             >
               Cancel

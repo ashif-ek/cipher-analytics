@@ -40,7 +40,8 @@ const AccessControl = () => {
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Entity Access Governance</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Entity Access Governance</h1>
           <p className="mt-1 text-sm text-slate-500 font-medium">Manage incoming research requests and cryptographic grant lifecycles.</p>
         </div>
       </div>
@@ -78,26 +79,26 @@ const AccessControl = () => {
 
       <Card className="overflow-hidden border-slate-200 shadow-sm">
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Inbound Request Queue</h3>
-          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Real-time Synchronization</span>
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Inbound Request Queue</h3>
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Real-time Synchronization</span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100">
             <thead className="bg-slate-50/30">
               <tr>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Researcher</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Dataset</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Rationale</th>
-                <th className="px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-3 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Researcher</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target Dataset</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rationale</th>
+                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">Fetching Registry...</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">Fetching Registry...</td></tr>
               ) : requests.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">No active requests found</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">No active requests found</td></tr>
               ) : (
                 requests.map(req => (
                   <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
@@ -118,13 +119,13 @@ const AccessControl = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => handleAction(req.id, 'approve')}
-                            className="px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-black transition-all"
+                            className="px-3 py-1 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-wider rounded-md hover:bg-black transition-all"
                           >
                             Approve
                           </button>
                           <button 
                             onClick={() => handleAction(req.id, 'reject')}
-                            className="px-3 py-1 border border-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-slate-50 transition-all"
+                            className="px-3 py-1 border border-slate-200 text-slate-600 text-[9px] font-bold uppercase tracking-wider rounded-md hover:bg-slate-50 transition-all"
                           >
                             Reject
                           </button>

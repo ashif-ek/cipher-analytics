@@ -75,13 +75,13 @@ const DashboardOverview = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Overview</h1>
+          <h1 className="text-2xl font-bold text-slate-900">System Overview</h1>
           <p className="mt-1 text-sm text-slate-500">Monitor your encrypted datasets and platform health.</p>
         </div>
         <div className="mt-4 sm:mt-0">
-          <Link to="/upload" className="inline-flex items-center px-5 py-2.5 border border-transparent text-xs font-black uppercase tracking-widest rounded-xl shadow-sm text-white bg-slate-900 hover:bg-black transition-all">
+          <Link to="/upload" className="inline-flex items-center px-5 py-2.5 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm text-white bg-slate-900 hover:bg-black transition-all">
             <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.7" d="M12 4v16m8-8H4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v16m8-8H4" />
             </svg>
             New Dataset
           </Link>
@@ -129,29 +129,29 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-10 border-slate-200">
-            <h3 className="text-xs font-black text-slate-900 mb-8 uppercase tracking-widest">System Quick Actions</h3>
+            <h3 className="text-xs font-bold text-slate-900 mb-8 uppercase tracking-wider">System Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <Link to="/upload" className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all group">
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-4 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" /></svg>
                 </div>
-                <span className="text-sm font-black text-slate-900">Upload Dataset</span>
-                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-black tracking-widest">Ingest CSV</span>
+                <span className="text-sm font-bold text-slate-900">Upload Dataset</span>
+                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold tracking-wider">Ingest CSV</span>
               </Link>
               
               <Link to="/audit-logs" className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all group">
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-4 group-hover:bg-slate-900 group-hover:text-white transition-all shadow-sm">
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                 </div>
-                <span className="text-sm font-black text-slate-900">Security Audit</span>
-                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-black tracking-widest">View Activity Logs</span>
+                <span className="text-sm font-bold text-slate-900">Security Audit</span>
+                <span className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold tracking-wider">View Activity Logs</span>
               </Link>
             </div>
           </Card>
         </div>
 
         <Card className="p-8 border-slate-200">
-          <h3 className="text-[10px] font-black text-slate-400 mb-8 uppercase tracking-widest">Recent Activity</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 mb-8 uppercase tracking-wider">Recent Activity</h3>
           <div className="flow-root">
             <ul className="-mb-8">
               {recentLogs.map((log, idx) => (
@@ -188,7 +188,7 @@ const DashboardOverview = () => {
             </ul>
           </div>
           <div className="mt-6">
-            <Link to="/audit-logs" className="w-full inline-flex justify-center items-center px-4 py-2 border border-slate-200 shadow-sm text-xs font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all uppercase tracking-widest">
+            <Link to="/audit-logs" className="w-full inline-flex justify-center items-center px-4 py-2 border border-slate-200 shadow-sm text-xs font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all uppercase tracking-wider">
               View full audit
             </Link>
           </div>

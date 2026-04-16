@@ -21,6 +21,13 @@ const Login = () => {
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   const {
     register,
     handleSubmit,
