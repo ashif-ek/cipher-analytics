@@ -49,6 +49,8 @@ class Dataset(models.Model):
         default=ComputeMode.STRICT
     )
 
+    column_stats = models.JSONField(default=dict, blank=True)
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

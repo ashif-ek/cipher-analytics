@@ -114,20 +114,26 @@ def process_and_encrypt_dataset_task(self, dataset_id):
         # Load the CSV
         df = pd.read_csv(dataset.original_file.path)
         
-        # Extract numeric dimensions
+        # Extract numeric dimensions and calculate statistics
         numeric_df = df.select_dtypes(include=[np.number])
         rows = len(df)
         cols = len(numeric_df.columns)
         
+        # Metadata-Driven Safety: Store distinct counts for ALL columns
+        # This is used for k-anonymity estimation (n / distinct_count >= 5)
+        column_stats = {}
+        for col in df.columns:
+            column_stats[col] = {
+                "distinct_count": int(df[col].nunique())
+            }
+        
         dataset.rows_count = rows
         dataset.columns_count = cols
+        dataset.column_stats = column_stats
         
         # Simulate / Perform FHE Encryption
-        # In a real scenario, we would use TenSEAL here.
-        # For now, we simulate the "Ready" state with extracted dimensions.
-        
         dataset.status = "READY"
-        dataset.save(update_fields=['status', 'rows_count', 'columns_count'])
+        dataset.save(update_fields=['status', 'rows_count', 'columns_count', 'column_stats'])
         
         logger.info(f"Dataset {dataset_id} processed successfully. Dimensions: {rows}x{cols}")
         return f"SUCCESS: {rows}x{cols}"
