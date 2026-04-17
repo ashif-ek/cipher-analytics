@@ -66,8 +66,13 @@ class DatasetViewSet(viewsets.ModelViewSet):
         req_id = get_current_request_id()
         ip = get_current_ip()
         
-        # Save the dataset with the current user as owner and status READY since ciphertext is pre-encrypted
-        dataset = serializer.save(owner=self.request.user, status="READY")
+        # Save the dataset with the current user as owner
+        dataset = serializer.save(owner=self.request.user)
+        
+        # Explicitly set status to READY and update fields to ensure persistence
+        # (This avoids any read-only field mapping issues in the serializer save)
+        dataset.status = "READY"
+        dataset.save(update_fields=['status'])
         
         log_audit_event(
             user_id=self.request.user.id,
@@ -114,7 +119,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Dataset is not ready for computation."}, status=status.HTTP_400_BAD_REQUEST)
         
         operation = request.data.get("operation", "sum")
-        if operation not in ["sum", "mean", "variance"]:
+        if operation not in ["sum", "mean", "variance", "std_deviation"]:
             return Response({"detail": "Invalid operation."}, status=status.HTTP_400_BAD_REQUEST)
             
         # Extract explicit execution grant boundaries via the zero-trust module.

@@ -65,7 +65,7 @@ const UserProfile = ({ onLogout }) => {
             <p className="text-xs text-gray-500 truncate mt-1">{profile.email}</p>
             
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs font-semibold px-2.5 py-1 bg-gray-200 text-gray-800 border border-gray-300 uppercase tracking-wide rounded-sm">
+              <span className="text-xs font-semibold px-2.5 py-1 bg-gray-200 text-gray-800 border border-gray-300 rounded-sm">
                 {profile.role === 'DATA_OWNER' ? 'Data Owner' : 'Researcher'}
               </span>
               

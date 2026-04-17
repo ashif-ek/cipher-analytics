@@ -33,6 +33,13 @@ const Register = () => {
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   const {
     register,
     handleSubmit,
@@ -41,6 +48,9 @@ const Register = () => {
   } = useForm({
     resolver: zodResolver(registerSchema),
     mode: 'onChange',
+    defaultValues: {
+        role: 'DATA_OWNER'
+    }
   });
 
   const passwordValue = watch('password', '');
@@ -74,6 +84,8 @@ const Register = () => {
       setLoading(false);
     }
   };
+
+  const selectedRole = watch('role');
 
   return (
     <AuthLayout 
@@ -125,7 +137,7 @@ const Register = () => {
               />
             ))}
           </div>
-          <p className="text-[11px] font-medium text-slate-500">
+          <p className="text-[11px] font-medium text-slate-500 px-0.5">
             Use 8 or more characters with a mix of letters, numbers & symbols
           </p>
           
@@ -138,20 +150,33 @@ const Register = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-0.5">Role</label>
-          <div className="relative">
-            <select 
-              {...register('role')}
-              className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 appearance-none cursor-pointer font-medium shadow-sm transition-all"
+          <label className="text-[11px] font-bold text-slate-500 px-0.5">Select Role</label>
+          <div className="grid grid-cols-2 gap-3">
+             <button
+              type="button"
+              onClick={() => register('role').onChange({ target: { name: 'role', value: 'DATA_OWNER' }})}
+              className={`p-3 border rounded-xl flex flex-col items-center gap-1 transition-all ${
+                selectedRole === 'DATA_OWNER' 
+                  ? 'border-slate-900 bg-slate-900 text-white' 
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
             >
-              <option value="DATA_OWNER">Data Owner</option>
-              <option value="RESEARCHER">Researcher</option>
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+              <span className="text-xs font-bold">Data Owner</span>
+              <span className={`text-[9px] ${selectedRole === 'DATA_OWNER' ? 'text-slate-400' : 'text-slate-500'}`}>Publish & Manage</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => register('role').onChange({ target: { name: 'role', value: 'RESEARCHER' }})}
+              className={`p-3 border rounded-xl flex flex-col items-center gap-1 transition-all ${
+                selectedRole === 'RESEARCHER' 
+                  ? 'border-slate-900 bg-slate-900 text-white' 
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              <span className="text-xs font-bold">Researcher</span>
+              <span className={`text-[9px] ${selectedRole === 'RESEARCHER' ? 'text-slate-400' : 'text-slate-500'}`}>Analyze & Request</span>
+            </button>
+            <input type="hidden" {...register('role')} />
           </div>
         </div>
 
@@ -188,7 +213,7 @@ const Register = () => {
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 text-white text-[11px] uppercase tracking-widest font-bold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-4"
+          className="w-full bg-slate-900 text-white text-[11px] font-bold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-4"
         >
           {loading ? 'Initializing...' : 'Create Account'}
         </button>

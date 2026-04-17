@@ -7,7 +7,7 @@ const FormFooter = ({ secondaryAction, secondaryText, links = [] }) => {
 
   return (
     <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center space-y-4">
-      <p className="text-xs font-medium text-slate-500">
+      <p className="text-xs text-slate-500">
         {secondaryText}{' '}
         <Link 
           to={secondaryAction.to} 
@@ -24,7 +24,7 @@ const FormFooter = ({ secondaryAction, secondaryText, links = [] }) => {
               key={link.text}
               type="button"
               onClick={() => link.to === '#' ? openLegal(link.text, link.type) : null}
-              className="text-[9px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-[0.15em]"
+              className="text-[9px] font-bold text-slate-400 hover:text-slate-900 transition-colors"
             >
               {link.text}
             </button>

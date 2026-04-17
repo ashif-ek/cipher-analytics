@@ -68,17 +68,38 @@ const DatasetDetails = () => {
     try {
       setComputing(true);
       const response = await client.post(`datasets/${id}/compute/`, { operation });
+      const jobId = response.data.job_id;
       
-      setComputationResult({
-        ...response.data,
-        datasetName: dataset.name
-      });
-      setShowResultModal(true);
-      setToastMessage(`Computation successful.`);
+      // Poll for completion
+      const pollInterval = setInterval(async () => {
+        try {
+          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+          if (jobRes.data.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            setComputationResult({
+              ...jobRes.data,
+              result: jobRes.data.result_value, // Ensure field name consistency
+              datasetName: dataset.name
+            });
+            setShowResultModal(true);
+            setComputing(false);
+            setToastMessage('');
+          } else if (jobRes.data.status === 'FAILED') {
+            clearInterval(pollInterval);
+            setComputing(false);
+            setToastMessage('Computation failed during FHE execution.');
+          }
+        } catch (err) {
+          clearInterval(pollInterval);
+          setComputing(false);
+          console.error("Polling error", err);
+        }
+      }, 2000);
+
+      setToastMessage(`FHE job ${jobId} queued...`);
     } catch (error) {
-      setToastMessage(`Computation failed: ${error.response?.data?.detail || error.message}`);
-    } finally {
       setComputing(false);
+      setToastMessage(`Queue failed: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -131,7 +152,7 @@ const DatasetDetails = () => {
                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center">
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center">
                 {dataset.name}
                 <span className="ml-3"><StatusBadge status={dataset.status} /></span>
               </h1>
@@ -199,31 +220,31 @@ const DatasetDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 md:col-span-2 space-y-8">
               <Card className="p-6 border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-6 pb-4 border-b border-slate-100">Dataset Architecture</h3>
+                <h3 className="text-sm font-semibold text-slate-900 mb-6 pb-4 border-b border-slate-100">Dataset Architecture</h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8">
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Logical Row Count</dt>
-                    <dd className="mt-2 text-3xl font-bold text-slate-900 tracking-tighter">{dataset.rows_count?.toLocaleString() || 'N/A'}</dd>
+                    <dt className="text-xs font-medium text-slate-500">Logical Row Count</dt>
+                    <dd className="mt-2 text-3xl font-bold text-slate-900">{dataset.rows_count?.toLocaleString() || 'N/A'}</dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Feature Dimensions</dt>
-                    <dd className="mt-2 text-3xl font-bold text-slate-900 tracking-tighter">{dataset.columns_count || 'N/A'} <span className="text-sm font-normal text-slate-400">Cols</span></dd>
+                    <dt className="text-xs font-medium text-slate-500">Feature Dimensions</dt>
+                    <dd className="mt-2 text-3xl font-bold text-slate-900">{dataset.columns_count || 'N/A'} <span className="text-sm font-normal text-slate-400">Cols</span></dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Security State</dt>
+                    <dt className="text-xs font-medium text-slate-500">Security State</dt>
                     <dd className="mt-2 text-sm text-slate-900 font-semibold flex items-center">
                       <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
                       Encrypted & Guarded
                     </dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Discovery Strategy</dt>
+                    <dt className="text-xs font-medium text-slate-500">Discovery Strategy</dt>
                     <dd className="mt-2">
                        <StatusBadge status={dataset.visibility} />
                     </dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-tight">Governance Protocol</dt>
+                    <dt className="text-xs font-medium text-slate-500">Governance Protocol</dt>
                     <dd className="mt-2">
                       <StatusBadge status={dataset.access_policy} />
                     </dd>
@@ -298,23 +319,23 @@ const DatasetDetails = () => {
           <div className="space-y-6 text-left">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4 pb-6 border-b border-slate-100">
               <div>
-                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Data Asset</span>
+                <span className="block text-[10px] font-bold text-slate-400 mb-1.5">Data Asset</span>
                 <span className="text-sm font-bold text-slate-900 truncate block">{computationResult?.datasetName}</span>
               </div>
               <div>
-                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Protocol State</span>
-                <span className="inline-flex items-center text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase">
+                <span className="block text-[10px] font-bold text-slate-400 mb-1.5">Protocol State</span>
+                <span className="inline-flex items-center text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                   {computationResult?.operation} / FHE-CKKS
                 </span>
               </div>
               <div>
-                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Computation ID</span>
+                <span className="block text-[10px] font-bold text-slate-400 mb-1.5">Computation ID</span>
                 <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
                   {computationResult?.computation_id || 'N/A'}
                 </span>
               </div>
               <div>
-                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Timestamp</span>
+                <span className="block text-[10px] font-bold text-slate-400 mb-1.5">Timestamp</span>
                 <span className="text-xs text-slate-500">{new Date().toLocaleString()}</span>
               </div>
             </div>
@@ -324,9 +345,9 @@ const DatasetDetails = () => {
                  <svg className="w-16 h-16 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
               </div>
               <div className="relative text-center">
-                <span className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Verified Numerical Output</span>
+                <span className="block text-[10px] font-bold text-slate-500 mb-4">Verified Numerical Output</span>
                 <div className="flex flex-col items-center">
-                  <span className="text-5xl font-black text-slate-900 tracking-tighter font-mono">
+                  <span className="text-5xl font-bold text-slate-900 font-mono">
                     {typeof computationResult?.result === 'number' 
                       ? computationResult.result.toFixed(6)
                       : 'N/A'}
@@ -336,7 +357,7 @@ const DatasetDetails = () => {
                       navigator.clipboard.writeText(computationResult?.result);
                       setToastMessage('Value copied to clipboard');
                     }}
-                    className="mt-6 flex items-center px-3 py-1.5 bg-white rounded-lg text-[10px] font-black text-slate-500 hover:bg-slate-900 hover:text-white transition-all border border-slate-200 uppercase tracking-widest"
+                    className="mt-6 flex items-center px-3 py-1.5 bg-white rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-900 hover:text-white transition-all border border-slate-200"
                   >
                     <svg className="w-3.5 h-3.5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 8v3m-3-3l3 3m0 0l3-3" />
@@ -348,15 +369,15 @@ const DatasetDetails = () => {
             </div>
 
             <div className="flex items-center space-x-6">
-              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center text-[10px] font-bold text-slate-500">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
                 Integrity Verified
               </div>
-              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center text-[10px] font-bold text-slate-500">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                 Zero-Leakage FHE
               </div>
-              <div className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center text-[10px] font-bold text-slate-500">
                 <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
                 Audit Logged
               </div>

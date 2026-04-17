@@ -43,7 +43,7 @@ const AuditLogs = () => {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">Audit Infrastructure</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-wide">Audit Infrastructure</h1>
           <p className="text-slate-500 font-medium">Immutable telemetry and comprehensive system activity trailing.</p>
         </div>
         <div className="flex gap-3">
@@ -75,7 +75,7 @@ const AuditLogs = () => {
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest gap-4">
+          <div className="flex items-center text-[10px] font-bold text-slate-400 gap-4">
             <span>Showing {filteredLogs.length} events</span>
           </div>
         </div>
@@ -84,12 +84,12 @@ const AuditLogs = () => {
           <table className="min-w-full divide-y divide-slate-100 text-left">
             <thead className="bg-white">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Timestamp</th>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">User</th>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Action</th>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Severity</th>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">IP Address</th>
-                <th className="px-6 py-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Request ID</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">Timestamp</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">User</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">Action</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">Severity</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">IP Address</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400">Request ID</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-50">
@@ -112,16 +112,19 @@ const AuditLogs = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center mr-3 border border-slate-200">
-                          <span className="text-[10px] font-black text-slate-600">{(log.user_email || 'SYS')[0].toUpperCase()}</span>
+                          <span className="text-[10px] font-bold text-slate-600">{(log.user_email || 'SYS')[0]}</span>
                         </div>
                         <span className="text-sm font-bold text-slate-900">{log.user_email || 'System'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-black text-slate-700 tracking-tight">{log.action.replace(/_/g, ' ')}</span>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-900 leading-tight">{log.action.replace(/_/g, ' ')}</span>
+                        <span className="text-slate-400 font-mono text-[9px] mt-0.5">#{log.id}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-[10px] font-black uppercase rounded border ${getSeverityColor(log.severity)}`}>
+                      <span className={`px-2 py-1 text-[10px] font-bold rounded border ${getSeverityColor(log.severity)}`}>
                         {log.severity}
                       </span>
                     </td>
@@ -141,19 +144,19 @@ const AuditLogs = () => {
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
-          <span className="block text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4">Integrity Verification</span>
+          <span className="block text-[10px] font-bold text-indigo-400 mb-4">Integrity Verification</span>
           <p className="text-sm text-slate-300 leading-relaxed font-medium">
             All logs are immutable (write-once) and captured via a dual-layer sync/async pipeline to ensure no telemetry is lost.
           </p>
         </div>
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-lg">
-          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Retention Policy</span>
+          <span className="block text-[10px] font-bold text-slate-400 mb-4">Retention Policy</span>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
             System activity data is retained for 365 days in accordance with the security compliance protocol.
           </p>
         </div>
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-lg">
-          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Anomaly Detection</span>
+          <span className="block text-[10px] font-bold text-slate-400 mb-4">Anomaly Detection</span>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
             Background workers analyze these trails for brute-force attempts and suspicious IP velocity in real-time.
           </p>

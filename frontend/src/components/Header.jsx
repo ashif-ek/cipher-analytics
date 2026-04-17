@@ -11,7 +11,7 @@ const Header = ({ title = 'Dashboard' }) => {
   return (
     <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 shrink-0 sticky top-0 z-30">
       <div className="flex items-center">
-        <h2 className="text-xl font-semibold text-slate-900 tracking-tight">{title}</h2>
+        <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
       </div>
       
       <div className="flex items-center space-x-6">

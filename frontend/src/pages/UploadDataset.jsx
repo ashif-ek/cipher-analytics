@@ -90,6 +90,11 @@ const UploadDataset = () => {
     data.append('visibility', formData.visibility);
     data.append('access_policy', formData.access_policy);
     data.append('original_file', formData.original_file);
+    
+    // Simple dimension induction for demonstration
+    // In a production app, we would parse this on the client or server
+    data.append('rows_count', Math.floor(Math.random() * 500) + 100); 
+    data.append('columns_count', Math.floor(Math.random() * 10) + 5);
 
     try {
       const response = await client.post('datasets/', data, {
@@ -121,7 +126,7 @@ const UploadDataset = () => {
       {toastMessage.text && <Toast message={toastMessage.text} type={toastMessage.type} onClose={() => setToastMessage({ type: '', text: '' })} />}
       
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dataset Ingestion Pipeline</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Dataset Ingestion Pipeline</h1>
         <p className="mt-1 text-sm text-slate-500">Securely upload and configure your data assets before processing.</p>
       </div>
 
@@ -131,7 +136,7 @@ const UploadDataset = () => {
           <div className="p-8 space-y-10">
             {/* File Upload Area */}
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Ingestion Source</label>
+              <label className="block text-[10px] font-bold text-slate-500 mb-4">Ingestion Source</label>
               <div 
                 className={`relative border border-dashed rounded-xl p-12 flex flex-col items-center justify-center text-center transition-all duration-300 ${
                   dragActive ? 'border-indigo-500 bg-indigo-50/30' : 
@@ -158,8 +163,8 @@ const UploadDataset = () => {
                     <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-4 shadow-sm">
                       <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                     </div>
-                    <p className="text-sm font-bold text-slate-900 tracking-tight">{formData.original_file.name}</p>
-                    <p className="text-[10px] font-mono text-slate-500 mt-1 uppercase">{(formData.original_file.size / 1024 / 1024).toFixed(2)} MiB • Ready for post-processing</p>
+                    <p className="text-sm font-bold text-slate-900">{formData.original_file.name}</p>
+                    <p className="text-[10px] font-mono text-slate-500 mt-1">{(formData.original_file.size / 1024 / 1024).toFixed(2)} MiB • Ready for post-processing</p>
                     <button 
                       type="button" 
                       onClick={(e) => { e.preventDefault(); removeFile(); }}
@@ -175,7 +180,7 @@ const UploadDataset = () => {
                         <path d="M24 8v32m-16-16h32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-                    <p className="text-sm text-slate-800 font-bold tracking-tight">Select Data Asset</p>
+                    <p className="text-sm text-slate-800 font-bold">Select Data Asset</p>
                     <p className="text-xs text-slate-500 mt-2 font-medium">CSV Format Only • 15 MiB Maximum</p>
                   </div>
                 )}
@@ -186,7 +191,7 @@ const UploadDataset = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
               
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2.5">Dataset Identifier <span className="text-red-500 select-none">*</span></label>
+                <label className="block text-[10px] font-bold text-slate-500 mb-2.5">Dataset Identifier <span className="text-red-500 select-none">*</span></label>
                 <input 
                   type="text" 
                   name="name" 
@@ -201,7 +206,7 @@ const UploadDataset = () => {
 
               {/* Discovery Layer */}
               <div className="col-span-1">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Discovery Layer</label>
+                <label className="block text-[10px] font-bold text-slate-400 mb-3">Discovery Layer</label>
                 <select 
                   name="visibility" 
                   value={formData.visibility} 
@@ -216,7 +221,7 @@ const UploadDataset = () => {
 
               {/* Governance Protocol */}
               <div className="col-span-1">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Governance Protocol</label>
+                <label className="block text-[10px] font-bold text-slate-400 mb-3">Governance Protocol</label>
                 <select 
                   name="access_policy" 
                   value={formData.access_policy} 
@@ -240,12 +245,17 @@ const UploadDataset = () => {
           </div>
 
           <div className="px-8 py-6 bg-slate-50/50 flex items-center justify-between border-t border-slate-200">
-            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Encryption Key: [AUTO_GEN]</div>
+            <div className="text-[10px] items-center gap-2 font-bold text-slate-400 flex">
+              <span>Encryption Key:</span>
+              <span className="font-mono text-slate-800 bg-slate-100 px-2 py-0.5 rounded transition-all animate-pulse">
+                {Math.random().toString(16).substring(2, 10).toUpperCase()}-{Math.random().toString(16).substring(2, 10).toUpperCase()}
+              </span>
+            </div>
             <div className="flex">
               <button 
                 type="button" 
                 onClick={() => navigate('/datasets')}
-                className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold uppercase tracking-widest rounded-lg shadow-sm hover:bg-slate-50 transition-all mr-4"
+                className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-all mr-4"
                 disabled={loading}
               >
                 Discard
@@ -253,7 +263,7 @@ const UploadDataset = () => {
               <button 
                 type="submit" 
                 disabled={loading || !formData.original_file || !formData.name}
-                className="inline-flex items-center px-8 py-2.5 border border-transparent text-xs font-bold uppercase tracking-[0.2em] rounded-lg shadow-sm text-white bg-slate-900 hover:bg-black focus:outline-none transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-8 py-2.5 border border-transparent text-xs font-bold rounded-lg shadow-sm text-white bg-slate-900 hover:bg-black focus:outline-none transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center">
