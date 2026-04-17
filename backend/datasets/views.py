@@ -69,10 +69,9 @@ class DatasetViewSet(viewsets.ModelViewSet):
         # Save the dataset with the current user as owner
         dataset = serializer.save(owner=self.request.user)
         
-        # Explicitly set status to READY and update fields to ensure persistence
-        # (This avoids any read-only field mapping issues in the serializer save)
-        dataset.status = "READY"
-        dataset.save(update_fields=['status'])
+        # Trigger celery ingestion task
+        from .tasks import process_and_encrypt_dataset_task
+        process_and_encrypt_dataset_task.delay(dataset.id)
         
         log_audit_event(
             user_id=self.request.user.id,

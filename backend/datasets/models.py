@@ -27,6 +27,7 @@ class Dataset(models.Model):
     name = models.CharField(max_length=255)
 
     # Zero-Trust Storage
+    original_file = models.FileField(upload_to="datasets/raw/", null=True, blank=True)
     ciphertext_path = models.FileField(upload_to="datasets/ciphertexts/", null=True, blank=True)
     public_key = models.BinaryField(null=True, blank=True) # B64 Encoded SEAL context
     eval_keys = models.BinaryField(null=True, blank=True)  # Relin/Galois keys required for backend arithmetic

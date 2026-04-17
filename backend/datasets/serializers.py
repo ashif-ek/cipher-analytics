@@ -6,7 +6,7 @@ class DatasetUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dataset
         fields = [
-            "id", "name", "ciphertext_path", "public_key", "eval_keys", "schema_hash", 
+            "id", "name", "original_file", "ciphertext_path", "public_key", "eval_keys", "schema_hash", 
             "status", "rows_count", "columns_count", "created_at", "updated_at", 
             "visibility", "access_policy", "task_id", "error_message",
             "owner_id"

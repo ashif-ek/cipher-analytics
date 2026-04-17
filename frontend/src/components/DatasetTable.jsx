@@ -166,30 +166,30 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl shadow-sm flex flex-col overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-[4px] shadow-sm flex flex-col overflow-hidden">
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
       
-      {/* Unified Command Bar */}
-      <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex-1 min-w-0 max-w-lg">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-900 transition-colors">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+      {/* Search and Filters Bar */}
+      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="relative w-full max-w-sm group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-slate-600">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
             <input
               type="text"
-              className="bg-white block w-full pl-11 pr-4 py-2.5 text-[10px] font-bold border-slate-200 rounded-xl focus:ring-0 focus:border-slate-900 transition-all placeholder:text-slate-400"
-              placeholder="Filter assets by ID or Name..."
+              className="bg-white block w-full pl-9 pr-3 py-1.5 text-[11px] font-medium border border-slate-200 rounded-[4px] focus:ring-0 focus:border-slate-400 focus:outline-none transition-all placeholder:text-slate-400"
+              placeholder="Find by Resource ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1">
+          
+          <div className="h-4 w-px bg-slate-200 hidden md:block"></div>
+          
+          <div className="hidden md:flex items-center space-x-2">
             <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
+              className="bg-transparent pl-2 pr-6 py-1 text-[11px] font-bold border-none focus:ring-0 text-slate-500 hover:text-slate-900 cursor-pointer transition-colors"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -198,9 +198,8 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
               <option value="PROCESSING">Processing</option>
               <option value="FAILED">Failed</option>
             </select>
-            <div className="w-px h-4 bg-slate-100"></div>
             <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
+              className="bg-transparent pl-2 pr-6 py-1 text-[11px] font-bold border-none focus:ring-0 text-slate-500 hover:text-slate-900 cursor-pointer transition-colors"
               value={visibilityFilter}
               onChange={(e) => setVisibilityFilter(e.target.value)}
             >
@@ -208,25 +207,16 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
               <option value="PRIVATE">Private</option>
               <option value="DISCOVERABLE">Discoverable</option>
             </select>
-            <div className="w-px h-4 bg-slate-100"></div>
-            <select 
-              className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-bold border-none focus:ring-0 text-slate-600 cursor-pointer"
-              value={policyFilter}
-              onChange={(e) => setPolicyFilter(e.target.value)}
-            >
-              <option value="ALL">All Policies</option>
-              <option value="STRICT">Strict</option>
-              <option value="COLLABORATIVE">Collaborative</option>
-              <option value="AGGREGATED">Aggregated</option>
-            </select>
           </div>
-
+        </div>
+        
+        <div className="flex items-center space-x-2">
           <button
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 text-[10px] font-bold rounded-xl text-slate-900 hover:bg-slate-50 transition-all disabled:opacity-50 group"
+            className="inline-flex items-center px-3 py-1.5 bg-white border border-slate-300 text-[11px] font-bold rounded-[4px] text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all disabled:opacity-50 group"
           >
-            <svg className={`mr-2 h-4 w-4 text-slate-400 group-hover:text-slate-900 transition-colors ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className={`mr-2 h-3.5 w-3.5 text-slate-400 group-hover:text-slate-900 transition-colors ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Refresh
@@ -234,212 +224,132 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
         </div>
       </div>
 
-      {/* Industrial Table */}
+      {/* High-Density Console Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-100">
-          <thead className="bg-white">
+        <table className="min-w-full divide-y divide-slate-200 border-collapse">
+          <thead className="bg-[#f2f3f3]/50">
             <tr>
-              <th scope="col" className="px-8 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('name')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Dataset Identity <SortIcon field="name" /></div>
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0 cursor-pointer group" onClick={() => handleSort('name')}>
+                <div className="flex items-center group-hover:text-slate-900">IDENTIFIER <SortIcon field="name" /></div>
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('status')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Status <SortIcon field="status" /></div>
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0 cursor-pointer group" onClick={() => handleSort('status')}>
+                <div className="flex items-center group-hover:text-slate-900">STATUS <SortIcon field="status" /></div>
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400">
-                Dimensions
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0">
+                DIMENSIONS
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('visibility')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Visibility <SortIcon field="visibility" /></div>
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0 cursor-pointer group" onClick={() => handleSort('visibility')}>
+                <div className="flex items-center group-hover:text-slate-900">VISIBILITY <SortIcon field="visibility" /></div>
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('access_policy')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Policy <SortIcon field="access_policy" /></div>
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0">
+                GOVERNANCE
               </th>
-              <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 cursor-pointer group" onClick={() => handleSort('created_at')}>
-                <div className="flex items-center group-hover:text-slate-900 transition-colors">Created <SortIcon field="created_at" /></div>
+              <th scope="col" className="px-5 py-2.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-tight border-r border-slate-100 last:border-0 cursor-pointer group" onClick={() => handleSort('created_at')}>
+                <div className="flex items-center group-hover:text-slate-900">CREATED <SortIcon field="created_at" /></div>
               </th>
-              <th scope="col" className="px-8 py-4 text-right text-[10px] font-bold text-slate-400">
-                Analytical Actions
+              <th scope="col" className="px-5 py-2.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-tight">
+                ACTIONS
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-50">
+          <tbody className="bg-white divide-y divide-slate-100">
             {loading && datasets.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-8 py-24 text-center">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <svg className="animate-spin h-6 w-6 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span className="text-[10px] font-bold text-slate-400">Synching Data Registry...</span>
+                <td colSpan="7" className="px-5 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span className="text-[11px] font-bold text-slate-400">LOADING REGISTRY...</span>
                   </div>
                 </td>
               </tr>
             ) : filteredAndSortedDatasets.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-8 py-24 text-center">
+                <td colSpan="7" className="px-5 py-12 text-center">
                    <div className="max-w-xs mx-auto">
-                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-3.586a1 1 0 01-.707-.293l-1.414-1.414a1 1 0 00-.707-.293h-3.172a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H4" /></svg>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900">No data assets found</h3>
-                    <p className="text-[10px] text-slate-500 mt-1 font-bold leading-relaxed">Adjust your filters or initiate a new ingestion pipeline.</p>
+                    <h3 className="text-[11px] font-bold text-slate-900">NO RESOURCES FOUND</h3>
+                    <p className="text-[11px] text-slate-400 mt-1 font-medium italic">Verify filters or initiate new ingestion.</p>
                    </div>
                 </td>
               </tr>
             ) : (
               filteredAndSortedDatasets.map((dataset) => (
-                <tr key={dataset.id} className="hover:bg-slate-50/50 transition-all group border-l-2 border-transparent hover:border-slate-900">
-                  <td className="px-8 py-5 whitespace-nowrap">
+                <tr key={dataset.id} className="hover:bg-slate-50/80 transition-all group">
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50 group-hover:border-slate-100">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-11 w-11 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                      <div className="flex-shrink-0 h-8 w-8 bg-slate-50 rounded-[4px] flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-200 transition-all">
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                       </div>
-                      <div className="ml-5">
-                        <div className="flex items-center gap-2">
-                          <Link to={`/datasets/${dataset.id}`} className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">{dataset.name}</Link>
-                          <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold text-slate-500">#{dataset.id}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-1 font-bold">Verified CKKS-Object</div>
+                      <div className="ml-3 min-w-0">
+                        <Link to={`/datasets/${dataset.id}`} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline block truncate">{dataset.name}</Link>
+                        <span className="text-[10px] font-mono text-slate-400">res-{dataset.id.toString().padStart(5, '0')}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
                     <StatusBadge status={dataset.status} />
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 font-mono text-xs">
-                      <span className="font-extrabold text-slate-900">{dataset.rows_count?.toLocaleString() || '-'}</span> 
-                      <span className="text-slate-300">×</span> 
-                      <span className="text-slate-500">{dataset.columns_count || '-'}</span>
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
+                    <div className="flex items-center font-mono text-[11px] text-slate-600">
+                      <span className="font-bold text-slate-900">{(dataset.rows_count || 0).toLocaleString()}</span> 
+                      <span className="mx-1 text-slate-300">×</span> 
+                      <span>{dataset.columns_count || 0}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
                     <StatusBadge status={dataset.visibility} />
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <StatusBadge status={dataset.access_policy} />
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50 text-[11px] font-bold text-slate-600">
+                    {dataset.access_policy === 'STRICT' ? (
+                       <div className="flex items-center text-red-600">
+                         <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                         GATED
+                       </div>
+                    ) : (
+                       <div className="flex items-center text-emerald-600">
+                         <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg>
+                         OPEN
+                       </div>
+                    )}
                   </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span className="text-[10px] font-bold text-slate-500">
-                      {new Date(dataset.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {new Date(dataset.created_at).toISOString().split('T')[0]}
                     </span>
                   </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-2.5">
+                  <td className="px-5 py-3 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end space-x-1.5">
                       {dataset.status === 'READY' && (
-                        <div className="flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-100 group-hover:border-slate-200 transition-colors">
-                          <button
-                            onClick={() => handleCompute(dataset.id, 'sum')}
-                            disabled={
-                              computingId === dataset.id || 
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER') // Gated until grant
-                            }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                                ? 'text-slate-300 cursor-not-allowed'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                            }`}
-                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Sum Aggregation"}
-                          >
-                            {computingId === dataset.id ? '...' : (
-                              <span className="flex items-center italic">
-                                <span className="mr-0.5 not-italic text-sm">∑</span> Sigma
-                              </span>
-                            )}
-                          </button>
-                          <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-                          <button
-                            onClick={async () => {
-                                 // Logic simplified for clarity, keeping props/params consistent
-                                 handleCompute(dataset.id, 'mean');
-                            }}
-                            disabled={
-                              computingId === dataset.id || 
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                            }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                                ? 'text-slate-300 cursor-not-allowed'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                            }`}
-                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Mean Average"}
-                          >
-                            {computingId === dataset.id ? '...' : (
-                              <span className="flex items-center italic">
-                                <span className="mr-0.5 not-italic text-sm">x̄</span> Mean
-                              </span>
-                            )}
-                          </button>
-                          <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-                          <button
-                            onClick={() => handleCompute(dataset.id, 'variance')}
-                            disabled={
-                              computingId === dataset.id || 
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                            }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                                ? 'text-slate-300 cursor-not-allowed'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                            }`}
-                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Variance (Variation)"}
-                          >
-                            {computingId === dataset.id ? '...' : (
-                              <span className="flex items-center italic">
-                                <span className="mr-0.5 not-italic text-sm">σ²</span> Var
-                              </span>
-                            )}
-                          </button>
-                          <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
-                          <button
-                            onClick={() => handleCompute(dataset.id, 'std_deviation')}
-                            disabled={
-                              computingId === dataset.id || 
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                            }
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
-                              (dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER')
-                                ? 'text-slate-300 cursor-not-allowed'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                            }`}
-                            title={dataset.access_policy === 'STRICT' && userRole === 'RESEARCHER' ? "Grant Required for Strict Data" : "Standard Deviation"}
-                          >
-                            {computingId === dataset.id ? '...' : (
-                              <span className="flex items-center italic">
-                                <span className="mr-0.5 not-italic text-sm">σ</span> Dev
-                              </span>
-                            )}
-                          </button>
+                        <div className="flex items-center bg-slate-50 rounded-[4px] border border-slate-200 p-0.5">
+                          {['sum', 'mean', 'variance', 'std_deviation'].map(op => {
+                            const isGated = dataset.access_policy === 'STRICT' && isResearcher;
+                            return (
+                              <button
+                                key={op}
+                                onClick={() => handleCompute(dataset.id, op)}
+                                disabled={computingId === dataset.id || isGated}
+                                className={`p-1.5 rounded-[2px] transition-all ${
+                                  isGated 
+                                    ? 'text-slate-200 cursor-not-allowed' 
+                                    : 'text-slate-500 hover:text-slate-900 hover:bg-white'
+                                }`}
+                                title={isGated ? "GOVERNANCE GATED" : op.toUpperCase()}
+                              >
+                                <span className="text-[10px] font-bold">{op === 'sum' ? '∑' : op === 'mean' ? 'x̄' : op === 'variance' ? 'σ²' : 'σ'}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                       
-                      <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                      <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
                       
-                      <Link
-                          to={`/datasets/${dataset.id}`}
-                          className="bg-white border border-slate-200 p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-400 transition-all shadow-sm"
-                          title="Detailed Metrics"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        </Link>
-                      
-                      {isResearcher && (
-                        <button
-                          onClick={() => onRequestAccess(dataset.id)}
-                          className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-slate-900 transition-all shadow-sm"
-                          title="Request Governance Access"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                        </button>
-                      )}
-
-                      {!isResearcher && deletingId !== dataset.id && ( // Ideally adding && dataset.owner_id === currentUserId
-                        <button
-                          onClick={() => handleDeleteClick(dataset)}
-                          className="text-slate-300 hover:text-red-500 p-2 rounded-xl transition-colors focus:outline-none"
-                          title="Expunge Asset"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeleteClick(dataset)}
+                        className="p-1.5 text-slate-300 hover:text-red-600 rounded-[2px] transition-colors"
+                        title="TERMINATE RESOURCE"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
