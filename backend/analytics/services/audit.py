@@ -22,11 +22,11 @@ def log_audit_event(user_id, action, severity, ip_address=None, request_id=None,
         'metadata': metadata
     }
 
-    if severity == AuditLog.Severity.CRITICAL:
+    if severity == AuditLog.Severity.CRITICAL or action == AuditLog.Action.ACCESS_DENIED:
         try:
             AuditLog.objects.create(**log_data)
         except Exception as e:
-            logger.error(f"Failed to synchronously write CRITICAL audit log: {e}", extra=log_data)
+            logger.error(f"Failed to synchronously write priority audit log: {e}", extra=log_data)
     else:
         try:
             # Attempt Async

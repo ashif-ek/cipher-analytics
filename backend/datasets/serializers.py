@@ -9,10 +9,10 @@ class DatasetUploadSerializer(serializers.ModelSerializer):
             "id", "name", "original_file", "ciphertext_path", "public_key", "eval_keys", "schema_hash", 
             "status", "rows_count", "columns_count", "created_at", "updated_at", 
             "visibility", "compute_mode", "task_id", "error_message",
-            "owner_id"
+            "owner_id", "last_result", "last_operation"
         ]
         read_only_fields = [
-            "id", "status", "created_at", "updated_at", "task_id", "error_message", "owner_id"
+            "id", "status", "created_at", "updated_at", "task_id", "error_message", "owner_id", "last_result", "last_operation"
         ]
 
     def validate_ciphertext_path(self, value):

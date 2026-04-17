@@ -55,6 +55,11 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
         job.status = "COMPLETED"
         job.save(update_fields=['status', 'result_value'])
         
+        # PERSIST TO DATASET: Allow inline display in UI
+        dataset.last_result = job.result_value
+        dataset.last_operation = job.operation
+        dataset.save(update_fields=['last_result', 'last_operation'])
+        
         log_audit_event(
             user_id=job.requested_by.id,
             action=AuditLog.Action.DATASET_PROCESS,
@@ -119,21 +124,24 @@ def process_and_encrypt_dataset_task(self, dataset_id):
         rows = len(df)
         cols = len(numeric_df.columns)
         
-        # Metadata-Driven Safety: Store distinct counts for ALL columns
-        # This is used for k-anonymity estimation (n / distinct_count >= 5)
+        # Metadata-Driven Safety: Store distinct counts and type flags for ALL columns
+        # This is used for k-anonymity estimation and type enforcement
         column_stats = {}
         for col in df.columns:
+            is_numeric = pd.api.types.is_numeric_dtype(df[col])
             column_stats[col] = {
-                "distinct_count": int(df[col].nunique())
+                "distinct_count": int(df[col].nunique()),
+                "is_numeric": bool(is_numeric)
             }
         
         dataset.rows_count = rows
         dataset.columns_count = cols
         dataset.column_stats = column_stats
+        dataset.column_stats_verified = True
         
         # Simulate / Perform FHE Encryption
         dataset.status = "READY"
-        dataset.save(update_fields=['status', 'rows_count', 'columns_count', 'column_stats'])
+        dataset.save(update_fields=['status', 'rows_count', 'columns_count', 'column_stats', 'column_stats_verified'])
         
         logger.info(f"Dataset {dataset_id} processed successfully. Dimensions: {rows}x{cols}")
         return f"SUCCESS: {rows}x{cols}"

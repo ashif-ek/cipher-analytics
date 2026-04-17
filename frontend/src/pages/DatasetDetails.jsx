@@ -84,6 +84,10 @@ const DatasetDetails = () => {
             setShowResultModal(true);
             setComputing(false);
             setToastMessage('');
+            
+            // Re-fetch dataset to update last_result/last_operation
+            const dsRes = await client.get(`datasets/${id}/`);
+            setDataset(dsRes.data);
           } else if (jobRes.data.status === 'FAILED') {
             clearInterval(pollInterval);
             setComputing(false);
@@ -155,6 +159,12 @@ const DatasetDetails = () => {
               <h1 className="text-2xl font-bold text-slate-900 flex items-center">
                 {dataset.name}
                 <span className="ml-3"><StatusBadge status={dataset.status} /></span>
+                {dataset.last_result !== null && (
+                   <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                     <span className="mr-1 opacity-50">{dataset.last_operation === 'SUM' ? '∑' : dataset.last_operation === 'MEAN' ? 'x̅' : dataset.last_operation}:</span>
+                     {dataset.last_result.toFixed(dataset.last_result % 1 === 0 ? 0 : 4)}
+                   </span>
+                )}
               </h1>
               <p className="text-sm text-slate-500 mt-1 flex items-center">
                 ID: <span className="font-mono ml-1 text-xs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{dataset.id}</span>
@@ -251,6 +261,33 @@ const DatasetDetails = () => {
                   </div>
                 </dl>
               </Card>
+
+              {dataset.last_result !== null && (
+                <Card className="p-8 border-amber-100 bg-amber-50/30 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12">
+                     <svg className="w-32 h-32 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  </div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-amber-900 uppercase tracking-widest flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Latest Analytical Insight
+                      </h3>
+                      <span className="text-[10px] font-mono text-amber-600 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                        {dataset.last_operation} PROCESSED
+                      </span>
+                    </div>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-5xl font-black text-slate-900 font-mono tracking-tighter">
+                        {dataset.last_result.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                      </span>
+                    </div>
+                    <p className="mt-4 text-xs font-medium text-amber-800/70 max-w-sm leading-relaxed">
+                      This value was derived under FHE protection. The integrity and privacy of the underlying resource remains intact.
+                    </p>
+                  </div>
+                </Card>
+              )}
               
               {dataset.status === 'READY' && (
                 <Card className="p-6">

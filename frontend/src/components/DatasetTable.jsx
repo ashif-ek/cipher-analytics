@@ -281,7 +281,14 @@ const DatasetTable = ({ datasets, loading, onRefresh, onDelete, onRequestAccess,
                       </div>
                       <div className="ml-3 min-w-0">
                         <Link to={`/datasets/${dataset.id}`} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline block truncate">{dataset.name}</Link>
-                        <span className="text-[10px] font-mono text-slate-400">res-{dataset.id.toString().padStart(5, '0')}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-mono text-slate-400">res-{dataset.id.toString().padStart(5, '0')}</span>
+                          {dataset.last_result !== null && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-[2px] text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                              {dataset.last_operation === 'SUM' ? '∑' : dataset.last_operation === 'MEAN' ? 'x̅' : dataset.last_operation}: {dataset.last_result.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>

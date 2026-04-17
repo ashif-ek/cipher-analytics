@@ -50,6 +50,7 @@ class Dataset(models.Model):
     )
 
     column_stats = models.JSONField(default=dict, blank=True)
+    column_stats_verified = models.BooleanField(default=False)
 
     status = models.CharField(
         max_length=20,
@@ -59,6 +60,10 @@ class Dataset(models.Model):
 
     task_id = models.CharField(max_length=255, blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+
+    # Persistence of Latest Insight
+    last_result = models.FloatField(null=True, blank=True)
+    last_operation = models.CharField(max_length=50, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
