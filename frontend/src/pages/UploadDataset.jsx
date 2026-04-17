@@ -11,7 +11,7 @@ const UploadDataset = () => {
   const [formData, setFormData] = useState({
     name: '',
     visibility: 'PRIVATE',
-    access_policy: 'STRICT',
+    compute_mode: 'STRICT',
     original_file: null,
   });
   
@@ -61,8 +61,8 @@ const UploadDataset = () => {
       setFormData(prev => {
         const newState = { ...prev, [name]: value };
         // Enforce Orthogonal Constraints: Private data cannot have Aggregated policy
-        if (name === 'visibility' && value === 'PRIVATE' && prev.access_policy === 'AGGREGATED') {
-          newState.access_policy = 'STRICT';
+        if (name === 'visibility' && value === 'PRIVATE' && prev.compute_mode === 'AGGREGATED') {
+          newState.compute_mode = 'STRICT';
         }
         return newState;
       });
@@ -88,7 +88,7 @@ const UploadDataset = () => {
     const data = new FormData();
     data.append('name', formData.name);
     data.append('visibility', formData.visibility);
-    data.append('access_policy', formData.access_policy);
+    data.append('compute_mode', formData.compute_mode);
     data.append('original_file', formData.original_file);
     
     // Simple dimension induction for demonstration
@@ -219,18 +219,17 @@ const UploadDataset = () => {
                 </select>
               </div>
 
-              {/* Governance Protocol */}
               <div className="col-span-1">
                 <label className="block text-[10px] font-bold text-slate-400 mb-3">Governance Protocol</label>
                 <select 
-                  name="access_policy" 
-                  value={formData.access_policy} 
+                  name="compute_mode" 
+                  value={formData.compute_mode} 
                   onChange={handleChange}
                   className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
                   disabled={loading}
                 >
                   <option value="STRICT">Strict (Request Required)</option>
-                  <option value="COLLABORATIVE">Collaborative (Team Access)</option>
+                  <option value="WHITELIST">Whitelist (Direct Access)</option>
                   <option value="AGGREGATED" disabled={formData.visibility === 'PRIVATE'}>
                     Aggregated (Analysis Only) {formData.visibility === 'PRIVATE' && '• Discovery Required'}
                   </option>

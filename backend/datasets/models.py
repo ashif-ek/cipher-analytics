@@ -17,9 +17,9 @@ class Dataset(models.Model):
         PRIVATE = "PRIVATE", "Private"
         DISCOVERABLE = "DISCOVERABLE", "Discoverable"
 
-    class AccessPolicy(models.TextChoices):
+    class ComputeMode(models.TextChoices):
         STRICT = "STRICT", "Strict"
-        COLLABORATIVE = "COLLABORATIVE", "Collaborative"
+        WHITELIST = "WHITELIST", "Whitelist"
         AGGREGATED = "AGGREGATED", "Aggregated"
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -43,10 +43,10 @@ class Dataset(models.Model):
         default=Visibility.PRIVATE
     )
 
-    access_policy = models.CharField(
+    compute_mode = models.CharField(
         max_length=20,
-        choices=AccessPolicy.choices,
-        default=AccessPolicy.STRICT
+        choices=ComputeMode.choices,
+        default=ComputeMode.STRICT
     )
 
     status = models.CharField(

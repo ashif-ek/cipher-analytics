@@ -24,6 +24,7 @@ class AuditLog(models.Model):
         DATASET_UPLOAD = "DATASET_UPLOAD", "Dataset Uploaded"
         DATASET_PROCESS = "DATASET_PROCESS", "Dataset Processed"
         DATASET_DELETE = "DATASET_DELETE", "Dataset Deleted"
+        ACCESS_DENIED = "ACCESS_DENIED", "Access Denied"
 
     class Severity(models.TextChoices):
         INFO = "INFO", "Info"

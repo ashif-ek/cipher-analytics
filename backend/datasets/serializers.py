@@ -8,7 +8,7 @@ class DatasetUploadSerializer(serializers.ModelSerializer):
         fields = [
             "id", "name", "original_file", "ciphertext_path", "public_key", "eval_keys", "schema_hash", 
             "status", "rows_count", "columns_count", "created_at", "updated_at", 
-            "visibility", "access_policy", "task_id", "error_message",
+            "visibility", "compute_mode", "task_id", "error_message",
             "owner_id"
         ]
         read_only_fields = [
