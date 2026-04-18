@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
+import useWebSockets from '../hooks/useWebSockets';
 import Card from '../components/ui/Card';
 
 const DashboardOverview = () => {
@@ -13,50 +14,74 @@ const DashboardOverview = () => {
   });
   const [recentLogs, setRecentLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const lastEventTimestamps = useRef(new Map()); // Ref to track latest timestamps: "model:id" -> timestamp
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const [datasetsRes, logsRes] = await Promise.all([
+        client.get('datasets/'),
+        client.get('analytics/audit-logs/')
+      ]);
+      
+      const datasets = datasetsRes.data;
+      const logs = logsRes.data;
+      
+      let priv = 0, shared = 0, research = 0;
+      datasets.forEach(ds => {
+        if (ds.visibility === 'PRIVATE') priv++;
+        if (ds.visibility === 'DISCOVERABLE') {
+          shared++;
+          research++;
+        }
+      });
+
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const activeUsers = new Set(
+        logs.filter(log => new Date(log.timestamp) > fiveMinutesAgo)
+            .map(log => log.user)
+      ).size || 1;
+
+      setStats({
+        total: datasets.length,
+        private: priv,
+        shared: shared,
+        researchReady: research,
+        liveSessions: activeUsers
+      });
+      setRecentLogs(logs.slice(0, 5));
+    } catch (error) {
+      console.error("Failed to fetch dashboard data", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Real-time updates via WebSockets
+  useWebSockets(useCallback((message) => {
+    // Schema check: supports both DATASET_STATUS_UPDATED and COMPUTATION_STATUS_UPDATED
+    if (message.type === 'DATASET_STATUS_UPDATED' || message.type === 'COMPUTATION_STATUS_UPDATED') {
+       const { payload, metadata } = message;
+       const eventKey = `${payload.model}:${payload.id}`;
+       const eventTime = new Date(metadata.timestamp).getTime();
+       
+       // Stale event protection
+       const lastTime = lastEventTimestamps.current.get(eventKey) || 0;
+       if (eventTime <= lastTime) {
+         console.warn(`Ignoring stale or duplicate event for ${eventKey}. Received: ${eventTime}, Last: ${lastTime}`);
+         return;
+       }
+       
+       lastEventTimestamps.current.set(eventKey, eventTime);
+       console.log(`Verified event [${metadata.event_id}] received from ${metadata.source}:`, payload);
+       
+       // Trigger data refresh
+       fetchDashboardData();
+    }
+  }, [fetchDashboardData]));
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [datasetsRes, logsRes] = await Promise.all([
-          client.get('datasets/'),
-          client.get('analytics/audit-logs/')
-        ]);
-        
-        const datasets = datasetsRes.data;
-        const logs = logsRes.data;
-        
-        let priv = 0, shared = 0, research = 0;
-        datasets.forEach(ds => {
-          if (ds.visibility === 'PRIVATE') priv++;
-          if (ds.visibility === 'DISCOVERABLE') {
-            shared++;
-            research++;
-          }
-        });
-
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-        const activeUsers = new Set(
-          logs.filter(log => new Date(log.timestamp) > fiveMinutesAgo)
-              .map(log => log.user)
-        ).size || 1;
-
-        setStats({
-          total: datasets.length,
-          private: priv,
-          shared: shared,
-          researchReady: research,
-          liveSessions: activeUsers
-        });
-        setRecentLogs(logs.slice(0, 5));
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (

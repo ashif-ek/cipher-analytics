@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import useWebSockets from '../hooks/useWebSockets';
 import Card from '../components/ui/Card';
 import StatusBadge from '../components/ui/StatusBadge';
 import Toast from '../components/ui/Toast';
@@ -18,41 +19,49 @@ const DatasetDetails = () => {
   const [computing, setComputing] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [computationResult, setComputationResult] = useState(null);
+  const lastEventTimestamp = useRef(0);
+
+  const fetchDataset = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await client.get(`datasets/${id}/`);
+      setDataset(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dataset details", error);
+      setToastMessage('Failed to load dataset details.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  // Real-time updates via WebSockets
+  useWebSockets(useCallback((message) => {
+    if (message.type === 'DATASET_STATUS_UPDATED' || message.type === 'COMPUTATION_STATUS_UPDATED') {
+       const { payload, metadata } = message;
+       const eventTime = new Date(metadata.timestamp).getTime();
+       
+       // Filter out stale events
+       if (eventTime <= lastEventTimestamp.current) {
+         return;
+       }
+       lastEventTimestamp.current = eventTime;
+
+       // If it's this dataset OR any computation related to this dataset, we refresh.
+       // (Note: in ComputationJob model, dataset_id is what we should ideally check, 
+       // but since we fetch all DS data on refresh, we can trigger if it's ANY computation 
+       // or be specific if payload in message included dataset_id)
+       if (payload.model === 'dataset' && payload.id === parseInt(id)) {
+           fetchDataset();
+       } else if (payload.model === 'computation') {
+           // computations usually belong to a dataset, we refresh to get the latest result/state
+           fetchDataset();
+       }
+    }
+  }, [id, fetchDataset]));
 
   useEffect(() => {
-    const fetchDataset = async () => {
-      try {
-        const response = await client.get(`datasets/${id}/`);
-        setDataset(response.data);
-      } catch (error) {
-        console.error("Failed to fetch dataset details", error);
-        setToastMessage('Failed to load dataset details.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDataset();
-
-    // Polling if processing
-    let intervalId;
-    if (dataset && dataset.status === 'PROCESSING') {
-      intervalId = setInterval(async () => {
-        try {
-          const response = await client.get(`datasets/${id}/`);
-          setDataset(response.data);
-          if (response.data.status !== 'PROCESSING') {
-            clearInterval(intervalId);
-          }
-        } catch (error) {
-          clearInterval(intervalId);
-        }
-      }, 3000);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [id, dataset?.status]);
+  }, [fetchDataset]);
 
   const handleDelete = async () => {
     try {
@@ -61,6 +70,24 @@ const DatasetDetails = () => {
       navigate('/datasets');
     } catch (error) {
       setToastMessage(`Failed to delete dataset: ${error.message}`);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await client.get(`datasets/${id}/download/`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${dataset.name}.enc`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Download failed", err);
+      alert("Failed to download encrypted payload.");
     }
   };
 
@@ -192,7 +219,14 @@ const DatasetDetails = () => {
                  </button>
                </>
              )}
-             <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+             <button 
+                onClick={handleDownload}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                title="Download Encrypted Payload"
+              >
+                Download Enc.
+              </button>
+              <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
               Export Metadata
             </button>
             <button 

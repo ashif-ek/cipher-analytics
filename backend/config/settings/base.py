@@ -23,7 +23,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "daphne",
     "django.contrib.staticfiles",
+    "channels",
     "corsheaders",
     "rest_framework",
     "drf_spectacular",
@@ -80,6 +82,7 @@ DATABASES = {
         "PASSWORD": config("DB_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT"),
+        "CONN_MAX_AGE": 300,
     }
 }
 
@@ -197,6 +200,18 @@ CACHES = {
         "LOCATION": config('CELERY_BROKER_URL', default='redis://redis:6379/0'),
     }
 }
+
+
+# Channels Configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config('CELERY_BROKER_URL', default='redis://redis:6379/1')],
+        },
+    },
+}
+
 
 # Task Routing and Queues
 CELERY_TASK_QUEUES = (

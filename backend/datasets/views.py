@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+from django.http import FileResponse
 
 from .serializers import DatasetUploadSerializer, ComputationJobSerializer
 from .models import Dataset, ComputationJob
@@ -111,6 +112,33 @@ class DatasetViewSet(viewsets.ModelViewSet):
             "error_message": dataset.error_message,
             "updated_at": dataset.updated_at
         })
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        dataset = self.get_object()
+        if not dataset.ciphertext_path:
+             return Response({"detail": "No encrypted payload available."}, status=status.HTTP_404_NOT_FOUND)
+             
+        file_path = dataset.ciphertext_path.path
+        response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{dataset.name}.enc"'
+        
+        # Log download
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        log_audit_event(
+            user_id=request.user.id,
+            action=AuditLog.Action.DATASET_DOWNLOAD,
+            severity=AuditLog.Severity.INFO,
+            ip_address=get_current_ip(),
+            request_id=get_current_request_id(),
+            metadata={"dataset_id": dataset.id, "type": "encrypted_download"}
+        )
+        
+        return response
+
     @action(detail=True, methods=['post'])
     def compute(self, request, pk=None):
         dataset = self.get_object()
