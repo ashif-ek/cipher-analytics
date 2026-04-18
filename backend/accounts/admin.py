@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import User, OTP
+from .models import User, OTP, Profile
 from .services.security import reset_failed_login
 
 
@@ -66,3 +66,10 @@ class OTPAdmin(admin.ModelAdmin):
     list_display = ["user", "otp", "is_used", "created_at"]
     list_filter = ["is_used", "created_at"]
     search_fields = ["user__email"]
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ["user", "organization", "job_title", "updated_at"]
+    search_fields = ["user__email", "organization"]
+

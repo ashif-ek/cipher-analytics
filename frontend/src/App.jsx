@@ -15,6 +15,7 @@ import AccessControl from './pages/AccessControl';
 import ResearchConsent from './pages/ResearchConsent';
 import MyRequests from './pages/MyRequests';
 import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 
 import { AuthProvider } from './components/auth/AuthLayout';
 
@@ -66,6 +67,7 @@ function App() {
             />
             <Route path="consent" element={<ResearchConsent />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

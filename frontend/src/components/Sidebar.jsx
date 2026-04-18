@@ -23,8 +23,10 @@ const Sidebar = () => {
       name: 'MAIN',
       items: [
         { name: 'Dashboard', path: '/', icon: 'home', roles: ['DATA_OWNER', 'RESEARCHER'] },
+        { name: 'Profile', path: '/profile', icon: 'user', roles: ['DATA_OWNER', 'RESEARCHER'] },
         { name: 'Requests', path: '/research-requests', icon: 'clipboard-list', roles: ['RESEARCHER'] },
       ]
+
     },
     {
       name: 'DATA',
@@ -53,6 +55,9 @@ const Sidebar = () => {
     switch (name) {
       case 'home':
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />;
+      case 'user':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />;
+
       case 'database':
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />;
       case 'upload':

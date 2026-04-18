@@ -69,6 +69,18 @@ const UploadDataset = () => {
     }
   };
 
+  const handleToggleVisibility = () => {
+    const newValue = formData.visibility === 'PRIVATE' ? 'DISCOVERABLE' : 'PRIVATE';
+    setFormData(prev => {
+      const newState = { ...prev, visibility: newValue };
+      // Enforce Orthogonal Constraints: Private data cannot have Aggregated policy
+      if (newValue === 'PRIVATE' && prev.compute_mode === 'AGGREGATED') {
+        newState.compute_mode = 'STRICT';
+      }
+      return newState;
+    });
+  };
+
   const removeFile = () => {
     setFormData(prev => ({ ...prev, original_file: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -204,19 +216,35 @@ const UploadDataset = () => {
                 />
               </div>
 
-              {/* Discovery Layer */}
+              {/* Discovery Layer - Premium Toggle */}
               <div className="col-span-1">
-                <label className="block text-[10px] font-bold text-slate-400 mb-3">Discovery Layer</label>
-                <select 
-                  name="visibility" 
-                  value={formData.visibility} 
-                  onChange={handleChange}
-                  className="bg-white block w-full px-4 py-3 text-xs font-bold border-slate-200 rounded-xl focus:ring-slate-900 focus:border-slate-900 transition-all cursor-pointer"
-                  disabled={loading}
+                <label className="block text-[10px] font-bold text-slate-400 mb-4">Discovery Layer</label>
+                <div 
+                  className={`flex items-center px-4 py-3 rounded-xl border transition-all cursor-pointer ${
+                    formData.visibility === 'DISCOVERABLE' 
+                      ? 'border-indigo-100 bg-indigo-50/30' 
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                  onClick={() => !loading && handleToggleVisibility()}
                 >
-                  <option value="PRIVATE">Private (Internal Only)</option>
-                  <option value="DISCOVERABLE">Discoverable (Research Directory)</option>
-                </select>
+                  <div className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none ${
+                    formData.visibility === 'DISCOVERABLE' ? 'bg-indigo-600' : 'bg-slate-200'
+                  }`}>
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      formData.visibility === 'DISCOVERABLE' ? 'translate-x-5' : 'translate-x-0.5'
+                    }`} />
+                  </div>
+                  <div className="ml-3 select-none">
+                    <p className={`text-[11px] font-bold transition-colors leading-none ${
+                      formData.visibility === 'DISCOVERABLE' ? 'text-indigo-900' : 'text-slate-600'
+                    }`}>
+                      {formData.visibility === 'DISCOVERABLE' ? 'Discoverable' : 'Private'}
+                    </p>
+                    <p className="text-[9px] text-slate-400 font-medium mt-1 leading-none">
+                      {formData.visibility === 'DISCOVERABLE' ? 'Visible in Research Directory' : 'Internal Only (Hidden)' }
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="col-span-1">

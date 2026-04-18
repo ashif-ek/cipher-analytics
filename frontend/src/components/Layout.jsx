@@ -24,7 +24,10 @@ const Layout = () => {
       breadcrumbs.push({ name: 'LOGS', path: '/audit-logs' });
     } else if (path === '/settings') {
       breadcrumbs.push({ name: 'SETTINGS', path: '/settings' });
+    } else if (path === '/profile') {
+      breadcrumbs.push({ name: 'PROFILE', path: '/profile' });
     }
+
     
     return breadcrumbs;
   };
