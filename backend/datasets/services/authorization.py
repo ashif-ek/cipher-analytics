@@ -1,70 +1,113 @@
-from rest_framework.exceptions import PermissionDenied
+import hashlib
 from django.utils import timezone
-from ..models import DatasetAccess
+from datetime import timedelta
+from rest_framework.exceptions import PermissionDenied
+from analytics.models import AuditLog
+from analytics.services.audit import log_audit_event
+from core.middleware.traceability import get_current_request_id, get_current_ip
+
+from .constants import ComputeMode, AuthAction
+from .types import Operation
+from .policy_handlers import handle_strict, handle_whitelist, handle_aggregated
+
+# Registry of handlers for deterministic policy dispatch (OCP Compliance)
+POLICY_HANDLERS = {
+    ComputeMode.STRICT.value: handle_strict,
+    ComputeMode.WHITELIST.value: handle_whitelist,
+    ComputeMode.AGGREGATED.value: handle_aggregated,
+}
 
 def check_dataset_permission(user, dataset, action: str, operation=None) -> bool:
     """
-    Evaluates fine-grained permissions (VIEW, COMPUTE, DECRYPT) 
-    disentangling visibility from access levels.
+    Central Authorization Entry Point.
+    Enforces Zero-Trust policy with query fingerprinting and audit escalation.
     """
-    # Owners hold immutable God-access to their own data
-    if user == dataset.owner:
+    context = {"action": action}
+    
+    # AGGREGATED mode template awareness
+    if action == AuthAction.COMPUTE.value:
+         context['template_name'] = getattr(operation, 'template_name', 'sum_field') 
+
+    # 1. Bypass logic for high-privilege roles
+    if user.is_authenticated and (user == dataset.owner or user.is_staff or getattr(user, 'role', '') == 'ADMIN'):
         return True
 
-    # System Administrators inherently pass
-    if user.is_staff or user.role == 'ADMIN':
-        return True
-
-    # Rule 1: Strict Rejection on Private Collections
-    if dataset.visibility == 'PRIVATE' and not DatasetAccess.objects.filter(dataset=dataset, user=user).exists():
-        # Even if private, if there's an explicit grant, we allow them to proceed 
-        # but otherwise block.
-        raise PermissionDenied("You do not have access to this Private Entity.")
-
-    # Rule 2: Validation
-    if action == 'VIEW':
-        # Granted if discoverable or user holds explicit database rights
+    # 2. VIEW access check (Discovery Layer)
+    if action == AuthAction.VIEW.value:
         if dataset.visibility == 'DISCOVERABLE':
             return True
-        elif DatasetAccess.objects.filter(dataset=dataset, user=user).exists():
+        from ..models import DatasetAccess
+        if DatasetAccess.objects.filter(dataset=dataset, user=user).exists():
             return True
-        raise PermissionDenied("VIEW access denied.")
+        _log_and_raise_denial(user, dataset, "VIEW_DENIED", operation)
 
-    elif action == 'COMPUTE':
-        if dataset.access_policy == 'COLLABORATIVE':
-            # Needs explicit COMPUTE grant in DatasetAccess
-            has_grant = DatasetAccess.objects.filter(
-                dataset=dataset, 
-                user=user, 
-                permission__in=['COMPUTE', 'ANALYZE', 'FULL']
-            ).exists()
-            if not has_grant:
-                raise PermissionDenied("COMPUTE privilege denied for Collaborative Pool.")
-                
-        elif dataset.access_policy == 'STRICT':
-            # Strict mode: Only those with an ANALYZE or FULL grant (Research Grant) can compute
-            if not DatasetAccess.objects.filter(dataset=dataset, user=user, permission__in=['ANALYZE', 'FULL']).exists():
-                 # Check for research grant models if linked
-                 from research.models import DatasetAccessGrant
-                 has_active_grant = DatasetAccessGrant.objects.filter(
-                     request__researcher=user,
-                     dataset=dataset,
-                     is_active=True,
-                     expires_at__gt=timezone.now()
-                 ).exists()
-                 if not has_active_grant:
-                     raise PermissionDenied("Active Research Grant required for computation on 'STRICT' policy data.")
+    # 3. COMPUTE access check (Governance Layer)
+    if action == AuthAction.COMPUTE.value:
+        handler = POLICY_HANDLERS.get(dataset.compute_mode)
+        
+        if not handler:
+            _log_and_raise_denial(user, dataset, "INVALID_MODE", operation)
+            
+        try:
+            return handler(user, dataset, operation, context)
+        except PermissionDenied as e:
+            _log_and_raise_denial(user, dataset, str(e), operation)
 
-        elif dataset.access_policy == 'AGGREGATED':
-            # For aggregated policy data, researchers may run simple aggregate mathematics
-            allowed_ops = ['SUM', 'MEAN', 'VARIANCE', 'STD_DEVIATION']
-            if operation and operation.upper() not in allowed_ops:
-                raise PermissionDenied(f"Operation {operation} not permitted. Aggregated policy limits queries to SUM/MEAN/VARIANCE/STD_DEVIATION.")
-                
-        return True
+    # 4. Fallback: Implicit Deny
+    _log_and_raise_denial(user, dataset, "UNKNOWN_ACTION", operation)
 
-    elif action == 'DECRYPT':
-        # Cryptographic execution boundaries: ONLY the Owner decrypts raw output by default
-        raise PermissionDenied("You do not hold the proxy-keys required to DECRYPT this payload.")
+def _log_and_raise_denial(user, dataset, reason, operation):
+    """
+    Side-effect helper for audit logging with fingerprinting and escalation.
+    """
+    # 1. Query Fingerprinting
+    fingerprint = "N/A"
+    if isinstance(operation, Operation):
+        # Fingerprint: hash(user_id + dataset_id + type + field)
+        fp_raw = f"{user.id}:{dataset.id}:{operation.type}:{operation.field}"
+        fingerprint = hashlib.sha256(fp_raw.encode()).hexdigest()
 
-    return False
+    # 2. Failure Counting (15-minute sliding window)
+    fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+    
+    # General failures for this user/dataset
+    window_failures = AuditLog.objects.filter(
+        user=user,
+        action=AuditLog.Action.ACCESS_DENIED,
+        timestamp__gt=fifteen_minutes_ago,
+        metadata__dataset_id=dataset.id
+    )
+    
+    total_failures = window_failures.count()
+    
+    # Specific repeated query failures (Fingerprint matching)
+    repeated_failures = window_failures.filter(
+        metadata__fingerprint=fingerprint
+    ).count() if fingerprint != "N/A" else 0
+
+    # 3. Escalation logic
+    severity = AuditLog.Severity.INFO
+    if repeated_failures >= 5 or total_failures >= 5:
+        severity = AuditLog.Severity.CRITICAL
+    elif total_failures >= 3:
+        severity = AuditLog.Severity.WARNING
+
+    # 4. Audit Persistence
+    op_repr = str(operation) if operation else "None"
+    log_audit_event(
+        user_id=user.id,
+        action=AuditLog.Action.ACCESS_DENIED,
+        severity=severity,
+        ip_address=get_current_ip(),
+        request_id=get_current_request_id(),
+        metadata={
+            "dataset_id": dataset.id,
+            "reason": reason,
+            "operation": op_repr,
+            "fingerprint": fingerprint,
+            "window_denials": total_failures,
+            "repeated_attempts": repeated_failures
+        }
+    )
+    
+    raise PermissionDenied(f"Access Denied: {reason}")

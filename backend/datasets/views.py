@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+from django.http import FileResponse
 
 from .serializers import DatasetUploadSerializer, ComputationJobSerializer
 from .models import Dataset, ComputationJob
@@ -25,18 +26,47 @@ class DatasetViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         if user.is_staff or user.role == "ADMIN":
-            return Dataset.objects.all().order_by("-created_at")
-            
-        if user.role == "DATA_OWNER":
-            return Dataset.objects.filter(owner=user).order_by("-created_at")
-            
-        if user.role == "RESEARCHER":
-            return Dataset.objects.filter(
+            queryset = Dataset.objects.all()
+        elif user.role == "DATA_OWNER":
+            queryset = Dataset.objects.filter(owner=user)
+        elif user.role == "RESEARCHER":
+            queryset = Dataset.objects.filter(
                 Q(visibility="DISCOVERABLE") |
                 Q(datasetaccess__user=user)
-            ).distinct().order_by("-created_at")
+            ).distinct()
+        else:
+            return Dataset.objects.none()
             
-        return Dataset.objects.none()
+        # Optional Query Parameters
+        q = self.request.query_params.get('q', '').strip()
+        status_filter = self.request.query_params.get('status', 'ALL')
+        visibility_filter = self.request.query_params.get('visibility', 'ALL')
+        
+        if q:
+            # Check if q is a numeric ID
+            if q.isdigit():
+                queryset = queryset.filter(Q(name__icontains=q) | Q(id=int(q)))
+            else:
+                queryset = queryset.filter(name__icontains=q)
+                
+        if status_filter and status_filter != 'ALL':
+            queryset = queryset.filter(status=status_filter)
+            
+        if visibility_filter and visibility_filter != 'ALL':
+            queryset = queryset.filter(visibility=visibility_filter)
+            
+        sort_field = self.request.query_params.get('sort_field', 'created_at')
+        sort_dir = self.request.query_params.get('sort_dir', 'desc')
+        
+        # Guard against invalid sort fields
+        valid_sort_fields = ['name', 'status', 'visibility', 'created_at']
+        if sort_field not in valid_sort_fields:
+            sort_field = 'created_at'
+            
+        if sort_dir == 'desc':
+            sort_field = f"-{sort_field}"
+            
+        return queryset.order_by(sort_field)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -69,10 +99,9 @@ class DatasetViewSet(viewsets.ModelViewSet):
         # Save the dataset with the current user as owner
         dataset = serializer.save(owner=self.request.user)
         
-        # Explicitly set status to READY and update fields to ensure persistence
-        # (This avoids any read-only field mapping issues in the serializer save)
-        dataset.status = "READY"
-        dataset.save(update_fields=['status'])
+        # Trigger celery ingestion task
+        from .tasks import process_and_encrypt_dataset_task
+        process_and_encrypt_dataset_task.delay(dataset.id)
         
         log_audit_event(
             user_id=self.request.user.id,
@@ -112,6 +141,33 @@ class DatasetViewSet(viewsets.ModelViewSet):
             "error_message": dataset.error_message,
             "updated_at": dataset.updated_at
         })
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        dataset = self.get_object()
+        if not dataset.ciphertext_path:
+             return Response({"detail": "No encrypted payload available."}, status=status.HTTP_404_NOT_FOUND)
+             
+        file_path = dataset.ciphertext_path.path
+        response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{dataset.name}.enc"'
+        
+        # Log download
+        from core.middleware.traceability import get_current_request_id, get_current_ip
+        from analytics.services.audit import log_audit_event
+        from analytics.models import AuditLog
+        
+        log_audit_event(
+            user_id=request.user.id,
+            action=AuditLog.Action.DATASET_DOWNLOAD,
+            severity=AuditLog.Severity.INFO,
+            ip_address=get_current_ip(),
+            request_id=get_current_request_id(),
+            metadata={"dataset_id": dataset.id, "type": "encrypted_download"}
+        )
+        
+        return response
+
     @action(detail=True, methods=['post'])
     def compute(self, request, pk=None):
         dataset = self.get_object()

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import useWebSockets from '../hooks/useWebSockets';
 import Card from '../components/ui/Card';
 import StatusBadge from '../components/ui/StatusBadge';
 import Toast from '../components/ui/Toast';
@@ -18,41 +19,49 @@ const DatasetDetails = () => {
   const [computing, setComputing] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [computationResult, setComputationResult] = useState(null);
+  const lastEventTimestamp = useRef(0);
+
+  const fetchDataset = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await client.get(`datasets/${id}/`);
+      setDataset(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dataset details", error);
+      setToastMessage('Failed to load dataset details.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  // Real-time updates via WebSockets
+  useWebSockets(useCallback((message) => {
+    if (message.type === 'DATASET_STATUS_UPDATED' || message.type === 'COMPUTATION_STATUS_UPDATED') {
+       const { payload, metadata } = message;
+       const eventTime = new Date(metadata.timestamp).getTime();
+       
+       // Filter out stale events
+       if (eventTime <= lastEventTimestamp.current) {
+         return;
+       }
+       lastEventTimestamp.current = eventTime;
+
+       // If it's this dataset OR any computation related to this dataset, we refresh.
+       // (Note: in ComputationJob model, dataset_id is what we should ideally check, 
+       // but since we fetch all DS data on refresh, we can trigger if it's ANY computation 
+       // or be specific if payload in message included dataset_id)
+       if (payload.model === 'dataset' && payload.id === parseInt(id)) {
+           fetchDataset();
+       } else if (payload.model === 'computation') {
+           // computations usually belong to a dataset, we refresh to get the latest result/state
+           fetchDataset();
+       }
+    }
+  }, [id, fetchDataset]));
 
   useEffect(() => {
-    const fetchDataset = async () => {
-      try {
-        const response = await client.get(`datasets/${id}/`);
-        setDataset(response.data);
-      } catch (error) {
-        console.error("Failed to fetch dataset details", error);
-        setToastMessage('Failed to load dataset details.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDataset();
-
-    // Polling if processing
-    let intervalId;
-    if (dataset && dataset.status === 'PROCESSING') {
-      intervalId = setInterval(async () => {
-        try {
-          const response = await client.get(`datasets/${id}/`);
-          setDataset(response.data);
-          if (response.data.status !== 'PROCESSING') {
-            clearInterval(intervalId);
-          }
-        } catch (error) {
-          clearInterval(intervalId);
-        }
-      }, 3000);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [id, dataset?.status]);
+  }, [fetchDataset]);
 
   const handleDelete = async () => {
     try {
@@ -61,6 +70,24 @@ const DatasetDetails = () => {
       navigate('/datasets');
     } catch (error) {
       setToastMessage(`Failed to delete dataset: ${error.message}`);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await client.get(`datasets/${id}/download/`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${dataset.name}.enc`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Download failed", err);
+      alert("Failed to download encrypted payload.");
     }
   };
 
@@ -84,6 +111,10 @@ const DatasetDetails = () => {
             setShowResultModal(true);
             setComputing(false);
             setToastMessage('');
+            
+            // Re-fetch dataset to update last_result/last_operation
+            const dsRes = await client.get(`datasets/${id}/`);
+            setDataset(dsRes.data);
           } else if (jobRes.data.status === 'FAILED') {
             clearInterval(pollInterval);
             setComputing(false);
@@ -155,6 +186,12 @@ const DatasetDetails = () => {
               <h1 className="text-2xl font-bold text-slate-900 flex items-center">
                 {dataset.name}
                 <span className="ml-3"><StatusBadge status={dataset.status} /></span>
+                {dataset.computations && dataset.computations.length > 0 && (
+                   <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                     <span className="mr-1 opacity-50">{dataset.computations[0].operation === 'SUM' ? '∑' : dataset.computations[0].operation === 'MEAN' ? 'x̅' : dataset.computations[0].operation}:</span>
+                     {dataset.computations[0].result_value.toFixed(dataset.computations[0].result_value % 1 === 0 ? 0 : 4)}
+                   </span>
+                )}
               </h1>
               <p className="text-sm text-slate-500 mt-1 flex items-center">
                 ID: <span className="font-mono ml-1 text-xs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{dataset.id}</span>
@@ -182,7 +219,14 @@ const DatasetDetails = () => {
                  </button>
                </>
              )}
-             <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+             <button 
+                onClick={handleDownload}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                title="Download Encrypted Payload"
+              >
+                Download Enc.
+              </button>
+              <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
               Export Metadata
             </button>
             <button 
@@ -251,6 +295,40 @@ const DatasetDetails = () => {
                   </div>
                 </dl>
               </Card>
+
+              {dataset.computations && dataset.computations.length > 0 && (
+                <Card className="p-8 border-amber-100 bg-amber-50/30 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12">
+                     <svg className="w-48 h-48 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  </div>
+                  <div className="relative">
+                    <h3 className="text-sm font-bold text-amber-900 uppercase tracking-widest flex items-center mb-6">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      Completed Insights
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {dataset.computations.map((comp) => (
+                        <div key={comp.id} className="bg-white/60 border border-amber-200/50 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                           <div>
+                             <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-200 mb-1 inline-block">
+                               {comp.operation} PROCESSED
+                             </span>
+                             <p className="text-xs text-amber-900/60 font-medium">Job {comp.id} • {new Date(comp.created_at).toLocaleDateString()}</p>
+                           </div>
+                           <span className="text-2xl font-black text-slate-900 font-mono tracking-tighter">
+                             {comp.result_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                           </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <p className="mt-6 text-xs font-medium text-amber-800/70 max-w-sm leading-relaxed border-t border-amber-200/50 pt-4">
+                      These values were derived under FHE protection. The integrity and privacy of the underlying resource remains intact.
+                    </p>
+                  </div>
+                </Card>
+              )}
               
               {dataset.status === 'READY' && (
                 <Card className="p-6">

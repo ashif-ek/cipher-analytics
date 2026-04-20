@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
 
 const UserProfile = ({ onLogout }) => {
@@ -77,7 +78,15 @@ const UserProfile = ({ onLogout }) => {
               </div>
             </div>
           </div>
-          <div className="p-2">
+          <div className="p-2 space-y-1">
+            <Link 
+              to="/profile"
+              className="w-full block text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium rounded-sm"
+              onClick={() => setIsOpen(false)}
+            >
+              Profile Settings
+            </Link>
+
             <button 
               onClick={onLogout}
               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium rounded-sm"
@@ -85,6 +94,7 @@ const UserProfile = ({ onLogout }) => {
               Logout
             </button>
           </div>
+
         </div>
       )}
     </div>

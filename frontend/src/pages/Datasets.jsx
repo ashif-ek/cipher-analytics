@@ -7,17 +7,41 @@ const Datasets = () => {
   const [datasets, setDatasets] = useState([]);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
 
+  // Lifted filtering states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [visibilityFilter, setVisibilityFilter] = useState('ALL');
+  const [policyFilter, setPolicyFilter] = useState('ALL');
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const fetchDatasets = useCallback(async () => {
     try {
         setLoadingDatasets(true);
-        const response = await client.get('datasets/');
+        const response = await client.get('datasets/', { 
+            params: {
+                q: debouncedSearch,
+                status: statusFilter,
+                visibility: visibilityFilter,
+                sort_field: sortField,
+                sort_dir: sortDirection
+            }
+        });
         setDatasets(response.data);
     } catch (error) {
         console.error("Failed to fetch datasets", error);
     } finally {
         setLoadingDatasets(false);
     }
-  }, []);
+  }, [debouncedSearch, statusFilter, visibilityFilter, sortField, sortDirection]);
 
   useEffect(() => {
     fetchDatasets();
@@ -31,7 +55,15 @@ const Datasets = () => {
     if (hasProcessing) {
       intervalId = setInterval(async () => {
         try {
-          const response = await client.get('datasets/');
+          const response = await client.get('datasets/', {
+            params: {
+                q: debouncedSearch,
+                status: statusFilter,
+                visibility: visibilityFilter,
+                sort_field: sortField,
+                sort_dir: sortDirection
+            }
+          });
           setDatasets(response.data);
           
           const stillProcessing = response.data.some(ds => ds.status === 'PROCESSING');
@@ -48,7 +80,7 @@ const Datasets = () => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [datasets]);
+  }, [datasets, debouncedSearch, statusFilter, visibilityFilter, sortField, sortDirection]);
 
   const handleDelete = (deletedId) => {
     setDatasets(prev => prev.filter(ds => ds.id !== deletedId));
@@ -89,6 +121,18 @@ const Datasets = () => {
           loading={loadingDatasets} 
           onRefresh={fetchDatasets} 
           onDelete={handleDelete}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          visibilityFilter={visibilityFilter}
+          setVisibilityFilter={setVisibilityFilter}
+          policyFilter={policyFilter}
+          setPolicyFilter={setPolicyFilter}
+          sortField={sortField}
+          setSortField={setSortField}
+          sortDirection={sortDirection}
+          setSortDirection={setSortDirection}
         />
       </div>
     </div>

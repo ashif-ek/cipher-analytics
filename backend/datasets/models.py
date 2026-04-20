@@ -17,9 +17,9 @@ class Dataset(models.Model):
         PRIVATE = "PRIVATE", "Private"
         DISCOVERABLE = "DISCOVERABLE", "Discoverable"
 
-    class AccessPolicy(models.TextChoices):
+    class ComputeMode(models.TextChoices):
         STRICT = "STRICT", "Strict"
-        COLLABORATIVE = "COLLABORATIVE", "Collaborative"
+        WHITELIST = "WHITELIST", "Whitelist"
         AGGREGATED = "AGGREGATED", "Aggregated"
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -27,6 +27,7 @@ class Dataset(models.Model):
     name = models.CharField(max_length=255)
 
     # Zero-Trust Storage
+    original_file = models.FileField(upload_to="datasets/raw/", null=True, blank=True)
     ciphertext_path = models.FileField(upload_to="datasets/ciphertexts/", null=True, blank=True)
     public_key = models.BinaryField(null=True, blank=True) # B64 Encoded SEAL context
     eval_keys = models.BinaryField(null=True, blank=True)  # Relin/Galois keys required for backend arithmetic
@@ -42,11 +43,14 @@ class Dataset(models.Model):
         default=Visibility.PRIVATE
     )
 
-    access_policy = models.CharField(
+    compute_mode = models.CharField(
         max_length=20,
-        choices=AccessPolicy.choices,
-        default=AccessPolicy.STRICT
+        choices=ComputeMode.choices,
+        default=ComputeMode.STRICT
     )
+
+    column_stats = models.JSONField(default=dict, blank=True)
+    column_stats_verified = models.BooleanField(default=False)
 
     status = models.CharField(
         max_length=20,
@@ -56,6 +60,10 @@ class Dataset(models.Model):
 
     task_id = models.CharField(max_length=255, blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+
+    # Persistence of Latest Insight
+    last_result = models.FloatField(null=True, blank=True)
+    last_operation = models.CharField(max_length=50, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

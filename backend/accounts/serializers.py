@@ -1,16 +1,41 @@
 import datetime
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User
+from .models import User, Profile
 from .services.security import check_and_unlock_user, record_failed_login, reset_failed_login
 from rest_framework.exceptions import AuthenticationFailed
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["bio", "organization", "job_title", "location", "phone_number", "website", "specialization", "updated_at"]
+
+
 class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "profile_picture", "is_staff", "role"]
+        fields = ["id", "username", "email", "profile_picture", "is_staff", "role", "profile"]
         read_only_fields = ["id", "is_staff"]
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("profile", None)
+        
+        # Update User fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update Profile fields
+        if profile_data:
+            profile, created = Profile.objects.get_or_create(user=instance)
+            for attr, value in profile_data.items():
+                setattr(profile, attr, value)
+            profile.save()
+
+        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):
