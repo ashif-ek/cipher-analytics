@@ -26,18 +26,47 @@ class DatasetViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         if user.is_staff or user.role == "ADMIN":
-            return Dataset.objects.all().order_by("-created_at")
-            
-        if user.role == "DATA_OWNER":
-            return Dataset.objects.filter(owner=user).order_by("-created_at")
-            
-        if user.role == "RESEARCHER":
-            return Dataset.objects.filter(
+            queryset = Dataset.objects.all()
+        elif user.role == "DATA_OWNER":
+            queryset = Dataset.objects.filter(owner=user)
+        elif user.role == "RESEARCHER":
+            queryset = Dataset.objects.filter(
                 Q(visibility="DISCOVERABLE") |
                 Q(datasetaccess__user=user)
-            ).distinct().order_by("-created_at")
+            ).distinct()
+        else:
+            return Dataset.objects.none()
             
-        return Dataset.objects.none()
+        # Optional Query Parameters
+        q = self.request.query_params.get('q', '').strip()
+        status_filter = self.request.query_params.get('status', 'ALL')
+        visibility_filter = self.request.query_params.get('visibility', 'ALL')
+        
+        if q:
+            # Check if q is a numeric ID
+            if q.isdigit():
+                queryset = queryset.filter(Q(name__icontains=q) | Q(id=int(q)))
+            else:
+                queryset = queryset.filter(name__icontains=q)
+                
+        if status_filter and status_filter != 'ALL':
+            queryset = queryset.filter(status=status_filter)
+            
+        if visibility_filter and visibility_filter != 'ALL':
+            queryset = queryset.filter(visibility=visibility_filter)
+            
+        sort_field = self.request.query_params.get('sort_field', 'created_at')
+        sort_dir = self.request.query_params.get('sort_dir', 'desc')
+        
+        # Guard against invalid sort fields
+        valid_sort_fields = ['name', 'status', 'visibility', 'created_at']
+        if sort_field not in valid_sort_fields:
+            sort_field = 'created_at'
+            
+        if sort_dir == 'desc':
+            sort_field = f"-{sort_field}"
+            
+        return queryset.order_by(sort_field)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

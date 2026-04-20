@@ -39,7 +39,6 @@ const Sidebar = () => {
       name: 'GOVERNANCE',
       items: [
         { name: 'Access', path: '/access-control', icon: 'shield', roles: ['DATA_OWNER', 'ADMIN'] },
-        { name: 'Consent', path: '/consent', icon: 'check-circle', roles: ['RESEARCHER', 'DATA_OWNER'] },
         { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list', roles: ['DATA_OWNER', 'ADMIN'] },
       ]
     },
