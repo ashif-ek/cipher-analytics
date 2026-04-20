@@ -87,7 +87,27 @@ const DatasetDetails = () => {
       link.remove();
     } catch (err) {
       console.error("Download failed", err);
-      alert("Failed to download encrypted payload.");
+      // Give a better error message if it's our 404
+      const msg = err.response?.data?.detail || "Failed to download payload.";
+      setToastMessage(msg);
+    }
+  };
+
+  const handleExportMetadata = async () => {
+    try {
+      const response = await client.get(`datasets/${id}/export-metadata/`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${dataset.name}_metadata.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Export metadata failed", err);
+      setToastMessage("Failed to export metadata.");
     }
   };
 
@@ -226,7 +246,11 @@ const DatasetDetails = () => {
               >
                 Download Enc.
               </button>
-              <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+              <button 
+                onClick={handleExportMetadata}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                title="Export JSON Metadata"
+              >
               Export Metadata
             </button>
             <button 

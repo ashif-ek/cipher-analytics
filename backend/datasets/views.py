@@ -145,12 +145,17 @@ class DatasetViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         dataset = self.get_object()
-        if not dataset.ciphertext_path:
-             return Response({"detail": "No encrypted payload available."}, status=status.HTTP_404_NOT_FOUND)
+        file_field = dataset.ciphertext_path or dataset.original_file
+        
+        if not file_field:
+             return Response({"detail": "No payload available to download."}, status=status.HTTP_404_NOT_FOUND)
              
-        file_path = dataset.ciphertext_path.path
-        response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{dataset.name}.enc"'
+        try:
+            file_path = file_field.path
+            response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{dataset.name}.enc"'
+        except Exception as e:
+            return Response({"detail": f"File access error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Log download
         from core.middleware.traceability import get_current_request_id, get_current_ip
@@ -166,6 +171,30 @@ class DatasetViewSet(viewsets.ModelViewSet):
             metadata={"dataset_id": dataset.id, "type": "encrypted_download"}
         )
         
+        return response
+
+    @action(detail=True, methods=['get'])
+    def export_metadata(self, request, pk=None):
+        import json
+        from django.http import HttpResponse
+        
+        dataset = self.get_object()
+        metadata = {
+            "id": dataset.id,
+            "name": dataset.name,
+            "status": dataset.status,
+            "visibility": dataset.visibility,
+            "access_policy": dataset.access_policy,
+            "rows_count": dataset.rows_count,
+            "columns_count": dataset.columns_count,
+            "column_stats": dataset.column_stats,
+            "created_at": dataset.created_at.isoformat() if dataset.created_at else None,
+            "last_operation": dataset.last_operation,
+            "last_result": dataset.last_result
+        }
+        
+        response = HttpResponse(json.dumps(metadata, indent=2), content_type="application/json")
+        response['Content-Disposition'] = f'attachment; filename="{dataset.name}_metadata.json"'
         return response
 
     @action(detail=True, methods=['post'])
