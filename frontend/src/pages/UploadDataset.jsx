@@ -110,7 +110,6 @@ const UploadDataset = () => {
 
     try {
       const response = await client.post('datasets/', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);

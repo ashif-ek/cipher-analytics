@@ -86,9 +86,10 @@ class ComputationJob(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     requested_by = models.ForeignKey(User, on_delete=models.CASCADE)
     operation = models.CharField(max_length=50) # 'MEAN', 'SUM', 'VARIANCE'
-    status = models.CharField(max_length=50, choices=[("PENDING", "Pending"), ("RUNNING", "Running"), ("COMPLETED", "Completed")], default="PENDING")
+    status = models.CharField(max_length=50, choices=[("PENDING", "Pending"), ("RUNNING", "Running"), ("COMPLETED", "Completed"), ("FAILED", "Failed")], default="PENDING")
     result_path = models.FileField(upload_to="computations/results/", null=True, blank=True)
     result_value = models.FloatField(null=True, blank=True) # Summary result for quick display
+    result_json = models.JSONField(null=True, blank=True) # Structured JSON result for ML insights
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

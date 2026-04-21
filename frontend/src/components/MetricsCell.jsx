@@ -4,18 +4,22 @@ const METRIC_LABELS = {
   sum: 'SUM',
   mean: 'MEAN',
   variance: 'VAR',
-  std_deviation: 'STD'
+  std_deviation: 'STD',
+  correlation: 'CORR',
+  anomaly_detection: 'ANML'
 };
 
 const METRIC_TOOLTIPS = {
   sum: 'Total of selected column',
   mean: 'Average value',
   variance: 'Variance',
-  std_deviation: 'Standard deviation'
+  std_deviation: 'Standard deviation',
+  correlation: 'Strongest feature correlation',
+  anomaly_detection: 'Detected anomalies'
 };
 
 const MetricsCell = ({ results = {}, loadingOperation }) => {
-  const operations = ['sum', 'mean', 'variance', 'std_deviation'];
+  const operations = ['sum', 'mean', 'variance', 'std_deviation', 'correlation', 'anomaly_detection'];
   
   const hasAnyData = operations.some(op => results[op] || loadingOperation === op);
 
@@ -46,9 +50,40 @@ const MetricsCell = ({ results = {}, loadingOperation }) => {
                 </svg>
               </span>
             ) : (
-              <span className="text-slate-900 font-mono">
-                {typeof opResult?.value === 'number' ? opResult.value.toFixed(4) : opResult?.value}
-              </span>
+              <>
+                {opResult?.json?.version === 'v2' && opResult.json.status === 'success' && opResult.json.result.type === 'correlation' && (
+                  <span className="text-slate-900 font-mono" title={`Strong pairs: ${opResult.json.result.summary.strong_pairs.length}`}>
+                    {opResult.json.result.summary.strong_pairs.length} Strong
+                  </span>
+                )}
+                {opResult?.json?.version === 'v2' && opResult.json.status === 'success' && opResult.json.result.type === 'anomaly' && (
+                  <span className="text-red-600 font-mono font-bold" title={`Detected ${opResult.json.result.count} anomalies`}>
+                    {opResult.json.result.percentage}%
+                  </span>
+                )}
+                {opResult?.json?.version === 'v2' && opResult.json.status === 'failed' && (
+                   <span className="text-red-500 font-mono font-bold" title={`${opResult.json.error_code}: ${opResult.json.message}`}>ERR</span>
+                )}
+                {/* Legacy V1 Support */}
+                {opResult?.json?.type === 'correlation' && opResult?.json?.version !== 'v2' && (
+                  <span className="text-slate-900 font-mono" title={opResult.json.message}>
+                    {opResult.json.correlation?.toFixed(4)}
+                  </span>
+                )}
+                {opResult?.json?.type === 'anomaly_detection' && opResult?.json?.version !== 'v2' && (
+                  <span className="text-red-600 font-mono font-bold" title={opResult.json.message}>
+                    {opResult.json.anomalies}/{opResult.json.total_rows}
+                  </span>
+                )}
+                {opResult?.json?.type === 'error' && opResult?.json?.version !== 'v2' && (
+                   <span className="text-red-500 font-mono font-bold" title={opResult.json.message}>ERR</span>
+                )}
+                {!opResult?.json && (
+                  <span className="text-slate-900 font-mono">
+                    {typeof opResult?.value === 'number' ? opResult.value.toFixed(4) : opResult?.value}
+                  </span>
+                )}
+              </>
             )}
           </div>
         );

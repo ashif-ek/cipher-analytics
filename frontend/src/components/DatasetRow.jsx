@@ -18,9 +18,13 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
     }
     
     // Always merge the backend's last known result as ground truth if it exists
-    if (dataset.last_operation && dataset.last_result !== null) {
+    if (dataset.last_operation) {
       const op = dataset.last_operation.toLowerCase();
-      localResults[op] = { value: dataset.last_result, timestamp: new Date().toISOString() };
+      // Only set if we have a real value or it's an ML operation that we might not have a float for locally
+      if (dataset.last_result !== null) {
+        if (!localResults[op]) localResults[op] = {};
+        localResults[op] = { ...localResults[op], value: dataset.last_result, timestamp: new Date().toISOString() };
+      }
     }
     return localResults;
   };
@@ -66,6 +70,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
                 ...prev.results,
                 [operation]: {
                   value: jobRes.data.result_value,
+                  json: jobRes.data.result_json,
                   timestamp: new Date().toISOString()
                 }
               }

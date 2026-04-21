@@ -126,6 +126,7 @@ const DatasetDetails = () => {
             setComputationResult({
               ...jobRes.data,
               result: jobRes.data.result_value, // Ensure field name consistency
+              result_json: jobRes.data.result_json,
               datasetName: dataset.name
             });
             setShowResultModal(true);
@@ -237,6 +238,20 @@ const DatasetDetails = () => {
                  >
                   {computing ? '...' : 'Run Mean'}
                  </button>
+                 <button 
+                  onClick={() => handleCompute('correlation')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-violet-200 shadow-sm text-sm font-bold rounded-lg text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Correlation'}
+                 </button>
+                 <button 
+                  onClick={() => handleCompute('anomaly_detection')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-rose-200 shadow-sm text-sm font-bold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Anomalies'}
+                 </button>
                </>
              )}
              <button 
@@ -340,8 +355,8 @@ const DatasetDetails = () => {
                              </span>
                              <p className="text-xs text-amber-900/60 font-medium">Job {comp.id} • {new Date(comp.created_at).toLocaleDateString()}</p>
                            </div>
-                           <span className="text-2xl font-black text-slate-900 font-mono tracking-tighter">
-                             {comp.result_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                           <span className={comp.result_json ? "text-sm font-bold text-slate-800" : "text-2xl font-black text-slate-900 font-mono tracking-tighter"}>
+                             {comp.result_json ? comp.result_json.message : comp.result_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
                            </span>
                         </div>
                       ))}
@@ -450,10 +465,24 @@ const DatasetDetails = () => {
                 <span className="block text-[10px] font-bold text-slate-500 mb-4">Verified Numerical Output</span>
                 <div className="flex flex-col items-center">
                   <span className="text-5xl font-bold text-slate-900 font-mono">
-                    {typeof computationResult?.result === 'number' 
-                      ? computationResult.result.toFixed(6)
-                      : 'N/A'}
+                    {computationResult?.result_json
+                      ? (computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'correlation' ? `${computationResult.result_json.result.summary.strong_pairs.length} Strong Pairs`
+                        : computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'anomaly' ? `${computationResult.result_json.result.percentage}% Anomalies`
+                        : computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'failed' ? 'FAILED'
+                        : computationResult.result_json.type === 'correlation' ? computationResult.result_json.correlation?.toFixed(4)
+                        : computationResult.result_json.type === 'anomaly_detection' ? computationResult.result_json.anomalies
+                        : computationResult.result_json.type === 'error' ? 'ERR' : '')
+                      : computationResult?.result_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+                    }
                   </span>
+                  
+                  {computationResult?.result_json && (
+                    <span className="text-xs text-slate-500 font-medium">
+                      {computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'failed' ? computationResult.result_json.message : ''}
+                      {computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'anomaly' ? `Detected ${computationResult.result_json.result.count} instances.` : ''}
+                      {computationResult.result_json.version !== 'v2' ? computationResult.result_json.message : ''}
+                    </span>
+                  )}
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(computationResult?.result);

@@ -61,37 +61,59 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
                      return "ALREADY_PROCESSED"
 
         dataset = job.dataset
-        logger.info(f"Starting FHE computation {job.operation} for dataset {dataset.id}")
+        logger.info(f"Starting computation {job.operation} for dataset {dataset.id}")
         
-        # ... [Simulated FHE logic stays same] ...
-        import random
-        base_val = dataset.rows_count * 1.5 if dataset.rows_count > 0 else 100.0
-        res_val = 0
-        if job.operation == 'SUM':
-            res_val = base_val + random.uniform(-10, 10)
-        elif job.operation == 'MEAN':
-            res_val = (base_val / dataset.rows_count) if dataset.rows_count > 0 else 1.0
-            res_val += random.uniform(-0.1, 0.1)
-        elif job.operation == 'VARIANCE':
-            res_val = random.uniform(2.0, 15.0)
-        elif job.operation == 'STD_DEVIATION':
-            import math
-            res_val = math.sqrt(random.uniform(2.0, 15.0))
+        is_ml = job.operation in ['CORRELATION', 'ANOMALY_DETECTION']
+        
+        res_val = None
+        res_json = None
+        
+        if is_ml:
+            # Dataset has original_file to load from
+            if dataset.original_file:
+                from .ml_insights import execute_ml_pipeline
+                res_json = execute_ml_pipeline(job.operation, dataset.original_file.path)
+            else:
+                from .ml_insights import build_error
+                res_json = build_error(
+                    error_code="MISSING_FILE", 
+                    message="Dataset has no raw file to process."
+                )
         else:
-            res_val = random.uniform(0, 100)
+            import random
+            base_val = dataset.rows_count * 1.5 if dataset.rows_count > 0 else 100.0
+            res_val = 0
+            if job.operation == 'SUM':
+                res_val = base_val + random.uniform(-10, 10)
+            elif job.operation == 'MEAN':
+                res_val = (base_val / dataset.rows_count) if dataset.rows_count > 0 else 1.0
+                res_val += random.uniform(-0.1, 0.1)
+            elif job.operation == 'VARIANCE':
+                res_val = random.uniform(2.0, 15.0)
+            elif job.operation == 'STD_DEVIATION':
+                import math
+                res_val = math.sqrt(random.uniform(2.0, 15.0))
+            else:
+                res_val = random.uniform(0, 100)
 
         with transaction.atomic():
+            update_kw = {"status": "COMPLETED"}
+            if is_ml:
+                update_kw["result_json"] = res_json
+            else:
+                update_kw["result_value"] = res_val
+
             # Atomic transition: RUNNING -> COMPLETED
-            count = ComputationJob.objects.filter(id=job_id, status="RUNNING").update(
-                status="COMPLETED", 
-                result_value=res_val
-            )
+            count = ComputationJob.objects.filter(id=job_id, status="RUNNING").update(**update_kw)
             
             if count == 1:
-                # Update dataset cache
-                dataset.last_result = res_val
+                # Update dataset cache conditionally
+                update_fields = ['last_operation']
                 dataset.last_operation = job.operation
-                dataset.save(update_fields=['last_result', 'last_operation'])
+                if not is_ml:
+                    dataset.last_result = res_val
+                    update_fields.append('last_result')
+                dataset.save(update_fields=update_fields)
                 
                 transaction.on_commit(lambda: broadcast_status_update(
                     job.requested_by.id, "computation", job.id, "COMPLETED"

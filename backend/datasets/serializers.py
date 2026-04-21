@@ -44,5 +44,5 @@ class DatasetUploadSerializer(serializers.ModelSerializer):
 class ComputationJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComputationJob
-        fields = ['id', 'dataset', 'requested_by', 'operation', 'status', 'result_value', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'requested_by', 'status', 'result_value', 'created_at', 'updated_at']
+        fields = ['id', 'dataset', 'requested_by', 'operation', 'status', 'result_value', 'result_json', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'requested_by', 'status', 'result_value', 'result_json', 'created_at', 'updated_at']
