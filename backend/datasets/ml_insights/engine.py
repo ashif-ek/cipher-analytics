@@ -28,11 +28,11 @@ def execute_ml_pipeline(operation: str, file_path: str) -> dict:
         "sampled_rows": total_rows
     }
     
-    if total_rows > 100000:
-        df = df.sample(n=100000, random_state=42)
+    if total_rows > 50000:
+        df = df.sample(n=50000, random_state=42)
         sampling_meta.update({
             "applied": True,
-            "sampled_rows": 100000
+            "sampled_rows": 50000
         })
         
     # 2. Validation Stage

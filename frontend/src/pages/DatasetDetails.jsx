@@ -6,6 +6,7 @@ import Card from '../components/ui/Card';
 import StatusBadge from '../components/ui/StatusBadge';
 import Toast from '../components/ui/Toast';
 import Modal from '../components/ui/Modal';
+import CorrelationHeatmap from '../components/CorrelationHeatmap';
 
 const DatasetDetails = () => {
   const { id } = useParams();
@@ -210,7 +211,10 @@ const DatasetDetails = () => {
                 {dataset.computations && dataset.computations.length > 0 && (
                    <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                      <span className="mr-1 opacity-50">{dataset.computations[0].operation === 'SUM' ? '∑' : dataset.computations[0].operation === 'MEAN' ? 'x̅' : dataset.computations[0].operation}:</span>
-                     {dataset.computations[0].result_value.toFixed(dataset.computations[0].result_value % 1 === 0 ? 0 : 4)}
+                     {dataset.computations[0].result_value !== null ? 
+                       dataset.computations[0].result_value.toFixed(dataset.computations[0].result_value % 1 === 0 ? 0 : 4) : 
+                       (dataset.computations[0].result_json ? 'Insights' : 'N/A')
+                     }
                    </span>
                 )}
               </h1>
@@ -483,6 +487,16 @@ const DatasetDetails = () => {
                       {computationResult.result_json.version !== 'v2' ? computationResult.result_json.message : ''}
                     </span>
                   )}
+
+                  {/* Heatmap Injection Point for Correlation Matrix */}
+                  {computationResult?.result_json?.version === 'v2' && 
+                   computationResult?.result_json?.status === 'success' && 
+                   computationResult?.result_json?.result?.type === 'correlation' && (
+                    <div className="mt-8 w-full">
+                      <CorrelationHeatmap data={computationResult.result_json} />
+                    </div>
+                  )}
+
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(computationResult?.result);

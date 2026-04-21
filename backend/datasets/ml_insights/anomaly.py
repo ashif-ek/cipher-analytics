@@ -20,7 +20,7 @@ def run_anomaly_detection(scaled_df: pd.DataFrame) -> dict:
     pct = round((count / total) * 100, 2) if total > 0 else 0.0
     
     # Dynamic threshold boundary used by IsolationForest 'auto'
-    threshold = float(iso.offset_[0]) if hasattr(iso, 'offset_') else 0.0
+    threshold = float(iso.offset_) if hasattr(iso, 'offset_') else 0.0
     
     # Intelligent Explanation: Why are these anomalous?
     # Mean difference per feature compared between normal and anomaly rows
