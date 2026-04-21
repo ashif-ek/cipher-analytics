@@ -52,15 +52,15 @@ def execute_ml_pipeline(operation: str, file_path: str) -> dict:
          
     # 4. Computation Routing
     result_data = {}
+    artifacts = None
     try:
         if operation == "CORRELATION":
             # Raw (unscaled) output needed for correlation
             result_data = compute_correlation(clean_df)
             
         elif operation == "ANOMALY_DETECTION":
-            # Scaled distribution needed for ISF distances
-            scaled_df = apply_scaling(clean_df)
-            result_data = run_anomaly_detection(scaled_df)
+            # V2 Logic: Pass clean_df, it handles scaling internally to capture artifacts
+            result_data, artifacts = run_anomaly_detection(clean_df)
             
         else:
             return build_error("UNSUPPORTED_OPERATION", f"Operation '{operation}' is not supported.")
@@ -74,10 +74,15 @@ def execute_ml_pipeline(operation: str, file_path: str) -> dict:
         )
         
     # 5. Generic V2 encapsulation
-    return {
+    response = {
         "version": "v2",
         "operation": operation,
         "status": "success",
         "sampling": sampling_meta,
         "result": result_data
     }
+    
+    if artifacts:
+        response["artifacts"] = artifacts
+        
+    return response

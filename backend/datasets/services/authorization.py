@@ -32,14 +32,14 @@ def check_dataset_permission(user, dataset, action: str, operation=None) -> bool
     if user.is_authenticated and (user == dataset.owner or user.is_staff or getattr(user, 'role', '') == 'ADMIN'):
         return True
 
-    # 2. VIEW access check (Discovery Layer)
-    if action == AuthAction.VIEW.value:
+    # 2. Access check for discovery-level actions (VIEW, DOWNLOAD, EXPORT)
+    if action in [AuthAction.VIEW.value, AuthAction.DOWNLOAD.value, AuthAction.EXPORT.value]:
         if dataset.visibility == 'DISCOVERABLE':
             return True
         from ..models import DatasetAccess
         if DatasetAccess.objects.filter(dataset=dataset, user=user).exists():
             return True
-        _log_and_raise_denial(user, dataset, "VIEW_DENIED", operation)
+        _log_and_raise_denial(user, dataset, f"{action}_DENIED", operation)
 
     # 3. COMPUTE access check (Governance Layer)
     if action == AuthAction.COMPUTE.value:

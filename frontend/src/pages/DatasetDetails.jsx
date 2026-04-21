@@ -7,6 +7,8 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Toast from '../components/ui/Toast';
 import Modal from '../components/ui/Modal';
 import CorrelationHeatmap from '../components/CorrelationHeatmap';
+import AnomalyHeatmap from '../components/AnomalyHeatmap';
+import ShapBarChart from '../components/ShapBarChart';
 
 const DatasetDetails = () => {
   const { id } = useParams();
@@ -20,6 +22,9 @@ const DatasetDetails = () => {
   const [computing, setComputing] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [computationResult, setComputationResult] = useState(null);
+  const [activeAnomalyRowId, setActiveAnomalyRowId] = useState(null);
+  const [shapResult, setShapResult] = useState(null);
+  const [shapLoading, setShapLoading] = useState(false);
   const lastEventTimestamp = useRef(0);
 
   const fetchDataset = useCallback(async () => {
@@ -153,6 +158,57 @@ const DatasetDetails = () => {
     } catch (error) {
       setComputing(false);
       setToastMessage(`Queue failed: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const handleExplainAnomaly = async (row_id) => {
+    try {
+      setActiveAnomalyRowId(row_id);
+      setShapLoading(true);
+      setShapResult(null);
+
+      const response = await client.post(`datasets/${id}/explain_anomaly/`, { row_id });
+      
+      // If cached, result_json might be returned immediately
+      if (response.data.cached && response.data.result_json) {
+        setShapResult(response.data.result_json);
+        setShapLoading(false);
+        return;
+      }
+
+      const jobId = response.data.job_id;
+      // Detailed polling for the specific SHAP investigation
+      let pollCount = 0;
+      const maxRetries = 20; // ~30-40 seconds total
+      
+      const pollInterval = setInterval(async () => {
+        try {
+          pollCount++;
+          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+          
+          if (jobRes.data.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            setShapResult(jobRes.data.result_json);
+            setShapLoading(false);
+          } else if (jobRes.data.status === 'FAILED') {
+            clearInterval(pollInterval);
+            setShapLoading(false);
+            setToastMessage('SHAP Explanation failed. Feature drift or CPU timeout.');
+          } else if (pollCount >= maxRetries) {
+            clearInterval(pollInterval);
+            setShapLoading(false);
+            setToastMessage('SHAP investigation timed out. Model is too complex for real-time extraction.');
+          }
+        } catch (err) {
+          clearInterval(pollInterval);
+          setShapLoading(false);
+          console.error("SHAP Poll Error", err);
+        }
+      }, 1500);
+
+    } catch (error) {
+      setShapLoading(false);
+      setToastMessage(`Investigation failed: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -433,9 +489,13 @@ const DatasetDetails = () => {
         onClose={() => setShowResultModal(false)}
         title="Analytical Audit Report"
         variant="info"
-        size="md"
+        size="lg"
         confirmText="Close Report"
-        onConfirm={() => setShowResultModal(false)}
+        onConfirm={() => {
+          setShowResultModal(false);
+          setActiveAnomalyRowId(null);
+          setShapResult(null);
+        }}
         message={
           <div className="space-y-6 text-left">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4 pb-6 border-b border-slate-100">
@@ -494,6 +554,27 @@ const DatasetDetails = () => {
                    computationResult?.result_json?.result?.type === 'correlation' && (
                     <div className="mt-8 w-full">
                       <CorrelationHeatmap data={computationResult.result_json} />
+                    </div>
+                  )}
+
+                  {/* Production SHAP Anomaly Explanation System (Dual Panel) */}
+                  {computationResult?.result_json?.version === 'v2' && 
+                   computationResult?.result_json?.status === 'success' && 
+                   computationResult?.result_json?.result?.type === 'anomaly' && (
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 w-full text-left bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                      <div className="lg:col-span-3 h-[450px]">
+                         <AnomalyHeatmap 
+                            data={computationResult.result_json.result} 
+                            onRowClick={handleExplainAnomaly}
+                            activeRowId={activeAnomalyRowId}
+                         />
+                      </div>
+                      <div className="lg:col-span-2 h-[450px]">
+                         <ShapBarChart 
+                            data={shapResult} 
+                            loading={shapLoading} 
+                         />
+                      </div>
                     </div>
                   )}
 
