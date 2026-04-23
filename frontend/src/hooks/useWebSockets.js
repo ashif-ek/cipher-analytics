@@ -5,6 +5,12 @@ const useWebSockets = (onMessage) => {
     const ws = useRef(null);
     const reconnectTimer = useRef(null);
     const reconnectDelay = useRef(1000);
+    const onMessageRef = useRef(onMessage);
+
+    // Keep the callback ref up to date without re-triggering effects
+    useEffect(() => {
+        onMessageRef.current = onMessage;
+    }, [onMessage]);
 
     const connect = useCallback(() => {
         const token = localStorage.getItem('access_token');
@@ -31,7 +37,7 @@ const useWebSockets = (onMessage) => {
 
         ws.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (onMessage) onMessage(data);
+            if (onMessageRef.current) onMessageRef.current(data);
         };
 
         ws.current.onclose = () => {
@@ -51,7 +57,7 @@ const useWebSockets = (onMessage) => {
             console.error('WebSocket Error', err);
             ws.current.close();
         };
-    }, [onMessage]);
+    }, []); // Empty dependency array: connect is now fully stable
 
     useEffect(() => {
         connect();

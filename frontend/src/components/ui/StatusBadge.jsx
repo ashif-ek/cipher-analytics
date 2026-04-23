@@ -1,6 +1,6 @@
 import React from 'react';
 
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, errorMessage }) => {
   const statusConfig = {
     UPLOADING: { color: 'bg-slate-50 text-slate-500 border-slate-200', text: 'UPLOADING', icon: null },
     PROCESSING: { 
@@ -29,7 +29,10 @@ const StatusBadge = ({ status }) => {
   const config = statusConfig[status] || { color: 'bg-slate-100 text-slate-600 border-slate-200', text: status, icon: null };
 
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-[2px] text-[10px] font-bold border ${config.color} leading-none tracking-tight`}>
+    <span 
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-[2px] text-[10px] font-bold border ${config.color} leading-none tracking-tight`}
+      title={errorMessage}
+    >
       {config.icon}
       {config.text}
     </span>

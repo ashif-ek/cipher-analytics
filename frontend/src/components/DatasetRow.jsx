@@ -117,7 +117,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
         </div>
       </td>
       <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
-        <StatusBadge status={dataset.status} />
+        <StatusBadge status={dataset.status} errorMessage={dataset.error_message} />
       </td>
       <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
         <div className="flex items-center font-mono text-[11px] text-slate-600">
