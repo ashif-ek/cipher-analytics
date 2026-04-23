@@ -15,6 +15,14 @@ def run_anomaly_detection(df: pd.DataFrame) -> tuple[dict, dict]:
     constant_features = stds[stds < 1e-6].index.tolist()
     clean_df = df.drop(columns=constant_features)
     
+    if clean_df.empty or clean_df.shape[1] == 0:
+        # Return a structured failure instead of crashing
+        return {
+            "type": "error",
+            "error_code": "NO_FEATURES_REMAINING",
+            "message": "Anomaly detection cannot proceed because all numeric features are constant or contain only null values."
+        }, None
+
     feature_names = clean_df.columns.tolist()
     feature_hash = hashlib.sha256(",".join(feature_names).encode()).hexdigest()
     
@@ -86,7 +94,7 @@ def run_anomaly_detection(df: pd.DataFrame) -> tuple[dict, dict]:
     }
     
     result_json = {
-        "type": "ANOMALY_DETECTION_V2",
+        "type": "anomaly",
         "count": total_anomalies,
         "percentage": round((total_anomalies / len(df)) * 100, 2) if len(df) > 0 else 0.0,
         "top_anomalies": top_indices,

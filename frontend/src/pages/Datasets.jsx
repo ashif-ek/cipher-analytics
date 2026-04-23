@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
 import DatasetTable from '../components/DatasetTable';
+import useWebSockets from '../hooks/useWebSockets';
 
 const Datasets = () => {
   const [datasets, setDatasets] = useState([]);
@@ -47,40 +48,12 @@ const Datasets = () => {
     fetchDatasets();
   }, [fetchDatasets]);
 
-  // Polling for datasets in PROCESSING state
-  useEffect(() => {
-    const hasProcessing = datasets.some(ds => ds.status === 'PROCESSING');
-    let intervalId;
-
-    if (hasProcessing) {
-      intervalId = setInterval(async () => {
-        try {
-          const response = await client.get('datasets/', {
-            params: {
-                q: debouncedSearch,
-                status: statusFilter,
-                visibility: visibilityFilter,
-                sort_field: sortField,
-                sort_dir: sortDirection
-            }
-          });
-          setDatasets(response.data);
-          
-          const stillProcessing = response.data.some(ds => ds.status === 'PROCESSING');
-          if (!stillProcessing) {
-            clearInterval(intervalId);
-          }
-        } catch (error) {
-          console.error("Polling failed", error);
-          clearInterval(intervalId);
-        }
-      }, 3000);
+  // Real-time updates via WebSockets
+  useWebSockets(useCallback((message) => {
+    if (message.type === 'DATASET_STATUS_UPDATED') {
+      fetchDatasets();
     }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [datasets, debouncedSearch, statusFilter, visibilityFilter, sortField, sortDirection]);
+  }, [fetchDatasets]));
 
   const handleDelete = (deletedId) => {
     setDatasets(prev => prev.filter(ds => ds.id !== deletedId));

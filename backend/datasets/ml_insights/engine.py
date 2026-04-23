@@ -14,8 +14,17 @@ def execute_ml_pipeline(operation: str, file_path: str) -> dict:
     Never throws an exception upward.
     """
     try:
-        df = pd.read_csv(file_path)
+        from datasets.services.ingestion import SafeCSVLoader
+        loader = SafeCSVLoader(file_path)
+        df, report = loader.load_safe()
+        
+        if report["status"] == "FAILED":
+             return build_error("INGESTION_ERROR", f"Failed to load dataset: {', '.join(report['errors'])}")
+             
+        if df is None or df.empty:
+             return build_error("EMPTY_DATASET", "The dataset is empty or malformed.")
     except Exception as e:
+        logger.exception("ML Ingestion Error")
         return build_error("FILE_READ_ERROR", "Could not read or parse the CSV.", debug={"error": str(e)})
         
     operation = operation.upper()
