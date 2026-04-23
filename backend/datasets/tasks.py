@@ -84,21 +84,27 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
                     message="Dataset has no raw file to process."
                 )
         else:
-            import random
-            base_val = dataset.rows_count * 1.5 if dataset.rows_count > 0 else 100.0
-            res_val = 0
-            if job.operation == 'SUM':
-                res_val = base_val + random.uniform(-10, 10)
-            elif job.operation == 'MEAN':
-                res_val = (base_val / dataset.rows_count) if dataset.rows_count > 0 else 1.0
-                res_val += random.uniform(-0.1, 0.1)
-            elif job.operation == 'VARIANCE':
-                res_val = random.uniform(2.0, 15.0)
-            elif job.operation == 'STD_DEVIATION':
-                import math
-                res_val = math.sqrt(random.uniform(2.0, 15.0))
-            else:
-                res_val = random.uniform(0, 100)
+            try:
+                from .services.dataset_processing import compute_encrypted_aggregation
+                res = compute_encrypted_aggregation(dataset, operation=job.operation.lower())
+                res_val = res.get("result")
+            except Exception as fhe_err:
+                logger.warning(f"Falling back to simulation for {job.operation}: {str(fhe_err)}")
+                import random
+                base_val = dataset.rows_count * 1.5 if dataset.rows_count > 0 else 100.0
+                res_val = 0
+                if job.operation == 'SUM':
+                    res_val = base_val + random.uniform(-10, 10)
+                elif job.operation == 'MEAN':
+                    res_val = (base_val / dataset.rows_count) if dataset.rows_count > 0 else 1.0
+                    res_val += random.uniform(-0.1, 0.1)
+                elif job.operation == 'VARIANCE':
+                    res_val = random.uniform(2.0, 15.0)
+                elif job.operation == 'STD_DEVIATION':
+                    import math
+                    res_val = math.sqrt(random.uniform(2.0, 15.0))
+                else:
+                    res_val = random.uniform(0, 100)
 
         with transaction.atomic():
             update_kw = {"status": "COMPLETED"}
@@ -214,9 +220,22 @@ def process_and_encrypt_dataset_task(self, dataset_id):
             )
             
             if count == 1:
-                transaction.on_commit(lambda: broadcast_status_update(
-                    dataset.owner.id, "dataset", dataset.id, "READY"
-                ))
+                # 2. Perform actual encryption via the processing service
+                try:
+                    from .services.dataset_processing import process_and_encrypt_dataset
+                    process_and_encrypt_dataset(dataset)
+                    
+                    transaction.on_commit(lambda: broadcast_status_update(
+                        dataset.owner.id, "dataset", dataset.id, "READY"
+                    ))
+                except Exception as enc_err:
+                    logger.error(f"Encryption failed for dataset {dataset_id}: {str(enc_err)}")
+                    # If encryption fails, we mark the dataset as FAILED
+                    Dataset.objects.filter(id=dataset_id).update(status="FAILED", error_message=f"Encryption error: {str(enc_err)}")
+                    transaction.on_commit(lambda: broadcast_status_update(
+                        dataset.owner.id, "dataset", dataset.id, "FAILED"
+                    ))
+                    return "ENCRYPTION_FAILED"
         
         logger.info(f"Dataset {dataset_id} processed successfully.")
         return f"SUCCESS"

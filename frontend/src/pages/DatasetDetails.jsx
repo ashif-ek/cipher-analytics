@@ -314,17 +314,19 @@ const DatasetDetails = () => {
                  </button>
                </>
              )}
-             <button 
+              <button 
                 onClick={handleDownload}
-                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-                title="Download Encrypted Payload"
+                disabled={dataset.status !== 'READY'}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={dataset.status === 'READY' ? "Download Encrypted Payload" : "Payload available once READY"}
               >
                 Download Enc.
               </button>
               <button 
                 onClick={handleExportMetadata}
-                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                title="Export JSON Metadata"
+                disabled={dataset.status !== 'READY' && dataset.status !== 'FAILED'}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={dataset.status === 'READY' ? "Export JSON Metadata" : "Metadata available once processed"}
               >
               Export Metadata
             </button>

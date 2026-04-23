@@ -97,22 +97,22 @@ def process_and_encrypt_dataset(dataset_obj):
     
     # 3. Save
     file_name = f"{dataset_obj.id}_encrypted.bin"
-    dataset_obj.encrypted_file.save(file_name, ContentFile(encrypted_binary))
+    dataset_obj.ciphertext_path.save(file_name, ContentFile(encrypted_binary))
     dataset_obj.rows_count = rows
     dataset_obj.columns_count = cols
-    dataset_obj.save(update_fields=['encrypted_file', 'rows_count', 'columns_count'])
+    dataset_obj.save(update_fields=['ciphertext_path', 'rows_count', 'columns_count'])
 
 def compute_encrypted_aggregation(dataset_obj, operation="sum"):
     """
     Load encrypted data, perform homomorphic operation (sum/mean), 
     decrypt and return the numerical result.
     """
-    if not dataset_obj.encrypted_file:
+    if not dataset_obj.ciphertext_path:
         raise ValueError("Dataset is not yet encrypted.")
         
     # 1. Read binary data
-    dataset_obj.encrypted_file.seek(0)
-    binary_data = dataset_obj.encrypted_file.read()
+    dataset_obj.ciphertext_path.seek(0)
+    binary_data = dataset_obj.ciphertext_path.read()
     
     # 2. Extract Context and Vector
     ctx_len = int.from_bytes(binary_data[:4], byteorder='big')

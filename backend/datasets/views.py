@@ -131,7 +131,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
         )
         instance.delete()
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='status')
     def status(self, request, pk=None):
         dataset = self.get_object()
         return Response({
@@ -142,7 +142,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
             "updated_at": dataset.updated_at
         })
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='download')
     def download(self, request, pk=None):
         dataset = self.get_object()
         
@@ -184,7 +184,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
         
         return response
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='export-metadata')
     def export_metadata(self, request, pk=None):
         import json
         from django.http import HttpResponse
