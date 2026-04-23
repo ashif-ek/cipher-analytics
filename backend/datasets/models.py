@@ -60,6 +60,7 @@ class Dataset(models.Model):
 
     task_id = models.CharField(max_length=255, blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+    ingestion_report = models.JSONField(default=dict, blank=True)
 
     # Persistence of Latest Insight
     last_result = models.FloatField(null=True, blank=True)
@@ -90,6 +91,7 @@ class ComputationJob(models.Model):
     result_path = models.FileField(upload_to="computations/results/", null=True, blank=True)
     result_value = models.FloatField(null=True, blank=True) # Summary result for quick display
     result_json = models.JSONField(null=True, blank=True) # Structured JSON result for ML insights
+    diagnostics = models.JSONField(default=dict, blank=True) # Stage-level tracking
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

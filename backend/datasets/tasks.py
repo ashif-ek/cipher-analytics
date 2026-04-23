@@ -172,85 +172,120 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
 
 @shared_task(queue='default')
 def cleanup_stuck_datasets_task():
-    # Detect datasets sitting in PENDING for > 2 hours and set them to FAILED
+    """
+    Detects datasets stuck in PROCESSING status for > 30 minutes (timeout_or_worker_crash).
+    """
     from datetime import timedelta
-    threshold = timezone.now() - timedelta(hours=2)
-    stuck_jobs = ComputationJob.objects.filter(status__in=["PENDING", "RUNNING"], updated_at__lt=threshold)
-    count = stuck_jobs.update(status="FAILED")
+    threshold = timezone.now() - timedelta(minutes=30)
+    
+    stuck_datasets = Dataset.objects.filter(status="PROCESSING", updated_at__lt=threshold)
+    count = stuck_datasets.update(status="FAILED", error_message="timeout_or_worker_crash")
+    
     if count > 0:
-         logger.info(f"Marked {count} stuck jobs as FAILED.", extra={'event': 'cleanup_stuck_datasets'})
+        logger.warning(f"Cleaned up {count} stuck datasets.")
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60, queue='heavy_tasks')
+    # Also clean up jobs
+    job_threshold = timezone.now() - timedelta(minutes=15)
+    stuck_jobs = ComputationJob.objects.filter(status__in=["PENDING", "RUNNING"], updated_at__lt=job_threshold)
+    stuck_jobs.update(status="FAILED")
+
+@shared_task(bind=True, max_retries=1, soft_time_limit=240, time_limit=300, queue='heavy_tasks')
 def process_and_encrypt_dataset_task(self, dataset_id):
     """
-    Ingests a raw CSV, counts dimensions, and prepares the FHE ciphertext.
+    Production-grade ingestion pipeline:
+    1. Lock Dataset (Idempotency)
+    2. Safe Ingestion (SafeCSVLoader)
+    3. Data Profiling (DataProfiler)
+    4. Adaptive Preprocessing (AdaptivePreprocessor)
+    5. FHE Encryption
     """
-    dataset = None
-    try:
-        # Atomic transition: UPLOADING -> PROCESSING
-        with transaction.atomic():
-            count = Dataset.objects.filter(id=dataset_id, status="UPLOADING").update(status="PROCESSING")
-            dataset = Dataset.objects.get(id=dataset_id)
-            if count == 1:
-                transaction.on_commit(lambda: broadcast_status_update(
-                    dataset.owner.id, "dataset", dataset.id, "PROCESSING"
-                ))
-            elif dataset.status != "PROCESSING":
-                return "ALREADY_PROCESSED"
+    from .services.locking import RedisLock
+    from .services.ingestion import SafeCSVLoader
+    from .services.validation import DataProfiler
+    from .services.preprocessing import AdaptivePreprocessor
+    from .services.dataset_processing import encrypt_dataset
+    from django.core.files.base import ContentFile
+
+    lock = RedisLock(f"dataset_ingest:{dataset_id}")
+    
+    with lock.acquire() as acquired:
+        if not acquired:
+            return "ALREADY_LOCKED"
+
+        dataset = Dataset.objects.get(id=dataset_id)
+        
+        # Idempotency check: Don't process if already READY
+        if dataset.status == "READY":
+            return "ALREADY_READY"
+
+        try:
+            # 1. Transition: UPLOADING -> PROCESSING
+            dataset.status = "PROCESSING"
+            dataset.save(update_fields=['status'])
+            broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "PROCESSING")
+
+            # 2. Stage: INGESTION
+            logger.info(f"ingestion_started: {dataset.id}")
+            loader = SafeCSVLoader(dataset.original_file.path)
+            df, ingestion_report = loader.load_safe()
+            dataset.ingestion_report = ingestion_report
+            dataset.save(update_fields=['ingestion_report'])
+
+            if ingestion_report["status"] == "FAILED":
+                logger.error(f"ingestion_failed: {dataset.id}")
+                dataset.status = "FAILED"
+                dataset.error_message = f"Ingestion Error: {', '.join(ingestion_report['errors'])}"
+                dataset.save(update_fields=['status', 'error_message'])
+                broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "FAILED")
+                return "FAILED_INGESTION"
+
+            # 3. Stage: VALIDATION
+            profiler = DataProfiler(df)
+            profile = profiler.profile_dataset()
+            dataset.column_stats = profile # Store profile in stats for now
             
-        if not dataset.original_file:
-            raise ValueError("No original file found for processing.")
+            if not profiler.is_valid:
+                logger.error(f"validation_failed: {dataset.id}")
+                dataset.status = "FAILED"
+                dataset.error_message = f"Validation Error: {profiler.reason}"
+                dataset.save(update_fields=['status', 'error_message', 'column_stats'])
+                broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "FAILED")
+                return "FAILED_VALIDATION"
+
+            # 4. Stage: PREPROCESSING
+            preprocessor = AdaptivePreprocessor(profile)
+            clean_df = preprocessor.apply(df)
+            logger.info(f"preprocessing_completed: {dataset.id}")
+
+            # 5. Stage: ENCRYPTION
+            # Use only numeric columns for FHE as currently designed
+            numeric_df = clean_df.select_dtypes(include=['number'])
+            if numeric_df.empty:
+                dataset.status = "FAILED"
+                dataset.error_message = "No numeric columns remain after preprocessing."
+                dataset.save(update_fields=['status', 'error_message'])
+                broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "FAILED")
+                return "FAILED_NO_NUMERIC"
+
+            encrypted_binary, rows, cols = encrypt_dataset(numeric_df)
             
-        import pandas as pd
-        import numpy as np
-        df = pd.read_csv(dataset.original_file.path)
-        numeric_df = df.select_dtypes(include=[np.number])
-        rows, cols = len(df), len(numeric_df.columns)
-        
-        column_stats = {col: {"distinct_count": int(df[col].nunique()), "is_numeric": bool(pd.api.types.is_numeric_dtype(df[col]))} for col in df.columns}
-        
-        with transaction.atomic():
-            # Atomic transition: PROCESSING -> READY
-            count = Dataset.objects.filter(id=dataset_id, status="PROCESSING").update(
-                status="READY",
-                rows_count=rows,
-                columns_count=cols,
-                column_stats=column_stats,
-                column_stats_verified=True
-            )
+            file_name = f"{dataset.id}_encrypted.bin"
+            dataset.ciphertext_path.save(file_name, ContentFile(encrypted_binary))
+            dataset.rows_count = rows
+            dataset.columns_count = cols
+            dataset.status = "READY"
+            dataset.save(update_fields=['ciphertext_path', 'rows_count', 'columns_count', 'status'])
             
-            if count == 1:
-                # 2. Perform actual encryption via the processing service
-                try:
-                    from .services.dataset_processing import process_and_encrypt_dataset
-                    process_and_encrypt_dataset(dataset)
-                    
-                    transaction.on_commit(lambda: broadcast_status_update(
-                        dataset.owner.id, "dataset", dataset.id, "READY"
-                    ))
-                except Exception as enc_err:
-                    logger.error(f"Encryption failed for dataset {dataset_id}: {str(enc_err)}")
-                    # If encryption fails, we mark the dataset as FAILED
-                    Dataset.objects.filter(id=dataset_id).update(status="FAILED", error_message=f"Encryption error: {str(enc_err)}")
-                    transaction.on_commit(lambda: broadcast_status_update(
-                        dataset.owner.id, "dataset", dataset.id, "FAILED"
-                    ))
-                    return "ENCRYPTION_FAILED"
-        
-        logger.info(f"Dataset {dataset_id} processed successfully.")
-        return f"SUCCESS"
-        
-    except Exception as e:
-        logger.error(f"Error processing dataset {dataset_id}: {str(e)}")
-        if dataset:
-            is_final_retry = self.request.retries >= self.max_retries
-            with transaction.atomic():
-                count = Dataset.objects.filter(id=dataset_id).exclude(status="READY").update(status="FAILED", error_message=str(e))
-                if count == 1 and is_final_retry:
-                    transaction.on_commit(lambda: broadcast_status_update(
-                        dataset.owner.id, "dataset", dataset.id, "FAILED"
-                    ))
-        raise
+            broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "READY")
+            return "SUCCESS"
+
+        except Exception as e:
+            logger.exception(f"Unexpected failure in ingestion pipeline for dataset {dataset_id}")
+            dataset.status = "FAILED"
+            dataset.error_message = f"INTERNAL_ERROR: {str(e)}"
+            dataset.save(update_fields=['status', 'error_message'])
+            broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "FAILED")
+            return "FAILED_INTERNAL"
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30, queue='heavy_tasks')
