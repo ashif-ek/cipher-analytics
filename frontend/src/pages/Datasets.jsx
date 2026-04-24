@@ -59,6 +59,25 @@ const Datasets = () => {
     setDatasets(prev => prev.filter(ds => ds.id !== deletedId));
   };
 
+  const handleRequestAccess = async (dataset) => {
+    try {
+        const response = await client.post('research/requests/', { 
+            dataset: dataset.id,
+            reason: "Standard research analysis request."
+        });
+        
+        // Update local state to show pending
+        setDatasets(prev => prev.map(ds => 
+            ds.id === dataset.id ? { ...ds, pending_request: true } : ds
+        ));
+        
+        console.log("Access request sent successfully", response.data);
+    } catch (error) {
+        console.error("Failed to request access", error);
+        alert(`Request failed: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -94,6 +113,7 @@ const Datasets = () => {
           loading={loadingDatasets} 
           onRefresh={fetchDatasets} 
           onDelete={handleDelete}
+          onRequestAccess={handleRequestAccess}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           statusFilter={statusFilter}

@@ -5,7 +5,7 @@ import MetricsCell from './MetricsCell';
 import ComputeDropdown from './ComputeDropdown';
 import client from '../api/client';
 
-const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) => {
+const DatasetRow = ({ dataset, isResearcher, onDeleteClick, onRequestAccess, setToastMessage }) => {
   const getInitialResults = () => {
     let localResults = {};
     try {
@@ -154,7 +154,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
         <div className="flex items-center justify-end space-x-3">
           {dataset.status === 'READY' && (
              <ComputeDropdown 
-               disabled={dataset.access_policy === 'STRICT' && isResearcher}
+               disabled={!dataset.has_access}
                isComputing={rowState.loading !== null}
                isOpen={dropdownOpen}
                onToggle={setDropdownOpen}
@@ -163,7 +163,21 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
              />
           )}
 
-          <div className="w-[1px] h-4 bg-slate-200"></div>
+          {isResearcher && !dataset.has_access && (
+            <button
+              onClick={() => onRequestAccess(dataset)}
+              disabled={dataset.pending_request}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded-[4px] transition-all border ${
+                dataset.pending_request 
+                  ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
+                  : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
+              }`}
+            >
+              {dataset.pending_request ? 'REQUEST PENDING' : 'REQUEST ACCESS'}
+            </button>
+          )}
+
+           <div className="w-[1px] h-4 bg-slate-200"></div>
 
           <button
             onClick={() => onDeleteClick(dataset)}

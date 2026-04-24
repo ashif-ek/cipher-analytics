@@ -64,8 +64,8 @@ const AnomalyHeatmap = ({ data, onRowClick, activeRowId }) => {
       left: 'center',
       bottom: 0,
       inRange: {
-        // Dynamic Blue -> White -> Red
-        color: ['#1e40af', '#f8fafc', '#991b1b']
+        // High-contrast Blue -> Slate (Neutral) -> Deep Red (Anomaly)
+        color: ['#1e40af', '#f1f5f9', '#b91c1c']
       }
     },
     series: [{
@@ -73,8 +73,7 @@ const AnomalyHeatmap = ({ data, onRowClick, activeRowId }) => {
       type: 'heatmap',
       data: chartData,
       label: {
-        show: features.length <= 10,
-        formatter: (p) => p.data[2].toFixed(1)
+        show: false // Removed to reduce clutter. Data is accessible via tooltip.
       },
       emphasis: {
         itemStyle: {
@@ -83,9 +82,9 @@ const AnomalyHeatmap = ({ data, onRowClick, activeRowId }) => {
         }
       },
       itemStyle: {
-          // Highlight active row
-          borderColor: (p) => top_anomalies[p.dataIndex / features.length] === activeRowId ? '#fbbf24' : '#fff',
-          borderWidth: (p) => top_anomalies[p.dataIndex / features.length] === activeRowId ? 2 : 1
+          borderColor: '#fff',
+          borderWidth: 2,
+          borderRadius: 2
       }
     }]
   };

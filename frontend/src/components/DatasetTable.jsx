@@ -182,6 +182,7 @@ const DatasetTable = ({
                   dataset={dataset}
                   isResearcher={isResearcher}
                   onDeleteClick={handleDeleteClick}
+                  onRequestAccess={onRequestAccess}
                   setToastMessage={setToastMessage}
                 />
               ))

@@ -24,16 +24,30 @@ def handle_strict(user, dataset, operation, context=None):
 
 def handle_whitelist(user, dataset, operation, context=None):
     """
-    WHITELIST mode: Requires the user to be in the dataset's explicit access list.
+    WHITELIST mode: Requires the user to be in the dataset's explicit access list
+    OR have an active Research Grant.
     """
-    has_grant = DatasetAccess.objects.filter(
+    # 1. Check internal whitelist
+    has_internal_access = DatasetAccess.objects.filter(
         dataset=dataset, 
         user=user, 
         permission__in=['COMPUTE', 'ANALYZE', 'FULL']
     ).exists()
     
-    if not has_grant:
-        raise PermissionDenied("User not on WHITELIST for this dataset.")
+    if has_internal_access:
+        return True
+
+    # 2. Fallback: Check Research Grants
+    from research.models import DatasetAccessGrant
+    has_active_grant = DatasetAccessGrant.objects.filter(
+        researcher=user,
+        dataset=dataset,
+        is_active=True,
+        expires_at__gt=timezone.now()
+    ).exists()
+
+    if not has_active_grant:
+        raise PermissionDenied("User not on WHITELIST and no active Research Grant found.")
         
     return True
 
