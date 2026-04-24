@@ -6,6 +6,9 @@ import Card from '../components/ui/Card';
 import StatusBadge from '../components/ui/StatusBadge';
 import Toast from '../components/ui/Toast';
 import Modal from '../components/ui/Modal';
+import CorrelationHeatmap from '../components/CorrelationHeatmap';
+import AnomalyHeatmap from '../components/AnomalyHeatmap';
+import ShapBarChart from '../components/ShapBarChart';
 
 const DatasetDetails = () => {
   const { id } = useParams();
@@ -19,6 +22,9 @@ const DatasetDetails = () => {
   const [computing, setComputing] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [computationResult, setComputationResult] = useState(null);
+  const [activeAnomalyRowId, setActiveAnomalyRowId] = useState(null);
+  const [shapResult, setShapResult] = useState(null);
+  const [shapLoading, setShapLoading] = useState(false);
   const lastEventTimestamp = useRef(0);
 
   const fetchDataset = useCallback(async () => {
@@ -87,7 +93,27 @@ const DatasetDetails = () => {
       link.remove();
     } catch (err) {
       console.error("Download failed", err);
-      alert("Failed to download encrypted payload.");
+      // Give a better error message if it's our 404
+      const msg = err.response?.data?.detail || "Failed to download payload.";
+      setToastMessage(msg);
+    }
+  };
+
+  const handleExportMetadata = async () => {
+    try {
+      const response = await client.get(`datasets/${id}/export-metadata/`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${dataset.name}_metadata.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Export metadata failed", err);
+      setToastMessage("Failed to export metadata.");
     }
   };
 
@@ -106,6 +132,7 @@ const DatasetDetails = () => {
             setComputationResult({
               ...jobRes.data,
               result: jobRes.data.result_value, // Ensure field name consistency
+              result_json: jobRes.data.result_json,
               datasetName: dataset.name
             });
             setShowResultModal(true);
@@ -131,6 +158,57 @@ const DatasetDetails = () => {
     } catch (error) {
       setComputing(false);
       setToastMessage(`Queue failed: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const handleExplainAnomaly = async (row_id) => {
+    try {
+      setActiveAnomalyRowId(row_id);
+      setShapLoading(true);
+      setShapResult(null);
+
+      const response = await client.post(`datasets/${id}/explain_anomaly/`, { row_id });
+      
+      // If cached, result_json might be returned immediately
+      if (response.data.cached && response.data.result_json) {
+        setShapResult(response.data.result_json);
+        setShapLoading(false);
+        return;
+      }
+
+      const jobId = response.data.job_id;
+      // Detailed polling for the specific SHAP investigation
+      let pollCount = 0;
+      const maxRetries = 20; // ~30-40 seconds total
+      
+      const pollInterval = setInterval(async () => {
+        try {
+          pollCount++;
+          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+          
+          if (jobRes.data.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            setShapResult(jobRes.data.result_json);
+            setShapLoading(false);
+          } else if (jobRes.data.status === 'FAILED') {
+            clearInterval(pollInterval);
+            setShapLoading(false);
+            setToastMessage('SHAP Explanation failed. Feature drift or CPU timeout.');
+          } else if (pollCount >= maxRetries) {
+            clearInterval(pollInterval);
+            setShapLoading(false);
+            setToastMessage('SHAP investigation timed out. Model is too complex for real-time extraction.');
+          }
+        } catch (err) {
+          clearInterval(pollInterval);
+          setShapLoading(false);
+          console.error("SHAP Poll Error", err);
+        }
+      }, 1500);
+
+    } catch (error) {
+      setShapLoading(false);
+      setToastMessage(`Investigation failed: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -189,7 +267,10 @@ const DatasetDetails = () => {
                 {dataset.computations && dataset.computations.length > 0 && (
                    <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                      <span className="mr-1 opacity-50">{dataset.computations[0].operation === 'SUM' ? '∑' : dataset.computations[0].operation === 'MEAN' ? 'x̅' : dataset.computations[0].operation}:</span>
-                     {dataset.computations[0].result_value.toFixed(dataset.computations[0].result_value % 1 === 0 ? 0 : 4)}
+                     {dataset.computations[0].result_value !== null ? 
+                       dataset.computations[0].result_value.toFixed(dataset.computations[0].result_value % 1 === 0 ? 0 : 4) : 
+                       (dataset.computations[0].result_json ? 'Insights' : 'N/A')
+                     }
                    </span>
                 )}
               </h1>
@@ -217,16 +298,36 @@ const DatasetDetails = () => {
                  >
                   {computing ? '...' : 'Run Mean'}
                  </button>
+                 <button 
+                  onClick={() => handleCompute('correlation')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-violet-200 shadow-sm text-sm font-bold rounded-lg text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Correlation'}
+                 </button>
+                 <button 
+                  onClick={() => handleCompute('anomaly_detection')}
+                  disabled={computing}
+                  className="px-4 py-2 border border-rose-200 shadow-sm text-sm font-bold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50"
+                 >
+                  {computing ? '...' : 'Anomalies'}
+                 </button>
                </>
              )}
-             <button 
+              <button 
                 onClick={handleDownload}
-                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-                title="Download Encrypted Payload"
+                disabled={dataset.status !== 'READY'}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={dataset.status === 'READY' ? "Download Encrypted Payload" : "Payload available once READY"}
               >
                 Download Enc.
               </button>
-              <button className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+              <button 
+                onClick={handleExportMetadata}
+                disabled={dataset.status !== 'READY' && dataset.status !== 'FAILED'}
+                className="px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title={dataset.status === 'READY' ? "Export JSON Metadata" : "Metadata available once processed"}
+              >
               Export Metadata
             </button>
             <button 
@@ -316,8 +417,8 @@ const DatasetDetails = () => {
                              </span>
                              <p className="text-xs text-amber-900/60 font-medium">Job {comp.id} • {new Date(comp.created_at).toLocaleDateString()}</p>
                            </div>
-                           <span className="text-2xl font-black text-slate-900 font-mono tracking-tighter">
-                             {comp.result_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                           <span className={comp.result_json ? "text-sm font-bold text-slate-800" : "text-2xl font-black text-slate-900 font-mono tracking-tighter"}>
+                             {comp.result_json ? comp.result_json.message : comp.result_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
                            </span>
                         </div>
                       ))}
@@ -390,9 +491,13 @@ const DatasetDetails = () => {
         onClose={() => setShowResultModal(false)}
         title="Analytical Audit Report"
         variant="info"
-        size="md"
+        size="lg"
         confirmText="Close Report"
-        onConfirm={() => setShowResultModal(false)}
+        onConfirm={() => {
+          setShowResultModal(false);
+          setActiveAnomalyRowId(null);
+          setShapResult(null);
+        }}
         message={
           <div className="space-y-6 text-left">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4 pb-6 border-b border-slate-100">
@@ -426,10 +531,55 @@ const DatasetDetails = () => {
                 <span className="block text-[10px] font-bold text-slate-500 mb-4">Verified Numerical Output</span>
                 <div className="flex flex-col items-center">
                   <span className="text-5xl font-bold text-slate-900 font-mono">
-                    {typeof computationResult?.result === 'number' 
-                      ? computationResult.result.toFixed(6)
-                      : 'N/A'}
+                    {computationResult?.result_json
+                      ? (computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'correlation' ? `${computationResult.result_json.result.summary.strong_pairs.length} Strong Pairs`
+                        : computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'anomaly' ? `${computationResult.result_json.result.percentage}% Anomalies`
+                        : computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'failed' ? 'FAILED'
+                        : computationResult.result_json.type === 'correlation' ? computationResult.result_json.correlation?.toFixed(4)
+                        : computationResult.result_json.type === 'anomaly_detection' ? computationResult.result_json.anomalies
+                        : computationResult.result_json.type === 'error' ? 'ERR' : '')
+                      : computationResult?.result_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+                    }
                   </span>
+                  
+                  {computationResult?.result_json && (
+                    <span className="text-xs text-slate-500 font-medium">
+                      {computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'failed' ? computationResult.result_json.message : ''}
+                      {computationResult.result_json.version === 'v2' && computationResult.result_json.status === 'success' && computationResult.result_json.result.type === 'anomaly' ? `Detected ${computationResult.result_json.result.count} instances.` : ''}
+                      {computationResult.result_json.version !== 'v2' ? computationResult.result_json.message : ''}
+                    </span>
+                  )}
+
+                  {/* Heatmap Injection Point for Correlation Matrix */}
+                  {computationResult?.result_json?.version === 'v2' && 
+                   computationResult?.result_json?.status === 'success' && 
+                   computationResult?.result_json?.result?.type === 'correlation' && (
+                    <div className="mt-8 w-full">
+                      <CorrelationHeatmap data={computationResult.result_json} />
+                    </div>
+                  )}
+
+                  {/* Production SHAP Anomaly Explanation System (Dual Panel) */}
+                  {computationResult?.result_json?.version === 'v2' && 
+                   computationResult?.result_json?.status === 'success' && 
+                   computationResult?.result_json?.result?.type === 'anomaly' && (
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 w-full text-left bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                      <div className="lg:col-span-3 h-[450px]">
+                         <AnomalyHeatmap 
+                            data={computationResult.result_json.result} 
+                            onRowClick={handleExplainAnomaly}
+                            activeRowId={activeAnomalyRowId}
+                         />
+                      </div>
+                      <div className="lg:col-span-2 h-[450px]">
+                         <ShapBarChart 
+                            data={shapResult} 
+                            loading={shapLoading} 
+                         />
+                      </div>
+                    </div>
+                  )}
+
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(computationResult?.result);

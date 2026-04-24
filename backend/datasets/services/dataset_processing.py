@@ -51,37 +51,49 @@ def parse_and_validate_csv(file):
 
 def encrypt_dataset(df):
     """
-    Encrypt dataset using TenSEAL CKKS.
+    Encrypt dataset using TenSEAL CKKS with slot-aware chunking.
     Returns: (serialized_data, rows_count, columns_count)
     """
     # Create TenSEAL context
+    poly_mod = 8192
     context = ts.context(
         ts.SCHEME_TYPE.CKKS,
-        poly_modulus_degree=8192,
+        poly_modulus_degree=poly_mod,
         coeff_mod_bit_sizes=[60, 40, 40, 60]
     )
     context.generate_relin_keys()
-    context.generate_galois_keys()
+    context.generate_galois_keys() # Needed for .sum() rotations
     context.global_scale = 2**40
     
-    # Process as flattened vector for simplicity in initial version
-    # Real-world might use matrix/vector per column or row
+    # Calculate slots (usually poly_mod / 2 for CKKS)
+    slots = poly_mod // 2
+    
+    # Flatten and chunk
     data_vector = df.values.flatten().tolist()
+    total_elements = len(data_vector)
     
-    # Encrypt
-    encrypted_vector = ts.ckks_vector(context, data_vector)
+    encrypted_chunks = []
+    for i in range(0, total_elements, slots):
+        chunk = data_vector[i : i + slots]
+        # Pad chunk with zeros if it's the last one and smaller than slots
+        # (Though TenSEAL handles variable sizes, keeping them consistent can help)
+        encrypted_chunks.append(ts.ckks_vector(context, chunk))
     
-    # Serialize context and ciphertext
-    # Note: In production, the secret key should be handled securely
-    # We include everything for demonstration, but typically secret key is with owner
+    # Serialize
     serialized_ctx = context.serialize(save_secret_key=True)
-    serialized_vec = encrypted_vector.serialize()
+    serialized_chunks = [c.serialize() for c in encrypted_chunks]
     
-    # Combine or separate. Here we'll return a combined binary blob for storage
-    # [Length of Context][Context][Vector]
-    ctx_len = len(serialized_ctx).to_bytes(4, byteorder='big')
-    binary_data = ctx_len + serialized_ctx + serialized_vec
+    # Combine binary blob: 
+    # [4: ctx_len][ctx][4: num_chunks][4: chunk1_len][chunk1]...
+    ctx_bytes = serialized_ctx
+    ctx_len = len(ctx_bytes).to_bytes(4, byteorder='big')
+    num_chunks = len(serialized_chunks).to_bytes(4, byteorder='big')
     
+    binary_data = ctx_len + ctx_bytes + num_chunks
+    for sc in serialized_chunks:
+        binary_data += len(sc).to_bytes(4, byteorder='big')
+        binary_data += sc
+        
     return binary_data, df.shape[0], df.shape[1]
 
 def process_and_encrypt_dataset(dataset_obj):
@@ -97,47 +109,56 @@ def process_and_encrypt_dataset(dataset_obj):
     
     # 3. Save
     file_name = f"{dataset_obj.id}_encrypted.bin"
-    dataset_obj.encrypted_file.save(file_name, ContentFile(encrypted_binary))
+    dataset_obj.ciphertext_path.save(file_name, ContentFile(encrypted_binary))
     dataset_obj.rows_count = rows
     dataset_obj.columns_count = cols
-    dataset_obj.save(update_fields=['encrypted_file', 'rows_count', 'columns_count'])
+    dataset_obj.save(update_fields=['ciphertext_path', 'rows_count', 'columns_count'])
 
 def compute_encrypted_aggregation(dataset_obj, operation="sum"):
     """
-    Load encrypted data, perform homomorphic operation (sum/mean), 
+    Load chunked encrypted data, perform homomorphic operation (sum/mean), 
     decrypt and return the numerical result.
     """
-    if not dataset_obj.encrypted_file:
+    if not dataset_obj.ciphertext_path:
         raise ValueError("Dataset is not yet encrypted.")
         
     # 1. Read binary data
-    dataset_obj.encrypted_file.seek(0)
-    binary_data = dataset_obj.encrypted_file.read()
+    dataset_obj.ciphertext_path.seek(0)
+    binary_data = dataset_obj.ciphertext_path.read()
     
-    # 2. Extract Context and Vector
-    ctx_len = int.from_bytes(binary_data[:4], byteorder='big')
-    serialized_ctx = binary_data[4:4+ctx_len]
-    serialized_vec = binary_data[4+ctx_len:]
+    # 2. Extract Context and Chunks
+    offset = 0
+    ctx_len = int.from_bytes(binary_data[offset:offset+4], byteorder='big')
+    offset += 4
+    serialized_ctx = binary_data[offset:offset+ctx_len]
+    offset += ctx_len
     
-    # 3. Reload into TenSEAL
     context = ts.context_from(serialized_ctx)
-    encrypted_vector = ts.ckks_vector_from(context, serialized_vec)
     
-    # 4. Perform operation homomorphically
+    num_chunks = int.from_bytes(binary_data[offset:offset+4], byteorder='big')
+    offset += 4
+    
+    chunks = []
+    for _ in range(num_chunks):
+        c_len = int.from_bytes(binary_data[offset:offset+4], byteorder='big')
+        offset += 4
+        chunks.append(ts.ckks_vector_from(context, binary_data[offset:offset+c_len]))
+        offset += c_len
+    
+    # 3. Perform operation homomorphically across chunks
+    total_sum = 0
+    for i, encrypted_vector in enumerate(chunks):
+        chunk_sum = encrypted_vector.sum().decrypt()[0]
+        total_sum += chunk_sum
+        
     if operation == "sum":
-        result_encrypted = encrypted_vector.sum()
-        result_plaintext = result_encrypted.decrypt()
-        value = result_plaintext[0]
-        return {"operation": "sum", "result": round(value, 4)}
+        return {"operation": "sum", "result": round(total_sum, 4)}
         
     elif operation == "mean":
-        result_encrypted = encrypted_vector.sum()
         total_elements = dataset_obj.rows_count * dataset_obj.columns_count
         if total_elements > 0:
-            result_encrypted = result_encrypted * (1.0 / total_elements)
-            
-        result_plaintext = result_encrypted.decrypt()
-        value = result_plaintext[0]
-        return {"operation": "mean", "result": round(value, 4)}
+            value = total_sum / total_elements
+            return {"operation": "mean", "result": round(value, 4)}
+        return {"operation": "mean", "result": 0}
     else:
         raise ValueError("Unsupported operation")

@@ -110,7 +110,6 @@ const UploadDataset = () => {
 
     try {
       const response = await client.post('datasets/', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
@@ -266,6 +265,56 @@ const UploadDataset = () => {
               
               <div className="col-span-1 md:col-span-2 mt-4 flex items-center justify-center p-8 border border-slate-100 rounded-xl bg-slate-50/30">
                 <p className="text-xs text-slate-400 font-medium italic">Protocol-specific encryption will be applied upon ingestion.</p>
+              </div>
+
+              {/* Guidelines Section */}
+              <div className="col-span-1 md:col-span-2 mt-8 p-6 border border-blue-100 rounded-xl bg-blue-50/30 text-[11px] text-slate-700 space-y-4 shadow-sm">
+                <h3 className="text-[13px] font-bold border-b border-blue-200 pb-2 text-blue-900">Governance & Validation Guidelines</h3>
+                
+                <p className="text-slate-600"><strong className="text-slate-800">Discovery Layer:</strong> Answers the question: <i>"Can other people see that my file exists in the system registry?"</i></p>
+                <p className="text-slate-600"><strong className="text-slate-800">Governance Protocol:</strong> Answers the question: <i>"If someone finds my file, what are the rules for them to actually run math on it?"</i></p>
+
+                <div className="space-y-4 pt-2">
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="font-extrabold text-slate-900 text-[12px] mb-1">🔒 Private + Strict (The Vault)</p>
+                    <p className="text-slate-600"><strong>What it means:</strong> The dataset is completely invisible to the public. Even if an administrator sends someone a direct link to the dataset, they will hit a brick wall and must submit a formal request just to look at the math.</p>
+                    <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> You are uploading the master payroll list (Salaries, SSNs, Bank details) for the entire corporation.</p>
+                    <p className="text-slate-600 mt-1"><strong>Use Case:</strong> No one should know this file exists. If the HR Director needs an audit executed on the file, the system administrator will explicitly grant that one single director access after a formal request review.</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                     <p className="font-extrabold text-slate-900 text-[12px] mb-1">🕵️‍♂️ Private + Whitelist (The Secret Taskforce)</p>
+                     <p className="text-slate-600"><strong>What it means:</strong> The dataset is still completely invisible to the company directory, BUT a specific group of trusted individuals has been pre-cleared to run FHE math on it the moment it is uploaded.</p>
+                     <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> You are working on a highly classified merger and acquisition (M&A) deal under a strict NDA.</p>
+                     <p className="text-slate-600 mt-1"><strong>Use Case:</strong> You upload the target company's financial records as Private so employees don't see it in the catalog and panic. You set the protocol to Whitelist, assigning the three executives on the M&A team. Those three executives can instantly run calculations without waiting for extra permissions.</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                     <p className="font-extrabold text-slate-900 text-[12px] mb-1">📚 Discoverable + Strict (The Library Book)</p>
+                     <p className="text-slate-600"><strong>What it means:</strong> Everyone in the organization can search the catalog and see the name/size of the dataset, but no one can touch it or run math on it without asking the owner for permission first.</p>
+                     <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> Your organization has purchased an extremely expensive third-party dataset (e.g., global satellite imagery metadata).</p>
+                     <p className="text-slate-600 mt-1"><strong>Use Case:</strong> You want researchers to know the company owns this data so they don't buy it twice (Discoverable). However, because processing the data costs thousands of dollars per query, every researcher must submit a request explaining why they need to use it before they are given access (Strict).</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                     <p className="font-extrabold text-slate-900 text-[12px] mb-1">⭐ Discoverable + Whitelist (The Premium Subscription)</p>
+                     <p className="text-slate-600"><strong>What it means:</strong> The dataset is visible to everyone in the catalog. However, only a VIP group of pre-approved users can run math on it immediately. Everyone else gets blocked but can still see the dataset exists.</p>
+                     <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> A healthcare network maintains a database of clinical trial results.</p>
+                     <p className="text-slate-600 mt-1"><strong>Use Case:</strong> The file is Discoverable so that all doctors know the trial data exists. However, the data is set to Whitelist restricted strictly to the "Oncology Research Team." An oncologist can click Compute and get an instant result. A standard pediatric doctor who browses the catalog and tries to click compute will get an "Access Denied" error.</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                     <p className="font-extrabold text-slate-900 text-[12px] mb-1">🌍 Discoverable + Aggregated (The Open API)</p>
+                     <p className="text-slate-600"><strong>What it means:</strong> The dataset is fully visible to the company, and anyone can freely run high-level math (Averages, Sums, Standard Deviations) on it immediately without permission.</p>
+                     <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> You are uploading basic corporate telemetry data—like "Daily Office Wi-Fi Usage Logs" or "Cafeteria Snack Sales."</p>
+                     <p className="text-slate-600 mt-1"><strong>Use Case:</strong> You want to encourage interns or data analysts to build cool internal dashboards (Discoverable). Because you set it to Aggregated, they can run FHE math to find out "What is the average amount of coffee sold per day?" without ever bothering you for permission. However, the system's Zero-Trust cryptography prevents them from extracting row-level data to see exactly how many coffees the CEO bought on Tuesday.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-100/50 border border-blue-200 rounded-lg flex gap-3 items-start">
+                  <span className="text-[14px]">⚠️</span>
+                  <p className="text-blue-900 font-medium"><strong>Note:</strong> "Private + Aggregated" does not exist, because you cannot open up public mathematical access to a file that you simultaneously want to hide from existence!</p>
+                </div>
               </div>
               
             </div>

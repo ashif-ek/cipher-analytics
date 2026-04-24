@@ -4,7 +4,9 @@ const OPERATIONS = [
   { id: 'sum', label: 'Sum' },
   { id: 'mean', label: 'Mean' },
   { id: 'variance', label: 'Variance' },
-  { id: 'std_deviation', label: 'Standard Deviation' }
+  { id: 'std_deviation', label: 'Standard Deviation' },
+  { id: 'correlation', label: 'Correlation (ML)' },
+  { id: 'anomaly_detection', label: 'Anomaly Detection (ML)' }
 ];
 
 const ComputeDropdown = ({ disabled, isComputing, isOpen, onToggle, onCompute, onClear }) => {

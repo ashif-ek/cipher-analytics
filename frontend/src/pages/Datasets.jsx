@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
 import DatasetTable from '../components/DatasetTable';
+import useWebSockets from '../hooks/useWebSockets';
 
 const Datasets = () => {
   const [datasets, setDatasets] = useState([]);
@@ -47,43 +48,34 @@ const Datasets = () => {
     fetchDatasets();
   }, [fetchDatasets]);
 
-  // Polling for datasets in PROCESSING state
-  useEffect(() => {
-    const hasProcessing = datasets.some(ds => ds.status === 'PROCESSING');
-    let intervalId;
-
-    if (hasProcessing) {
-      intervalId = setInterval(async () => {
-        try {
-          const response = await client.get('datasets/', {
-            params: {
-                q: debouncedSearch,
-                status: statusFilter,
-                visibility: visibilityFilter,
-                sort_field: sortField,
-                sort_dir: sortDirection
-            }
-          });
-          setDatasets(response.data);
-          
-          const stillProcessing = response.data.some(ds => ds.status === 'PROCESSING');
-          if (!stillProcessing) {
-            clearInterval(intervalId);
-          }
-        } catch (error) {
-          console.error("Polling failed", error);
-          clearInterval(intervalId);
-        }
-      }, 3000);
+  // Real-time updates via WebSockets
+  useWebSockets(useCallback((message) => {
+    if (message.type === 'DATASET_STATUS_UPDATED') {
+      fetchDatasets();
     }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [datasets, debouncedSearch, statusFilter, visibilityFilter, sortField, sortDirection]);
+  }, [fetchDatasets]));
 
   const handleDelete = (deletedId) => {
     setDatasets(prev => prev.filter(ds => ds.id !== deletedId));
+  };
+
+  const handleRequestAccess = async (dataset) => {
+    try {
+        const response = await client.post('research/requests/', { 
+            dataset: dataset.id,
+            reason: "Standard research analysis request."
+        });
+        
+        // Update local state to show pending
+        setDatasets(prev => prev.map(ds => 
+            ds.id === dataset.id ? { ...ds, pending_request: true } : ds
+        ));
+        
+        console.log("Access request sent successfully", response.data);
+    } catch (error) {
+        console.error("Failed to request access", error);
+        alert(`Request failed: ${error.response?.data?.detail || error.message}`);
+    }
   };
 
   return (
@@ -121,6 +113,7 @@ const Datasets = () => {
           loading={loadingDatasets} 
           onRefresh={fetchDatasets} 
           onDelete={handleDelete}
+          onRequestAccess={handleRequestAccess}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           statusFilter={statusFilter}

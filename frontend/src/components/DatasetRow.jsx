@@ -5,7 +5,7 @@ import MetricsCell from './MetricsCell';
 import ComputeDropdown from './ComputeDropdown';
 import client from '../api/client';
 
-const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) => {
+const DatasetRow = ({ dataset, isResearcher, onDeleteClick, onRequestAccess, setToastMessage }) => {
   const getInitialResults = () => {
     let localResults = {};
     try {
@@ -18,9 +18,13 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
     }
     
     // Always merge the backend's last known result as ground truth if it exists
-    if (dataset.last_operation && dataset.last_result !== null) {
+    if (dataset.last_operation) {
       const op = dataset.last_operation.toLowerCase();
-      localResults[op] = { value: dataset.last_result, timestamp: new Date().toISOString() };
+      // Only set if we have a real value or it's an ML operation that we might not have a float for locally
+      if (dataset.last_result !== null) {
+        if (!localResults[op]) localResults[op] = {};
+        localResults[op] = { ...localResults[op], value: dataset.last_result, timestamp: new Date().toISOString() };
+      }
     }
     return localResults;
   };
@@ -66,6 +70,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
                 ...prev.results,
                 [operation]: {
                   value: jobRes.data.result_value,
+                  json: jobRes.data.result_json,
                   timestamp: new Date().toISOString()
                 }
               }
@@ -112,7 +117,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
         </div>
       </td>
       <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
-        <StatusBadge status={dataset.status} />
+        <StatusBadge status={dataset.status} errorMessage={dataset.error_message} />
       </td>
       <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
         <div className="flex items-center font-mono text-[11px] text-slate-600">
@@ -149,7 +154,7 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
         <div className="flex items-center justify-end space-x-3">
           {dataset.status === 'READY' && (
              <ComputeDropdown 
-               disabled={dataset.access_policy === 'STRICT' && isResearcher}
+               disabled={!dataset.has_access}
                isComputing={rowState.loading !== null}
                isOpen={dropdownOpen}
                onToggle={setDropdownOpen}
@@ -158,7 +163,21 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, setToastMessage }) =
              />
           )}
 
-          <div className="w-[1px] h-4 bg-slate-200"></div>
+          {isResearcher && !dataset.has_access && (
+            <button
+              onClick={() => onRequestAccess(dataset)}
+              disabled={dataset.pending_request}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded-[4px] transition-all border ${
+                dataset.pending_request 
+                  ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
+                  : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
+              }`}
+            >
+              {dataset.pending_request ? 'REQUEST PENDING' : 'REQUEST ACCESS'}
+            </button>
+          )}
+
+           <div className="w-[1px] h-4 bg-slate-200"></div>
 
           <button
             onClick={() => onDeleteClick(dataset)}

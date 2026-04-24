@@ -20,3 +20,5 @@ class AuthAction(Enum):
     VIEW = "VIEW"
     COMPUTE = "COMPUTE"
     DECRYPT = "DECRYPT"
+    DOWNLOAD = "DOWNLOAD"
+    EXPORT = "EXPORT"
