@@ -9,6 +9,7 @@ import Modal from '../components/ui/Modal';
 import CorrelationHeatmap from '../components/CorrelationHeatmap';
 import AnomalyHeatmap from '../components/AnomalyHeatmap';
 import ShapBarChart from '../components/ShapBarChart';
+import AnomalyGalaxy from '../components/analytics/AnomalyGalaxy';
 
 const DatasetDetails = () => {
   const { id } = useParams();
@@ -26,6 +27,8 @@ const DatasetDetails = () => {
   const [shapResult, setShapResult] = useState(null);
   const [shapLoading, setShapLoading] = useState(false);
   const lastEventTimestamp = useRef(0);
+  const activeJobIdRef = useRef(null);
+  const activeShapJobIdRef = useRef(null);
 
   const fetchDataset = useCallback(async () => {
     try {
@@ -40,6 +43,48 @@ const DatasetDetails = () => {
     }
   }, [id]);
 
+  const checkJobStatus = useCallback(async (jobId) => {
+    try {
+      const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+      if (jobRes.data.status === 'COMPLETED') {
+        setComputationResult({
+          ...jobRes.data,
+          result: jobRes.data.result_value, 
+          result_json: jobRes.data.result_json,
+          datasetName: dataset?.name
+        });
+        setShowResultModal(true);
+        setComputing(false);
+        setToastMessage('');
+        activeJobIdRef.current = null;
+        fetchDataset();
+      } else if (jobRes.data.status === 'FAILED') {
+        setComputing(false);
+        setToastMessage(`Computation failed: ${jobRes.data.error_message || 'FHE execution error'}`);
+        activeJobIdRef.current = null;
+      }
+    } catch (err) {
+      console.error("Error fetching job status", err);
+    }
+  }, [dataset?.name, fetchDataset]);
+
+  const checkShapJobStatus = useCallback(async (jobId) => {
+    try {
+      const jobRes = await client.get(`datasets/jobs/${jobId}/`);
+      if (jobRes.data.status === 'COMPLETED') {
+        setShapResult(jobRes.data.result_json);
+        setShapLoading(false);
+        activeShapJobIdRef.current = null;
+      } else if (jobRes.data.status === 'FAILED') {
+        setShapLoading(false);
+        setToastMessage('SHAP Explanation failed. Feature drift or CPU timeout.');
+        activeShapJobIdRef.current = null;
+      }
+    } catch (err) {
+      console.error("SHAP Poll Error", err);
+    }
+  }, []);
+
   // Real-time updates via WebSockets
   useWebSockets(useCallback((message) => {
     if (message.type === 'DATASET_STATUS_UPDATED' || message.type === 'COMPUTATION_STATUS_UPDATED') {
@@ -52,18 +97,19 @@ const DatasetDetails = () => {
        }
        lastEventTimestamp.current = eventTime;
 
-       // If it's this dataset OR any computation related to this dataset, we refresh.
-       // (Note: in ComputationJob model, dataset_id is what we should ideally check, 
-       // but since we fetch all DS data on refresh, we can trigger if it's ANY computation 
-       // or be specific if payload in message included dataset_id)
        if (payload.model === 'dataset' && payload.id === parseInt(id)) {
            fetchDataset();
        } else if (payload.model === 'computation') {
-           // computations usually belong to a dataset, we refresh to get the latest result/state
            fetchDataset();
+           if (activeJobIdRef.current === payload.id) {
+               checkJobStatus(payload.id);
+           }
+           if (activeShapJobIdRef.current === payload.id) {
+               checkShapJobStatus(payload.id);
+           }
        }
     }
-  }, [id, fetchDataset]));
+  }, [id, fetchDataset, checkJobStatus, checkShapJobStatus]));
 
   useEffect(() => {
     fetchDataset();
@@ -123,37 +169,12 @@ const DatasetDetails = () => {
       const response = await client.post(`datasets/${id}/compute/`, { operation });
       const jobId = response.data.job_id;
       
-      // Poll for completion
-      const pollInterval = setInterval(async () => {
-        try {
-          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
-          if (jobRes.data.status === 'COMPLETED') {
-            clearInterval(pollInterval);
-            setComputationResult({
-              ...jobRes.data,
-              result: jobRes.data.result_value, // Ensure field name consistency
-              result_json: jobRes.data.result_json,
-              datasetName: dataset.name
-            });
-            setShowResultModal(true);
-            setComputing(false);
-            setToastMessage('');
-            
-            // Re-fetch dataset to update last_result/last_operation
-            const dsRes = await client.get(`datasets/${id}/`);
-            setDataset(dsRes.data);
-          } else if (jobRes.data.status === 'FAILED') {
-            clearInterval(pollInterval);
-            setComputing(false);
-            setToastMessage('Computation failed during FHE execution.');
-          }
-        } catch (err) {
-          clearInterval(pollInterval);
-          setComputing(false);
-          console.error("Polling error", err);
-        }
-      }, 2000);
-
+      if (response.data.status === 'COMPLETED' || response.data.status === 'FAILED') {
+        checkJobStatus(jobId);
+        return;
+      }
+      
+      activeJobIdRef.current = jobId;
       setToastMessage(`FHE job ${jobId} queued...`);
     } catch (error) {
       setComputing(false);
@@ -169,7 +190,6 @@ const DatasetDetails = () => {
 
       const response = await client.post(`datasets/${id}/explain_anomaly/`, { row_id });
       
-      // If cached, result_json might be returned immediately
       if (response.data.cached && response.data.result_json) {
         setShapResult(response.data.result_json);
         setShapLoading(false);
@@ -177,35 +197,13 @@ const DatasetDetails = () => {
       }
 
       const jobId = response.data.job_id;
-      // Detailed polling for the specific SHAP investigation
-      let pollCount = 0;
-      const maxRetries = 20; // ~30-40 seconds total
       
-      const pollInterval = setInterval(async () => {
-        try {
-          pollCount++;
-          const jobRes = await client.get(`datasets/jobs/${jobId}/`);
-          
-          if (jobRes.data.status === 'COMPLETED') {
-            clearInterval(pollInterval);
-            setShapResult(jobRes.data.result_json);
-            setShapLoading(false);
-          } else if (jobRes.data.status === 'FAILED') {
-            clearInterval(pollInterval);
-            setShapLoading(false);
-            setToastMessage('SHAP Explanation failed. Feature drift or CPU timeout.');
-          } else if (pollCount >= maxRetries) {
-            clearInterval(pollInterval);
-            setShapLoading(false);
-            setToastMessage('SHAP investigation timed out. Model is too complex for real-time extraction.');
-          }
-        } catch (err) {
-          clearInterval(pollInterval);
-          setShapLoading(false);
-          console.error("SHAP Poll Error", err);
-        }
-      }, 1500);
-
+      if (response.data.status === 'COMPLETED' || response.data.status === 'FAILED') {
+         checkShapJobStatus(jobId);
+         return;
+      }
+      
+      activeShapJobIdRef.current = jobId;
     } catch (error) {
       setShapLoading(false);
       setToastMessage(`Investigation failed: ${error.response?.data?.detail || error.message}`);
@@ -232,6 +230,7 @@ const DatasetDetails = () => {
 
   const tabs = [
     { id: 'overview', name: 'Overview' },
+    { id: '3d-galaxy', name: '3D Galaxy' },
     { id: 'access', name: 'Access Control' },
     { id: 'logs', name: 'Activity Logs' }
   ];
@@ -482,6 +481,16 @@ const DatasetDetails = () => {
                <h3 className="mt-2 text-sm font-medium text-slate-900">Activity Logs</h3>
                <p className="mt-1 text-sm text-slate-500">Live activity tracing is currently being integrated with the audit service.</p>
             </div>
+          </Card>
+        )}
+
+        {activeTab === '3d-galaxy' && (
+          <Card className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-medium text-slate-900">Interactive 3D Embedding</h3>
+              <p className="text-sm text-slate-500">Visualizing high-dimensional anomalies via UMAP projection.</p>
+            </div>
+            <AnomalyGalaxy datasetId={dataset.id} />
           </Card>
         )}
       </div>

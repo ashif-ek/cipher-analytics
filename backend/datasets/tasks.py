@@ -46,23 +46,22 @@ def broadcast_status_update(user_id, model_name, instance_id, status):
         event_envelope
     )
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60, queue='heavy_tasks')
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, queue='queue_fhe')
 def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None):
     job = None
     try:
-        # Atomic transition: PENDING -> RUNNING
+        # Atomic transition: PENDING/QUEUED -> RUNNING
         with transaction.atomic():
-            count = ComputationJob.objects.filter(id=job_id, status="PENDING").update(status="RUNNING")
-            if count == 1:
-                job = ComputationJob.objects.select_related('dataset', 'requested_by').get(id=job_id)
-                transaction.on_commit(lambda: broadcast_status_update(
-                    job.requested_by.id, "computation", job.id, "RUNNING"
-                ))
-            else:
-                # Already processed or in different state
-                job = ComputationJob.objects.select_related('dataset', 'requested_by').get(id=job_id)
-                if job.status != "RUNNING":
-                     return "ALREADY_PROCESSED"
+            job = ComputationJob.objects.select_for_update().get(id=job_id)
+            if job.status not in ["PENDING", "QUEUED", "RETRYING"]:
+                return "ALREADY_PROCESSED"
+                
+            job.status = "RUNNING"
+            job.save(update_fields=["status", "updated_at"])
+            
+            transaction.on_commit(lambda: broadcast_status_update(
+                job.requested_by.id, "computation", job.id, "RUNNING"
+            ))
 
         dataset = job.dataset
         logger.info(f"Starting computation {job.operation} for dataset {dataset.id}")
@@ -107,8 +106,18 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
                     res_val = random.uniform(0, 100)
 
         with transaction.atomic():
-            update_kw = {"status": "COMPLETED"}
-            if is_ml:
+            job = ComputationJob.objects.select_for_update().get(id=job_id)
+            if job.status != "RUNNING":
+                return "UNEXPECTED_STATE"
+            
+            if is_ml and isinstance(res_json, dict) and res_json.get('status') == 'failed':
+                job.status = "FAILED"
+                job.error_message = res_json.get("message", "ML computation failed.")
+                job.result_json = res_json
+            else:
+                job.status = "COMPLETED"
+            
+            if is_ml and job.status == "COMPLETED":
                 # Artifact persistence logic
                 artifacts = res_json.pop("artifacts", None)
                 if artifacts and job.operation == 'ANOMALY_DETECTION':
@@ -125,26 +134,34 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
                         job.result_path = f"artifacts/{artifact_filename}"
                     except Exception as ae:
                         logger.error(f"Failed to store artifacts for job {job.id}: {str(ae)}")
+                        
+                    # Auto-trigger embedding if small enough
+                    dataset.embedding_status = "PENDING"
+                    update_fields = ['embedding_status']
+                    if dataset.rows_count <= 10000:
+                        dataset.save(update_fields=update_fields)
+                        from .tasks import generate_embedding_task
+                        generate_embedding_task.delay(dataset.id)
+                    else:
+                        dataset.save(update_fields=update_fields)
 
-                update_kw["result_json"] = res_json
+                job.result_json = res_json
             else:
-                update_kw["result_value"] = res_val
+                job.result_value = res_val
 
-            # Atomic transition: RUNNING -> COMPLETED
-            count = ComputationJob.objects.filter(id=job_id, status="RUNNING").update(**update_kw)
+            job.save()
             
-            if count == 1:
-                # Update dataset cache conditionally
-                update_fields = ['last_operation']
-                dataset.last_operation = job.operation
-                if not is_ml:
-                    dataset.last_result = res_val
-                    update_fields.append('last_result')
-                dataset.save(update_fields=update_fields)
-                
-                transaction.on_commit(lambda: broadcast_status_update(
-                    job.requested_by.id, "computation", job.id, "COMPLETED"
-                ))
+            # Update dataset cache conditionally
+            update_fields = ['last_operation']
+            dataset.last_operation = job.operation
+            if not is_ml:
+                dataset.last_result = res_val
+                update_fields.append('last_result')
+            dataset.save(update_fields=update_fields)
+            
+            transaction.on_commit(lambda: broadcast_status_update(
+                job.requested_by.id, "computation", job.id, "COMPLETED"
+            ))
         
         log_audit_event(
             user_id=job.requested_by.id,
@@ -159,14 +176,17 @@ def execute_fhe_computation_task(self, job_id, request_id=None, ip_address=None)
     except Exception as e:
         logger.warning(f"Error in FHE task: {str(e)}")
         if job:
-            # Final retry logic for failure emission
             is_final_retry = self.request.retries >= self.max_retries
             with transaction.atomic():
-                count = ComputationJob.objects.filter(id=job_id).exclude(status="COMPLETED").update(status="FAILED")
-                if count == 1 and is_final_retry:
-                    transaction.on_commit(lambda: broadcast_status_update(
-                        job.requested_by.id, "computation", job.id, "FAILED"
-                    ))
+                job = ComputationJob.objects.select_for_update().filter(id=job_id).first()
+                if job and job.status != "COMPLETED":
+                    job.status = "FAILED" if is_final_retry else "RETRYING"
+                    job.save(update_fields=["status", "updated_at"])
+                    
+                    if is_final_retry:
+                        transaction.on_commit(lambda: broadcast_status_update(
+                            job.requested_by.id, "computation", job.id, "FAILED"
+                        ))
         raise # Celery handles retries
 
 
@@ -189,7 +209,7 @@ def cleanup_stuck_datasets_task():
     stuck_jobs = ComputationJob.objects.filter(status__in=["PENDING", "RUNNING"], updated_at__lt=job_threshold)
     stuck_jobs.update(status="FAILED")
 
-@shared_task(bind=True, max_retries=1, soft_time_limit=240, time_limit=300, queue='heavy_tasks')
+@shared_task(bind=True, max_retries=1, soft_time_limit=240, time_limit=300, queue='queue_ml')
 def process_and_encrypt_dataset_task(self, dataset_id):
     """
     Production-grade ingestion pipeline:
@@ -288,7 +308,7 @@ def process_and_encrypt_dataset_task(self, dataset_id):
             return "FAILED_INTERNAL"
 
 
-@shared_task(bind=True, max_retries=2, default_retry_delay=30, queue='heavy_tasks')
+@shared_task(bind=True, max_retries=2, default_retry_delay=30, queue='queue_ml')
 def execute_shap_explanation_task(self, job_id, row_id):
     """
     Asynchronously computes SHAP explanation for a single anomaly row.
@@ -302,8 +322,12 @@ def execute_shap_explanation_task(self, job_id, row_id):
     
     try:
         with transaction.atomic():
-            ComputationJob.objects.filter(id=job_id).update(status="RUNNING")
-            job = ComputationJob.objects.select_related('dataset', 'requested_by').get(id=job_id)
+            job = ComputationJob.objects.select_for_update().get(id=job_id)
+            if job.status not in ["PENDING", "QUEUED", "RETRYING"]:
+                return "ALREADY_PROCESSED"
+                
+            job.status = "RUNNING"
+            job.save(update_fields=["status", "updated_at"])
 
         dataset = job.dataset
         # Find the detection job for artifacts
@@ -416,3 +440,87 @@ def execute_shap_explanation_task(self, job_id, row_id):
             job.save()
             broadcast_status_update(job.requested_by.id, "computation", job.id, "FAILED")
         return "FAILED"
+
+@shared_task(bind=True, max_retries=2, soft_time_limit=300, time_limit=360, queue='queue_ml')
+def generate_embedding_task(self, dataset_id):
+    """
+    Computes UMAP 3D embedding for a dataset asynchronously.
+    """
+    import os
+    import json
+    import time
+    from django.conf import settings
+    from .services.locking import RedisLock
+    from .ml_insights.embedding import compute_3d_embedding
+    import pandas as pd
+    import pickle
+    
+    lock = RedisLock(f"dataset_embedding:{dataset_id}")
+    with lock.acquire() as acquired:
+        if not acquired:
+            return "ALREADY_RUNNING"
+            
+        dataset = Dataset.objects.get(id=dataset_id)
+        if dataset.embedding_status == "COMPLETED":
+            return "ALREADY_COMPLETED"
+            
+        dataset.embedding_status = "RUNNING"
+        dataset.save(update_fields=['embedding_status'])
+        broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "EMBEDDING_RUNNING")
+        
+        start_time = time.time()
+        try:
+            # Hash to avoid recomputing if unchanged
+            dataset_hash = dataset.content_hash or str(dataset.id)
+            embedding_dir = os.path.join(settings.MEDIA_ROOT, 'embeddings')
+            os.makedirs(embedding_dir, exist_ok=True)
+            output_path = os.path.join(embedding_dir, f"{dataset_hash}.json")
+            
+            # If exists, just mark completed
+            if os.path.exists(output_path):
+                dataset.embedding_status = "COMPLETED"
+                dataset.save(update_fields=['embedding_status'])
+                broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "EMBEDDING_COMPLETED")
+                return "CACHED"
+                
+            # Load Data
+            df = pd.read_csv(dataset.original_file.path)
+            
+            # Extract existing anomaly scores if Anomaly Detection was run
+            precomputed_scores = None
+            detection_job = ComputationJob.objects.filter(
+                dataset=dataset, 
+                operation='ANOMALY_DETECTION', 
+                status='COMPLETED'
+            ).order_by('-created_at').first()
+            
+            if detection_job and detection_job.result_json and 'result' in detection_job.result_json:
+                result_data = detection_job.result_json['result']
+                if 'anomaly_scores' in result_data:
+                    precomputed_scores = np.array(result_data['anomaly_scores'])
+                    
+            # Compute Embedding
+            import tracemalloc
+            tracemalloc.start()
+            
+            embedding_results = compute_3d_embedding(df, precomputed_scores=precomputed_scores)
+            
+            current, peak = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            logger.info(f"Embedding compute time: {time.time() - start_time:.2f}s, Peak Mem: {peak / 10**6:.2f}MB")
+            
+            # Save compressed/json
+            with open(output_path, 'w') as f:
+                json.dump(embedding_results, f)
+                
+            dataset.embedding_status = "COMPLETED"
+            dataset.save(update_fields=['embedding_status'])
+            broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "EMBEDDING_COMPLETED")
+            return "SUCCESS"
+            
+        except Exception as e:
+            logger.error(f"Embedding failed: {str(e)}")
+            dataset.embedding_status = "FAILED"
+            dataset.save(update_fields=['embedding_status'])
+            broadcast_status_update(dataset.owner.id, "dataset", dataset.id, "EMBEDDING_FAILED")
+            raise

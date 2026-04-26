@@ -276,13 +276,44 @@ class DatasetViewSet(viewsets.ModelViewSet):
         except Exception as pe:
              return Response({"detail": str(pe)}, status=status.HTTP_403_FORBIDDEN)
              
-        # 3. Create Async Job
+        # 3. Strict Idempotency Hash
+        content_hash = dataset.content_hash or str(dataset.id)
+        import hashlib
+        task_hash_input = f"{content_hash}_default_SHAP_{row_id}_v1_fhe1"
+        task_hash = hashlib.sha256(task_hash_input.encode()).hexdigest()
+
+        existing_job = ComputationJob.objects.filter(
+            task_hash=task_hash, 
+            status__in=["PENDING", "QUEUED", "RUNNING", "COMPLETED", "RETRYING"]
+        ).first()
+
+        if existing_job:
+            return Response({
+                "job_id": existing_job.id,
+                "status": existing_job.status,
+                "message": "Found existing identical SHAP explanation job."
+            }, status=status.HTTP_200_OK)
+
+        # 4. Backpressure Control
+        import redis
+        from django.conf import settings
+        try:
+            r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+            if r.llen("queue_ml") > 50:
+                return Response({
+                    "detail": "System under heavy load. The queue_ml is currently saturated. Please try again later.",
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except Exception:
+            pass # Fail open
+
+        # 5. Create Async Job
         try:
             job = ComputationJob.objects.create(
                 dataset=dataset,
                 requested_by=request.user,
                 operation="SHAP_EXPLANATION",
-                status="PENDING"
+                status="PENDING",
+                task_hash=task_hash
             )
             
             # Record Audit Trail
@@ -331,13 +362,46 @@ class DatasetViewSet(viewsets.ModelViewSet):
         except PermissionDenied as pe:
              return Response({"detail": str(pe)}, status=status.HTTP_403_FORBIDDEN)
             
+        # Strict Idempotency Hash
+        content_hash = dataset.content_hash or str(dataset.id)
+        import hashlib
+        task_hash_input = f"{content_hash}_default_{operation.upper()}__v1_fhe1"
+        task_hash = hashlib.sha256(task_hash_input.encode()).hexdigest()
+
+        from .models import ComputationJob
+        existing_job = ComputationJob.objects.filter(
+            task_hash=task_hash, 
+            status__in=["PENDING", "QUEUED", "RUNNING", "COMPLETED", "RETRYING"]
+        ).first()
+
+        if existing_job:
+            return Response({
+                "job_id": existing_job.id,
+                "status": existing_job.status,
+                "operation": existing_job.operation,
+                "message": "Found existing identical computation job."
+            }, status=status.HTTP_200_OK)
+
+        # Backpressure Control
+        import redis
+        from django.conf import settings
         try:
-            from .models import ComputationJob
+            r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+            queue_name = "queue_ml" if operation.upper() in ["CORRELATION", "ANOMALY_DETECTION"] else "queue_fhe"
+            if r.llen(queue_name) > 50:
+                return Response({
+                    "detail": f"System under heavy load. The {queue_name} is currently saturated. Please try again later.",
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except Exception:
+            pass # Fail open
+
+        try:
             job = ComputationJob.objects.create(
                 dataset=dataset,
                 requested_by=request.user,
                 operation=operation.upper(),
-                status="PENDING"
+                status="PENDING",
+                task_hash=task_hash
             )
 
             from core.middleware.traceability import get_current_request_id, get_current_ip
@@ -366,6 +430,76 @@ class DatasetViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'], url_path='embedding')
+    def embedding(self, request, pk=None):
+        dataset = self.get_object()
+        
+        # 1. Zero-Trust Action Check
+        from .services.authorization import check_dataset_permission
+        from rest_framework.exceptions import PermissionDenied
+        try:
+             check_dataset_permission(request.user, dataset, 'VIEW')
+        except PermissionDenied as pe:
+             return Response({"detail": str(pe)}, status=status.HTTP_403_FORBIDDEN)
+             
+        import os
+        import json
+        from django.conf import settings
+        from django.core.cache import cache
+        from django.http import HttpResponse
+        
+        dataset_hash = dataset.content_hash or str(dataset.id)
+        cache_key = f"embedding_json_{dataset_hash}"
+        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return HttpResponse(cached_data, content_type='application/json')
+            
+        embedding_dir = os.path.join(settings.MEDIA_ROOT, 'embeddings')
+        output_path = os.path.join(embedding_dir, f"{dataset_hash}.json")
+        
+        if not os.path.exists(output_path):
+            return Response({"detail": "Embedding not found. Please generate it first.", "status": dataset.embedding_status}, status=status.HTTP_404_NOT_FOUND)
+            
+        with open(output_path, 'r') as f:
+            data = f.read()
+            
+        cache.set(cache_key, data, timeout=3600*24) # Cache for 24h
+        return HttpResponse(data, content_type='application/json')
+
+    @action(detail=True, methods=['post'], url_path='generate-embedding')
+    def generate_embedding(self, request, pk=None):
+        dataset = self.get_object()
+        
+        # 1. Zero-Trust Action Check
+        from .services.authorization import check_dataset_permission
+        from rest_framework.exceptions import PermissionDenied
+        try:
+             check_dataset_permission(request.user, dataset, 'COMPUTE')
+        except PermissionDenied as pe:
+             return Response({"detail": str(pe)}, status=status.HTTP_403_FORBIDDEN)
+             
+        if dataset.embedding_status in ["PENDING", "RUNNING"]:
+            return Response({"detail": "Embedding generation is already in progress.", "status": dataset.embedding_status}, status=status.HTTP_400_BAD_REQUEST)
+            
+        import os
+        from django.conf import settings
+        dataset_hash = dataset.content_hash or str(dataset.id)
+        embedding_dir = os.path.join(settings.MEDIA_ROOT, 'embeddings')
+        output_path = os.path.join(embedding_dir, f"{dataset_hash}.json")
+        
+        if os.path.exists(output_path):
+            return Response({"detail": "Embedding already exists.", "status": "COMPLETED"}, status=status.HTTP_200_OK)
+            
+        # Trigger Celery Task
+        from .tasks import generate_embedding_task
+        dataset.embedding_status = "PENDING"
+        dataset.save(update_fields=['embedding_status'])
+        
+        generate_embedding_task.delay(dataset.id)
+        
+        return Response({"detail": "Embedding generation started.", "status": "PENDING"}, status=status.HTTP_202_ACCEPTED)
 
 class ComputationJobViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ComputationJobSerializer

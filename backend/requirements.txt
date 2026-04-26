@@ -72,3 +72,4 @@ channels==4.1.0
 channels-redis==4.2.0
 scikit-learn==1.4.2
 shap==0.45.0
+umap-learn==0.5.5
