@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import client from '../api/client';
 import DatasetTable from '../components/DatasetTable';
 import useWebSockets from '../hooks/useWebSockets';
+import Modal from '../components/ui/Modal';
 
 const Datasets = () => {
   const [datasets, setDatasets] = useState([]);
@@ -16,6 +17,9 @@ const Datasets = () => {
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Request Access Modal State
+  const [requestModal, setRequestModal] = useState({ isOpen: false, dataset: null, reason: '' });
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -59,11 +63,17 @@ const Datasets = () => {
     setDatasets(prev => prev.filter(ds => ds.id !== deletedId));
   };
 
-  const handleRequestAccess = async (dataset) => {
+  const handleRequestAccess = async () => {
+    const { dataset, reason } = requestModal;
+    if (!reason.trim()) {
+        alert("Please provide a reason for the access request.");
+        return;
+    }
+
     try {
         const response = await client.post('research/requests/', { 
             dataset: dataset.id,
-            reason: "Standard research analysis request."
+            reason: reason
         });
         
         // Update local state to show pending
@@ -71,6 +81,7 @@ const Datasets = () => {
             ds.id === dataset.id ? { ...ds, pending_request: true } : ds
         ));
         
+        setRequestModal({ isOpen: false, dataset: null, reason: '' });
         console.log("Access request sent successfully", response.data);
     } catch (error) {
         console.error("Failed to request access", error);
@@ -113,7 +124,7 @@ const Datasets = () => {
           loading={loadingDatasets} 
           onRefresh={fetchDatasets} 
           onDelete={handleDelete}
-          onRequestAccess={handleRequestAccess}
+          onRequestAccess={(ds) => setRequestModal({ isOpen: true, dataset: ds, reason: '' })}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           statusFilter={statusFilter}
@@ -126,6 +137,33 @@ const Datasets = () => {
           setSortField={setSortField}
           sortDirection={sortDirection}
           setSortDirection={setSortDirection}
+        />
+
+        {/* Request Access Modal */}
+        <Modal 
+          isOpen={requestModal.isOpen}
+          onClose={() => setRequestModal({ isOpen: false, dataset: null, reason: '' })}
+          onConfirm={handleRequestAccess}
+          title="Request Dataset Access"
+          confirmText="Send Request"
+          size="md"
+          message={
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                You are requesting access to <span className="font-bold text-slate-900">{requestModal.dataset?.name}</span>. 
+                Please explain why you need this data and how you plan to use it.
+              </p>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-wider">Justification / Research Goal</label>
+                <textarea 
+                  className="w-full h-32 p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-none"
+                  placeholder="e.g. Analyzing transaction patterns to detect multi-stage fraud anomalies..."
+                  value={requestModal.reason}
+                  onChange={(e) => setRequestModal(prev => ({ ...prev, reason: e.target.value }))}
+                />
+              </div>
+            </div>
+          }
         />
       </div>
     </div>

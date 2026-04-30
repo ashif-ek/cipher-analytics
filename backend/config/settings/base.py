@@ -8,10 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
-    default="",
+    default="*",
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
 
@@ -23,7 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "daphne",
     "django.contrib.staticfiles",
     "channels",
     "corsheaders",
@@ -115,6 +115,7 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # Custom user
@@ -216,10 +217,15 @@ CHANNEL_LAYERS = {
 # Task Routing and Queues
 CELERY_TASK_QUEUES = (
     Queue('default', routing_key='task.#'),
-    Queue('heavy_tasks', routing_key='heavy.#'),
+    Queue('queue_fast', routing_key='fast.#'),
+    Queue('queue_ml', routing_key='ml.#'),
+    Queue('queue_fhe', routing_key='fhe.#'),
+    Queue('queue_dlq', routing_key='dlq.#'),
 )
 CELERY_TASK_ROUTES = {
-    'datasets.tasks.process_and_encrypt_dataset_task': {'queue': 'heavy_tasks', 'routing_key': 'heavy.process'},
+    'datasets.tasks.process_and_encrypt_dataset_task': {'queue': 'queue_ml', 'routing_key': 'ml.process'},
+    'datasets.tasks.execute_fhe_computation_task': {'queue': 'queue_fhe', 'routing_key': 'fhe.compute'},
+    'datasets.tasks.execute_shap_explanation_task': {'queue': 'queue_ml', 'routing_key': 'ml.shap'},
     'datasets.tasks.cleanup_stuck_datasets_task': {'queue': 'default', 'routing_key': 'task.cleanup'},
 }
 
@@ -227,6 +233,7 @@ CELERY_TASK_ROUTES = {
 CELERY_TASK_TIME_LIMIT = 3600  # 1 hour
 CELERY_TASK_SOFT_TIME_LIMIT = 3000
 CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
 # Beat Schedule
 CELERY_BEAT_SCHEDULE = {

@@ -24,7 +24,8 @@ const useWebSockets = (onMessage) => {
             clearTimeout(reconnectTimer.current);
         }
 
-        const wsUrl = `ws://${window.location.hostname}:8000/ws/notifications/?token=${token}`;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/notifications/?token=${token}`;
         
         console.log(`Attempting WebSocket connection (Delay: ${reconnectDelay.current}ms)`);
         ws.current = new WebSocket(wsUrl);

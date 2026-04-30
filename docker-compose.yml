@@ -22,6 +22,7 @@ services:
     command: sh -c "python manage.py makemigrations && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     volumes:
       - ./backend:/app
+      - cipher_shared_media:/app/media
     ports:
       - "8000:8000"
     env_file:
@@ -35,12 +36,32 @@ services:
       - db
       - redis
 
-  celery_heavy:
+  celery_fhe:
     build: ./backend
-    # Explicitly consume the heavy_tasks queue with low concurrency since encryption is CPU-bound
-    command: celery -A config worker -Q heavy_tasks -l info --concurrency=2
+    # Explicitly consume the FHE queue with low concurrency since CKKS encryption is purely CPU-bound
+    command: celery -A config worker -Q queue_fhe -l info --concurrency=2
     volumes:
       - ./backend:/app
+      - cipher_shared_media:/app/media
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - backend
+
+  celery_ml:
+    build: ./backend
+    # Consume ML preprocessing and SHAP queues
+    command: celery -A config worker -Q queue_ml -l info --concurrency=4
+    volumes:
+      - ./backend:/app
+      - cipher_shared_media:/app/media
     env_file:
       - ./backend/.env
     environment:
@@ -55,10 +76,11 @@ services:
 
   celery_default:
     build: ./backend
-    # Default queue for light async tasks (e.g. emails)
-    command: celery -A config worker -Q default -l info
+    # Default queue for light async tasks and fast aggregations
+    command: celery -A config worker -Q default,queue_fast,queue_dlq -l info
     volumes:
       - ./backend:/app
+      - cipher_shared_media:/app/media
     env_file:
       - ./backend/.env
     environment:
@@ -76,6 +98,7 @@ services:
     command: celery -A config beat -l info
     volumes:
       - ./backend:/app
+      - cipher_shared_media:/app/media
     env_file:
       - ./backend/.env
     environment:
@@ -102,7 +125,8 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
-      - celery_heavy
+      - celery_fhe
+      - celery_ml
       - celery_default
   frontend:
     build: ./frontend
@@ -116,3 +140,4 @@ services:
 
 volumes:
   postgres_data:
+  cipher_shared_media:
