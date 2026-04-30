@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import axios from 'axios';
+import client from '../../api/client';
 
 // --- Custom Shader for Points ---
 // Supports per-point size, color, and a soft circular alpha gradient (glow)
@@ -16,8 +16,8 @@ const pointShader = {
     void main() {
       vColor = color;
       vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      // Scale size by distance to camera
-      gl_PointSize = size * (200.0 / -mvPosition.z);
+      // Increased multiplier for better visibility at distance
+      gl_PointSize = size * (500.0 / -mvPosition.z);
       gl_Position = projectionMatrix * mvPosition;
     }
   `,
@@ -28,8 +28,8 @@ const pointShader = {
       float ll = length(xy);
       if(ll > 0.5) discard;
       
-      // Radial gradient for additive blending glow
-      float alpha = pow((0.5 - ll) * 2.0, 1.5);
+      // Adjusted gradient for a sharper, more visible core
+      float alpha = pow((0.5 - ll) * 2.0, 1.0);
       gl_FragColor = vec4(vColor, alpha);
     }
   `,
@@ -37,6 +37,14 @@ const pointShader = {
 
 const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
   const geometryRef = useRef();
+  const materialRef = useRef();
+
+  // Pulse effect for the galaxy
+  useFrame((state) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.time.value = state.clock.getElapsedTime();
+    }
+  });
   
   // Prepare Float32Arrays for BufferGeometry
   const { positions, colors, sizes } = useMemo(() => {
@@ -52,11 +60,10 @@ const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
     const tempColor = new THREE.Color();
 
     validData.forEach((d, i) => {
-      pos[i * 3] = d.x * 10; // Scale up the normalized [-1, 1] space for better camera manipulation
+      pos[i * 3] = d.x * 10; 
       pos[i * 3 + 1] = d.y * 10;
       pos[i * 3 + 2] = d.z * 10;
       
-      // Interpolate color based on score (0 to 1)
       if (d.score < 0.5) {
         tempColor.lerpColors(colorLow, colorMed, d.score * 2);
       } else {
@@ -67,8 +74,8 @@ const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
       col[i * 3 + 1] = tempColor.g;
       col[i * 3 + 2] = tempColor.b;
       
-      // Size mapping: high anomaly gets much larger size (glow effect)
-      sz[i] = 1.0 + (d.score * 4.0);
+      // Increased base size for immediate visibility
+      sz[i] = 4.0 + (d.score * 6.0);
     });
     
     return { positions: pos, colors: col, sizes: sz };
@@ -79,8 +86,7 @@ const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
     e.stopPropagation();
     if (e.index !== undefined) {
       document.body.style.cursor = 'pointer';
-      // Throttle/Debounce in a real app, but R3F manages event frequency decently
-      onHover(data[e.index], e.clientX, e.clientY);
+      onHover(data[e.index], e.nativeEvent.offsetX, e.nativeEvent.offsetY);
     }
   }, [data, onHover]);
 
@@ -117,6 +123,7 @@ const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
         />
       </bufferGeometry>
       <shaderMaterial
+        ref={materialRef}
         vertexShader={pointShader.vertexShader}
         fragmentShader={pointShader.fragmentShader}
         uniforms={pointShader.uniforms}
@@ -132,46 +139,30 @@ const GalaxyPoints = ({ data, onHover, onClickPoint }) => {
 const CameraController = ({ data }) => {
   const { camera } = useThree();
   const [focused, setFocused] = useState(false);
+  const initialized = useRef(false);
   
-  useEffect(() => {
+  useFrame((state, delta) => {
     if (!data || data.length === 0 || focused) return;
     
-    // Focus on top anomaly
-    const topAnomaly = data.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+    // One-time snap on data arrival
+    if (!initialized.current) {
+      const topAnomaly = data.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+      camera.position.set(
+        (topAnomaly.x * 10) + 5, 
+        (topAnomaly.y * 10) + 5, 
+        (topAnomaly.z * 10) + 5
+      );
+      initialized.current = true;
+    }
     
-    // Start camera close to the top anomaly
-    camera.position.set(
-      (topAnomaly.x * 10) + 2, 
-      (topAnomaly.y * 10) + 2, 
-      (topAnomaly.z * 10) + 2
-    );
-    camera.lookAt(topAnomaly.x * 10, topAnomaly.y * 10, topAnomaly.z * 10);
-    
-    // Animate zoom out
-    const duration = 2000;
-    const startPos = camera.position.clone();
     const endPos = new THREE.Vector3(0, 0, 25);
-    const startTime = performance.now();
-    
-    const animate = (time) => {
-      const elapsed = time - startTime;
-      const progress = Math.min(elapsed / duration, 1.0);
-      
-      // Easing function (easeOutCubic)
-      const ease = 1 - Math.pow(1 - progress, 3);
-      
-      camera.position.lerpVectors(startPos, endPos, ease);
-      camera.lookAt(0, 0, 0); // Eventually look at center
-      
-      if (progress < 1.0) {
-        requestAnimationFrame(animate);
-      } else {
-        setFocused(true);
-      }
-    };
-    
-    requestAnimationFrame(animate);
-  }, [data, camera, focused]);
+    camera.position.lerp(endPos, 0.05); 
+    camera.lookAt(0, 0, 0);
+
+    if (camera.position.distanceTo(endPos) < 0.1) {
+      setFocused(true);
+    }
+  });
   
   return null;
 };
@@ -182,74 +173,121 @@ export default function AnomalyGalaxy({ datasetId }) {
   const [error, setError] = useState(null);
   const [hoverInfo, setHoverInfo] = useState(null);
   const [selectedPoint, setSelectedPoint] = useState(null);
+  const [status, setStatus] = useState('INITIAL'); // INITIAL, PENDING, RUNNING, COMPLETED, FAILED
+
+  const fetchEmbedding = useCallback(async (isPolling = false) => {
+    try {
+      if (!isPolling) setLoading(true);
+      const res = await client.get(`datasets/${datasetId}/embedding/`);
+      
+      // If we're here, it's 200 OK
+      const responseData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        setData(responseData);
+        setError(null);
+        setStatus('COMPLETED');
+      } else {
+        if (!isPolling) setError("No embedding data found.");
+      }
+    } catch (err) {
+      const serverStatus = err.response?.data?.status || 'FAILED';
+      setStatus(serverStatus);
+      
+      if (serverStatus === 'PENDING' || serverStatus === 'RUNNING') {
+        setError(null); // Clear error if it's just in progress
+      } else {
+        setError(err.response?.data?.detail || "Failed to load 3D embedding.");
+      }
+    } finally {
+      if (!isPolling) setLoading(false);
+    }
+  }, [datasetId]);
 
   useEffect(() => {
-    let active = true;
-    const fetchEmbedding = async () => {
-      try {
-        setLoading(true);
-        // Get JWT from storage if needed
-        const token = localStorage.getItem('access_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
-        const res = await axios.get(`/api/datasets/${datasetId}/embedding/`, { headers });
-        if (active) {
-          // Sometimes APIs wrap arrays in an object, handle if it's not an array directly
-          const responseData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-          
-          if (!Array.isArray(responseData) || responseData.length === 0) {
-             // Treat empty or invalid data as an error state if it's not currently loading
-             if (!loading) setError("No embedding data found.");
-          } else {
-             setData(responseData);
-             setError(null);
-          }
-        }
-      } catch (err) {
-        if (active) {
-          setError(err.response?.data?.detail || "Failed to load 3D embedding. Please generate it first.");
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
     fetchEmbedding();
-    return () => { active = false; };
-  }, [datasetId]);
+  }, [fetchEmbedding]);
+
+  // Polling logic
+  useEffect(() => {
+    let interval;
+    if (status === 'PENDING' || status === 'RUNNING') {
+      interval = setInterval(() => {
+        fetchEmbedding(true);
+      }, 3000);
+    } else if (status === 'FAILED') {
+      if (interval) clearInterval(interval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [status, fetchEmbedding]);
 
   const handleGenerate = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.post(`/api/datasets/${datasetId}/generate-embedding/`, {}, { headers });
-      setError("Generation started. Please wait and refresh in a few moments.");
+      setError(null);
+      const res = await client.post(`datasets/${datasetId}/generate-embedding/`, {});
+      setStatus(res.data.status || 'PENDING');
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to start generation.");
+      if (err.response?.status === 400) {
+        // Already in progress, start polling
+        setStatus('PENDING');
+      } else {
+        setError(err.response?.data?.detail || "Failed to start generation.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const isDataEmpty = !Array.isArray(data) || data.length === 0;
+  const isProcessing = status === 'PENDING' || status === 'RUNNING';
 
-  if (loading && isDataEmpty) {
+  if (loading && isDataEmpty && !isProcessing) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-blue-400 animate-pulse">Loading 3D Galaxy...</div>
+      <div className="w-full h-[600px] flex items-center justify-center bg-gray-900 rounded-lg border border-gray-800">
+        <div className="text-blue-400 animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+          Initializing 3D Pipeline...
+        </div>
+      </div>
+    );
+  }
+
+  if (isProcessing && isDataEmpty) {
+    return (
+      <div className="w-full h-[600px] flex flex-col items-center justify-center bg-gray-900 rounded-lg border border-gray-800 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-8 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+          <h3 className="text-xl font-bold text-white mb-2">Generating 3D Galaxy</h3>
+          <p className="text-blue-300/70 text-sm max-w-xs text-center animate-pulse">
+            Performing UMAP dimensionality reduction on high-dimensional feature space...
+          </p>
+          <div className="mt-8 flex space-x-2">
+             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+             <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error && isDataEmpty) {
     return (
-      <div className="w-full h-96 flex flex-col items-center justify-center bg-gray-900 rounded-lg border border-gray-800 p-6">
-        <div className="text-red-400 mb-4 text-center">{error}</div>
+      <div className="w-full h-[600px] flex flex-col items-center justify-center bg-gray-900 rounded-lg border border-gray-800 p-6">
+        <div className="text-red-400 mb-6 text-center max-w-md bg-red-900/20 p-4 rounded-lg border border-red-900/50">
+          <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          {error}
+        </div>
         <button 
           onClick={handleGenerate}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          disabled={loading || isProcessing}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center"
         >
-          Generate Embedding
+          {loading ? 'Starting...' : 'Generate 3D Embedding'}
         </button>
       </div>
     );

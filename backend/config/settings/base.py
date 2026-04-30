@@ -8,10 +8,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
-    default="",
+    default="*",
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
 
@@ -23,7 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "daphne",
     "django.contrib.staticfiles",
     "channels",
     "corsheaders",
@@ -115,6 +115,7 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # Custom user

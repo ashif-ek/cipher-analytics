@@ -208,6 +208,10 @@ def cleanup_stuck_datasets_task():
     job_threshold = timezone.now() - timedelta(minutes=15)
     stuck_jobs = ComputationJob.objects.filter(status__in=["PENDING", "RUNNING"], updated_at__lt=job_threshold)
     stuck_jobs.update(status="FAILED")
+    
+    # Clean up stuck embeddings
+    stuck_embeddings = Dataset.objects.filter(embedding_status__in=["PENDING", "RUNNING"], updated_at__lt=job_threshold)
+    stuck_embeddings.update(embedding_status="FAILED")
 
 @shared_task(bind=True, max_retries=1, soft_time_limit=240, time_limit=300, queue='queue_ml')
 def process_and_encrypt_dataset_task(self, dataset_id):
