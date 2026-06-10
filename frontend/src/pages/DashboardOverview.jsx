@@ -99,7 +99,7 @@ const DashboardOverview = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center">
-            System Dashboard
+            Command Center
             <span className="ml-3 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-[2px] text-[10px] uppercase tracking-widest leading-none">Online</span>
           </h1>
           <p className="mt-0.5 text-xs text-slate-500 font-medium">Overview of your data and system activity.</p>
@@ -119,7 +119,7 @@ const DashboardOverview = () => {
           <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
             <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
           </div>
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Compute Resources</dt>
+          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cryptographic Assets</dt>
           <dd className="flex items-baseline">
             <span className="text-2xl font-bold text-slate-900">{stats.total}</span>
             <span className="ml-2 text-[10px] font-bold text-slate-400">TOTAL ASSETS</span>
@@ -130,7 +130,7 @@ const DashboardOverview = () => {
         </Card>
         
         <Card className="p-5 border-slate-200 shadow-sm group">
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Corporate Reach</dt>
+          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Discoverable Topology</dt>
           <dd className="flex items-baseline">
             <span className="text-2xl font-bold text-slate-900">{stats.shared}</span>
             <span className="ml-2 text-[10px] font-bold text-slate-400">DISCOVERABLE</span>
@@ -142,7 +142,7 @@ const DashboardOverview = () => {
         </Card>
 
         <Card className="p-5 border-slate-200 shadow-sm group">
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Research Index</dt>
+          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ready Enclaves</dt>
           <dd className="flex items-baseline">
             <span className="text-2xl font-bold text-slate-900">{stats.researchReady}</span>
             <span className="ml-2 text-[10px] font-bold text-slate-400">ANALYSIS READY</span>
@@ -167,7 +167,7 @@ const DashboardOverview = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-0 border-slate-200 shadow-sm overflow-hidden">
              <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight italic">Resource Catalog Shortcuts</h3>
+               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight italic">Operational Workflows</h3>
                <span className="text-[9px] font-bold text-slate-400 uppercase">Interactive Elements</span>
              </div>
              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -176,7 +176,7 @@ const DashboardOverview = () => {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" /></svg>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">UPLOAD DATA</span>
+                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">INGEST PAYLOAD</span>
                   <span className="text-[10px] text-slate-400 font-medium">Add new encrypted datasets</span>
                 </div>
               </Link>
@@ -186,11 +186,41 @@ const DashboardOverview = () => {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">SYSTEM LOGS</span>
+                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">AUDIT TRAIL</span>
                   <span className="text-[10px] text-slate-400 font-medium">View platform activity history</span>
                 </div>
               </Link>
             </div>
+          </Card>
+
+          <Card className="p-0 border-slate-200 shadow-sm overflow-hidden">
+             <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight italic">Cryptographic Infrastructure Network</h3>
+               <span className="text-[9px] font-bold text-emerald-500 uppercase">3 Active Nodes</span>
+             </div>
+             <div className="p-6">
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                 {[
+                   { name: 'Alpha Enclave (US-EAST)', status: 'Syncing', load: '12%', color: 'bg-emerald-500' },
+                   { name: 'Beta Enclave (EU-WEST)', status: 'Compute', load: '87%', color: 'bg-blue-500' },
+                   { name: 'Gamma Enclave (AP-SOUTHEAST)', status: 'Standby', load: '2%', color: 'bg-slate-400' }
+                 ].map((node, i) => (
+                   <div key={i} className="p-4 border border-slate-100 rounded-[4px] bg-white shadow-sm flex flex-col justify-between">
+                     <div className="flex items-center justify-between mb-3">
+                       <span className="text-[10px] font-bold text-slate-900">{node.name}</span>
+                       <span className="flex h-2 w-2 relative">
+                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${node.color}`}></span>
+                         <span className={`relative inline-flex rounded-full h-2 w-2 ${node.color}`}></span>
+                       </span>
+                     </div>
+                     <div className="flex items-center justify-between mt-auto">
+                       <span className="text-[9px] font-bold text-slate-400 uppercase">{node.status}</span>
+                       <span className="text-[10px] font-mono text-slate-900">{node.load} LOAD</span>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
           </Card>
         </div>
 

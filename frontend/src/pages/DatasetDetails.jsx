@@ -138,6 +138,9 @@ const ActionToolbar = ({ dataset, jobStates, onOpenConsole, onDownload, onMetada
         <button onClick={onDownload} disabled={dataset.status !== 'READY'} className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-30">
           <IconDownload className="w-4 h-4" />
         </button>
+        <button onClick={() => window.print()} className="px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+          Export Brief (PDF)
+        </button>
         <button onClick={onMetadata} className="px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
           Export Metadata
         </button>
@@ -618,7 +621,7 @@ const DatasetDetails = () => {
     }
   };
 
-  const handleCompute = async (operation) => {
+  const handleCompute = useCallback(async (operation) => {
     const internalOp = operation.toLowerCase();
     try {
       setJobStates(prev => ({ ...prev, [internalOp]: JOB_LIFECYCLE.RUNNING }));
@@ -636,7 +639,7 @@ const DatasetDetails = () => {
       setConsoleState(prev => ({ ...prev, status: CONSOLE_STATE.ERROR, error: error.response?.data?.detail || "Network connection failure" }));
       showToast(`Audit initialization failed: ${error.response?.data?.detail || 'Network error'}`, 'error');
     }
-  };
+  }, [id, client, checkJobStatus, showToast]);
 
   const handleExplainAnomaly = async (row_id) => {
     try {
@@ -666,13 +669,24 @@ const DatasetDetails = () => {
     const isRunning = jobStates[type] === JOB_LIFECYCLE.RUNNING;
     const hasResult = !!cache[type];
     
-    setConsoleState({
-      isOpen: true,
-      type,
-      status: isRunning ? CONSOLE_STATE.RUNNING : (hasResult ? CONSOLE_STATE.SUCCESS : CONSOLE_STATE.IDLE),
-      error: null
-    });
-  }, [jobStates, cache]);
+    if (!isRunning && !hasResult) {
+      // Auto-trigger computation so the user doesn't have to click the button
+      setConsoleState({
+        isOpen: true,
+        type,
+        status: CONSOLE_STATE.RUNNING,
+        error: null
+      });
+      handleCompute(type);
+    } else {
+      setConsoleState({
+        isOpen: true,
+        type,
+        status: isRunning ? CONSOLE_STATE.RUNNING : (hasResult ? CONSOLE_STATE.SUCCESS : CONSOLE_STATE.IDLE),
+        error: null
+      });
+    }
+  }, [jobStates, cache, handleCompute]);
 
   const handleCloseConsole = useCallback(() => {
     setConsoleState(prev => ({ ...prev, isOpen: false }));
@@ -713,7 +727,7 @@ const DatasetDetails = () => {
       {/* --- Research-Grade Computation Console --- */}
       {consoleState.isOpen && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+          <div className="flex items-start justify-center min-h-screen px-4 pt-10 pb-20 text-center sm:p-0">
             <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onClick={consoleState.status !== CONSOLE_STATE.RUNNING ? handleCloseConsole : undefined}></div>
             <div className={`relative inline-block align-middle bg-white rounded-[3rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-6xl sm:w-full z-10 border border-slate-200/50 p-16 animate-in fade-in zoom-in-95 duration-300`}>
               <ModalHeader type={consoleState.type} state={consoleState.status} datasetId={dataset.id} />

@@ -33,7 +33,7 @@ const UserProfile = ({ onLogout }) => {
   }, []);
 
   if (loading) {
-    return <div className="text-sm text-gray-400 font-medium">Loading...</div>;
+    return <div className="text-sm text-gray-400 font-medium">Initializing identity context...</div>;
   }
 
   if (!profile) {
@@ -84,14 +84,14 @@ const UserProfile = ({ onLogout }) => {
               className="w-full block text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium rounded-sm"
               onClick={() => setIsOpen(false)}
             >
-              Profile Settings
+              Identity Context
             </Link>
 
             <button 
               onClick={onLogout}
               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium rounded-sm"
             >
-              Logout
+              Terminate Session
             </button>
           </div>
 

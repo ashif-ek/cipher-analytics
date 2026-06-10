@@ -11,7 +11,9 @@ def get_user_from_token(token_key):
         token = AccessToken(token_key)
         user_id = token['user_id']
         return User.objects.get(id=user_id)
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"WebSocket Auth Error: {e}")
         return AnonymousUser()
 
 class JwtAuthMiddleware:

@@ -166,8 +166,8 @@ const Dashboard = () => {
         {/* Upload Form Section */}
         <div className="bg-white border border-gray-200 p-8 shadow-sm">
           <div className="mb-8 border-b border-gray-100 pb-4">
-            <h2 className="text-lg font-semibold">Your Accessible Datasets</h2>
-            <p className="text-sm text-gray-500 mt-1">Upload records or manage shared inventories.</p>
+            <h2 className="text-lg font-semibold">Operational Workspace</h2>
+            <p className="text-sm text-gray-500 mt-1">Ingest records or manage shared inventories.</p>
           </div>
           
           
@@ -246,7 +246,7 @@ const Dashboard = () => {
                 disabled={loading}
                 className="bg-gray-900 text-white font-medium py-3 px-8 hover:bg-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm shadow-sm"
               >
-                {loading ? 'Encrypting & Transmitting...' : 'Execute Encrypted Upload'}
+                {loading ? 'Encrypting & Transmitting...' : 'Submit Analytical Payload'}
               </button>
             </div>
           </form>
