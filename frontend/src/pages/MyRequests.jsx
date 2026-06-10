@@ -72,7 +72,7 @@ const MyRequests = () => {
 
       <Card className="overflow-hidden border-slate-200 shadow-sm">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-900">Outbound Request History</h3>
+          <h3 className="text-xs font-bold text-slate-900">Outbound Execution Trace</h3>
           <span className="text-[10px] font-mono text-slate-400">Verified Log</span>
         </div>
         
@@ -90,7 +90,7 @@ const MyRequests = () => {
               {loading ? (
                 <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">Establishing secure link...</td></tr>
               ) : requests.length === 0 ? (
-                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">No outbound requests found</td></tr>
+                <tr><td colSpan="4" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">No execution traces registered</td></tr>
               ) : (
                 requests.map(req => (
                   <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">

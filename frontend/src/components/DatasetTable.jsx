@@ -51,7 +51,7 @@ const DatasetTable = ({
       setShowDeleteModal(false);
       await client.delete(`datasets/${datasetToDelete.id}/`);
       onDelete(datasetToDelete.id);
-      setToastMessage(`Dataset "${datasetToDelete.name}" deleted successfully.`);
+      setToastMessage(`Research artifact "${datasetToDelete.name}" purged successfully.`);
     } catch (error) {
       alert(`Failed to delete dataset: ${error.message}`);
     } finally {
@@ -80,7 +80,7 @@ const DatasetTable = ({
             <input
               type="text"
               className="bg-white block w-full pl-9 pr-3 py-1.5 text-[11px] font-medium border border-slate-200 rounded-[4px] focus:ring-0 focus:border-slate-400 focus:outline-none transition-all placeholder:text-slate-400"
-              placeholder="Find by Resource ID or Name..."
+              placeholder="Semantic Retrieval by Resource ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -170,8 +170,8 @@ const DatasetTable = ({
               <tr>
                 <td colSpan="8" className="px-5 py-12 text-center">
                    <div className="max-w-xs mx-auto">
-                    <h3 className="text-[11px] font-bold text-slate-900">NO RESOURCES FOUND</h3>
-                    <p className="text-[11px] text-slate-400 mt-1 font-medium italic">Verify filters or initiate new ingestion.</p>
+                    <h3 className="text-[11px] font-bold text-slate-900">NO ANALYTICAL ARTIFACTS REGISTERED</h3>
+                    <p className="text-[11px] text-slate-400 mt-1 font-medium italic">Awaiting dataset ingestion.</p>
                    </div>
                 </td>
               </tr>
@@ -195,9 +195,9 @@ const DatasetTable = ({
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
-        title="Delete Dataset"
-        message={`Are you sure you want to delete "${datasetToDelete?.name}"? This action cannot be undone and will remove all associated analytics.`}
-        confirmText="Yes, delete it"
+        title="Purge Artifact"
+        message={`Are you sure you want to purge "${datasetToDelete?.name}"? This action cannot be undone and will remove all associated analytics.`}
+        confirmText="Yes, purge it"
         variant="danger"
       />
     </div>

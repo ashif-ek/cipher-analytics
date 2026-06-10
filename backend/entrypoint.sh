@@ -45,9 +45,13 @@ echo "✅ Redis is online."
 echo "🔄 Running migrations..."
 python manage.py migrate --noinput
 
-# Collect static files for Nginx
-echo "📁 Collecting static files..."
-python manage.py collectstatic --noinput
+# Collect static files for Nginx (Production only)
+if [ "$DJANGO_ENV" = "production" ]; then
+    echo "📁 Collecting static files..."
+    python manage.py collectstatic --noinput
+else
+    echo "📁 Skipping collectstatic for development..."
+fi
 
 echo "🔥 Execution starting..."
 # Execute the passed CMD (Gunicorn)

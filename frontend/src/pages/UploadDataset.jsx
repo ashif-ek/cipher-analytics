@@ -116,7 +116,7 @@ const UploadDataset = () => {
         }
       });
       
-      setToastMessage({ type: 'success', text: `Dataset uploaded successfully. Redirecting...` });
+      setToastMessage({ type: 'success', text: `Research artifact indexed. Redirecting...` });
       
       setTimeout(() => {
         navigate('/datasets');
@@ -124,7 +124,7 @@ const UploadDataset = () => {
 
     } catch (error) {
       if (error.response) {
-        setToastMessage({ type: 'error', text: `Upload exception: ${JSON.stringify(error.response.data)}` });
+        setToastMessage({ type: 'error', text: `Dataset ingestion pipeline failed validation: ${JSON.stringify(error.response.data)}` });
       } else {
         setToastMessage({ type: 'error', text: `System Error: ${error.message}` });
       }
@@ -291,7 +291,7 @@ const UploadDataset = () => {
 
                   <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
                      <p className="font-extrabold text-slate-900 text-[12px] mb-1">📚 Discoverable + Strict (The Library Book)</p>
-                     <p className="text-slate-600"><strong>What it means:</strong> Everyone in the organization can search the catalog and see the name/size of the dataset, but no one can touch it or run math on it without asking the owner for permission first.</p>
+                     <p className="text-slate-600"><strong>What it means:</strong> Everyone in the organization can query the catalog and see the name/size of the dataset, but no one can touch it or run math on it without asking the owner for permission first.</p>
                      <p className="text-slate-600 mt-1"><strong>The Scenario:</strong> Your organization has purchased an extremely expensive third-party dataset (e.g., global satellite imagery metadata).</p>
                      <p className="text-slate-600 mt-1"><strong>Use Case:</strong> You want researchers to know the company owns this data so they don't buy it twice (Discoverable). However, because processing the data costs thousands of dollars per query, every researcher must submit a request explaining why they need to use it before they are given access (Strict).</p>
                   </div>
@@ -347,7 +347,7 @@ const UploadDataset = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>{uploadProgress < 100 ? `Uploading ${uploadProgress}%` : 'Finalizing...'}</span>
+                    <span>{uploadProgress < 100 ? `Transmitting analytical payload ${uploadProgress}%` : 'Initializing embedding pipeline...'}</span>
                   </div>
                 ) : 'Ingest Asset'}
               </button>

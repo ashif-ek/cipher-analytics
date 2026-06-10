@@ -24,8 +24,17 @@ const useWebSockets = (onMessage) => {
             clearTimeout(reconnectTimer.current);
         }
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/notifications/?token=${token}`;
+        const baseURL = import.meta.env.VITE_API_URL || '/api/';
+        let wsUrl;
+        
+        if (baseURL.startsWith('http')) {
+            const urlObj = new URL(baseURL);
+            const wsProtocol = urlObj.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${wsProtocol}//${urlObj.host}/ws/notifications/?token=${token}`;
+        } else {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${protocol}//${window.location.host}/ws/notifications/?token=${token}`;
+        }
         
         console.log(`Attempting WebSocket connection (Delay: ${reconnectDelay.current}ms)`);
         ws.current = new WebSocket(wsUrl);

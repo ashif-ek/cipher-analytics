@@ -20,32 +20,32 @@ const Sidebar = () => {
 
   const categories = [
     {
-      name: 'MAIN',
+      name: 'CORE',
       items: [
-        { name: 'Dashboard', path: '/', icon: 'home', roles: ['DATA_OWNER', 'RESEARCHER'] },
-        { name: 'Profile', path: '/profile', icon: 'user', roles: ['DATA_OWNER', 'RESEARCHER'] },
-        { name: 'Requests', path: '/research-requests', icon: 'clipboard-list', roles: ['RESEARCHER'] },
+        { name: 'Research Console', path: '/', icon: 'home', roles: ['DATA_OWNER', 'RESEARCHER'] },
+        { name: 'Identity Context', path: '/profile', icon: 'user', roles: ['DATA_OWNER', 'RESEARCHER'] },
+        { name: 'Analytical Briefs', path: '/research-requests', icon: 'clipboard-list', roles: ['RESEARCHER'] },
       ]
 
     },
     {
-      name: 'DATA',
+      name: 'ASSETS',
       items: [
-        { name: 'Datasets', path: '/datasets', icon: 'database', roles: ['DATA_OWNER'] },
-        { name: 'Upload', path: '/upload', icon: 'upload', roles: ['DATA_OWNER'] },
+        { name: 'Data Sources', path: '/datasets', icon: 'database', roles: ['DATA_OWNER'] },
+        { name: 'Ingest Dataset', path: '/upload', icon: 'upload', roles: ['DATA_OWNER'] },
       ]
     },
     {
       name: 'GOVERNANCE',
       items: [
-        { name: 'Access', path: '/access-control', icon: 'shield', roles: ['DATA_OWNER', 'ADMIN'] },
-        { name: 'Audit Logs', path: '/audit-logs', icon: 'clipboard-list', roles: ['DATA_OWNER', 'ADMIN'] },
+        { name: 'Access Control', path: '/access-control', icon: 'shield', roles: ['DATA_OWNER', 'ADMIN'] },
+        { name: 'Activity Timeline', path: '/audit-logs', icon: 'clipboard-list', roles: ['DATA_OWNER', 'ADMIN'] },
       ]
     },
     {
-      name: 'SYSTEM',
+      name: 'INFRASTRUCTURE',
       items: [
-        { name: 'Settings', path: '/settings', icon: 'cog', roles: ['DATA_OWNER', 'RESEARCHER', 'ADMIN'] },
+        { name: 'System Preferences', path: '/settings', icon: 'cog', roles: ['DATA_OWNER', 'RESEARCHER', 'ADMIN'] },
       ]
     }
   ];
@@ -144,7 +144,7 @@ const Sidebar = () => {
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Term. Session
+          Terminate Session
         </button>
       </div>
     </div>
