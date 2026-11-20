@@ -17,10 +17,9 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, onRequestAccess, set
       console.error('Failed to parse local compute results', e);
     }
     
-    // Always merge the backend's last known result as ground truth if it exists
+    // Merge the backend's last known result as ground truth if it exists
     if (dataset.last_operation) {
       const op = dataset.last_operation.toLowerCase();
-      // Only set if we have a real value or it's an ML operation that we might not have a float for locally
       if (dataset.last_result !== null) {
         if (!localResults[op]) localResults[op] = {};
         localResults[op] = { ...localResults[op], value: dataset.last_result, timestamp: new Date().toISOString() };
@@ -78,114 +77,147 @@ const DatasetRow = ({ dataset, isResearcher, onDeleteClick, onRequestAccess, set
             setToastMessage(`Computation successful for ${dataset.name}.`);
           } else if (jobRes.data.status === 'FAILED') {
             clearInterval(pollInterval);
-            setRowState(prev => ({ ...prev, loading: null, error: 'Computation failed' }));
+            setRowState(prev => ({
+              ...prev,
+              loading: null,
+              error: 'Computation failed on worker.'
+            }));
+            setToastMessage(`Computation failed for ${dataset.name}.`);
           } else if (attempts >= maxAttempts) {
             clearInterval(pollInterval);
-            setRowState(prev => ({ ...prev, loading: null, error: 'Timeout' }));
+            setRowState(prev => ({
+              ...prev,
+              loading: null,
+              error: 'Operation timed out.'
+            }));
+            setToastMessage(`Operation timed out for ${dataset.name}. Check details.`);
           }
-        } catch (err) {
-          console.error(`Polling error for dataset ${dataset.id}:`, err);
+        } catch (pollErr) {
+          console.error('Polling error', pollErr);
         }
-      }, 2000);
+      }, 1000);
 
     } catch (error) {
-       setRowState(prev => ({ ...prev, loading: null, error: 'Failed to start' }));
-       setToastMessage(`Computation failed: ${error.response?.data?.detail || error.message}`);
+      setRowState(prev => ({
+        ...prev,
+        loading: null,
+        error: error.response?.data?.detail || 'Failed to dispatch compute job'
+      }));
+      setToastMessage(error.response?.data?.detail || 'Compute dispatch failed.');
     }
   };
 
-  const handleClear = () => {
-    setRowState(prev => ({ ...prev, results: {}, error: null }));
+  const handleClearResults = () => {
+    setRowState(prev => ({ ...prev, results: {} }));
+    localStorage.removeItem(`cipher_ds_metrics_${dataset.id}`);
+    setToastMessage(`Results cleared for ${dataset.name}.`);
   };
 
   return (
-    <tr className="hover:bg-slate-50/80 transition-all group relative">
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50 group-hover:border-slate-100">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-8 w-8 bg-slate-50 rounded-[4px] flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-200 transition-all">
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+    <tr className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0">
+      {/* Dataset Identity & ID */}
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        <div className="flex items-center space-x-3">
+          <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-500 shrink-0">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+            </svg>
           </div>
-          <div className="ml-3 min-w-0">
-            <Link to={`/datasets/${dataset.id}`} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline block truncate">{dataset.name}</Link>
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-mono text-slate-400">res-{dataset.id.toString().padStart(5, '0')}</span>
+          <div className="min-w-0">
+            <Link 
+              to={`/datasets/${dataset.id}`}
+              className="text-xs font-semibold text-slate-900 hover:text-sky-600 transition-colors block truncate max-w-xs"
+            >
+              {dataset.name}
+            </Link>
+            <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-400 mt-0.5">
+              <span>ID::{dataset.id.toString().padStart(4, '0')}</span>
+              <span>•</span>
+              <span>{dataset.rows_count.toLocaleString()} rows</span>
+              <span>•</span>
+              <span>{dataset.columns_count} cols</span>
             </div>
-            {rowState.error && (
-               <span className="text-[9px] font-bold text-red-500 mt-0.5 block">⚠ {rowState.error}</span>
-            )}
           </div>
         </div>
       </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
+
+      {/* Encryption & Ingestion Status */}
+      <td className="px-5 py-3.5 whitespace-nowrap">
         <StatusBadge status={dataset.status} errorMessage={dataset.error_message} />
       </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
-        <div className="flex items-center font-mono text-[11px] text-slate-600">
-          <span className="font-bold text-slate-900">{(dataset.rows_count || 0).toLocaleString()}</span> 
-          <span className="mx-1 text-slate-300">×</span> 
-          <span>{dataset.columns_count || 0}</span>
+
+      {/* Governance & Compute Mode */}
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        <div className="flex items-center space-x-1.5">
+          <StatusBadge status={dataset.compute_mode || 'STRICT'} />
+          <StatusBadge status={dataset.visibility || 'PRIVATE'} />
         </div>
       </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
-        <StatusBadge status={dataset.visibility} />
-      </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50 text-[11px] font-bold text-slate-600">
-        {dataset.access_policy === 'STRICT' ? (
-           <div className="flex items-center text-red-600">
-             <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-             GATED
-           </div>
-        ) : (
-           <div className="flex items-center text-emerald-600">
-             <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg>
-             OPEN
-           </div>
+
+      {/* Live Computed Metrics */}
+      <td className="px-5 py-3.5 whitespace-nowrap">
+        <MetricsCell 
+          results={rowState.results} 
+          loadingOperation={rowState.loading} 
+        />
+        {rowState.error && (
+          <div className="text-[10px] text-rose-500 font-mono mt-1">{rowState.error}</div>
         )}
       </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50">
-        <span className="text-[10px] font-mono text-slate-500">
-          {new Date(dataset.created_at).toISOString().split('T')[0]}
-        </span>
-      </td>
-      <td className="px-5 py-3 whitespace-nowrap border-r border-slate-50 min-w-[200px]">
-         <MetricsCell results={rowState.results} loadingOperation={rowState.loading} />
-      </td>
-      <td className="px-5 py-3 whitespace-nowrap text-right">
-        <div className="flex items-center justify-end space-x-3">
-          {dataset.status === 'READY' && (
-             <ComputeDropdown 
-               disabled={!dataset.has_access}
-               isComputing={rowState.loading !== null}
-               isOpen={dropdownOpen}
-               onToggle={setDropdownOpen}
-               onCompute={handleCompute}
-               onClear={handleClear}
-             />
-          )}
 
+      {/* Actions */}
+      <td className="px-5 py-3.5 whitespace-nowrap text-right">
+        <div className="flex items-center justify-end space-x-2">
+          {/* Researcher without grant -> Request button */}
           {isResearcher && !dataset.has_access && (
             <button
               onClick={() => onRequestAccess(dataset)}
-              disabled={dataset.pending_request}
-              className={`px-3 py-1.5 text-[10px] font-bold rounded-[4px] transition-all border ${
-                dataset.pending_request 
-                  ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
-                  : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
+              disabled={dataset.request_pending}
+              className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                dataset.request_pending 
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200'
               }`}
             >
-              {dataset.pending_request ? 'REQUEST PENDING' : 'REQUEST ACCESS'}
+              {dataset.request_pending ? 'Pending Grant' : 'Request Access'}
             </button>
           )}
 
-           <div className="w-[1px] h-4 bg-slate-200"></div>
+          {/* Compute Controls (Owner or authorized researcher) */}
+          {(!isResearcher || dataset.has_access) && (
+            <ComputeDropdown 
+              disabled={dataset.status !== 'READY'}
+              isComputing={!!rowState.loading}
+              isOpen={dropdownOpen}
+              onToggle={setDropdownOpen}
+              onCompute={handleCompute}
+              onClear={handleClearResults}
+            />
+          )}
 
-          <button
-            onClick={() => onDeleteClick(dataset)}
-            className="p-1.5 text-slate-300 hover:text-red-600 rounded-[2px] transition-colors"
-            title="PURGE ARTIFACT"
+          {/* View Details Link */}
+          <Link
+            to={`/datasets/${dataset.id}`}
+            className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+            title="Inspect Artifact Details"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-          </button>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          {/* Delete Action (Owners only) */}
+          {!isResearcher && onDeleteClick && (
+            <button
+              onClick={() => onDeleteClick(dataset)}
+              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+              title="Delete Dataset"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
         </div>
       </td>
     </tr>

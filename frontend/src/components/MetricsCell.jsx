@@ -10,12 +10,12 @@ const METRIC_LABELS = {
 };
 
 const METRIC_TOOLTIPS = {
-  sum: 'Total of selected column',
-  mean: 'Average value',
-  variance: 'Variance',
-  std_deviation: 'Standard deviation',
-  correlation: 'Strongest feature correlation',
-  anomaly_detection: 'Detected anomalies'
+  sum: 'Total of selected column (FHE)',
+  mean: 'Arithmetic Mean (FHE)',
+  variance: 'Variance (FHE)',
+  std_deviation: 'Standard deviation (FHE)',
+  correlation: 'Feature correlation matrix (ML)',
+  anomaly_detection: 'Isolation Forest anomaly detection (ML)'
 };
 
 const MetricsCell = ({ results = {}, loadingOperation }) => {
@@ -24,11 +24,11 @@ const MetricsCell = ({ results = {}, loadingOperation }) => {
   const hasAnyData = operations.some(op => results[op] || loadingOperation === op);
 
   if (!hasAnyData) {
-    return <span className="text-slate-400 font-medium">—</span>;
+    return <span className="text-slate-300 font-mono text-xs select-none">—</span>;
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5 items-center">
+    <div className="flex flex-wrap gap-1 items-center">
       {operations.map(op => {
         const isComputing = loadingOperation === op;
         const opResult = results[op];
@@ -38,13 +38,13 @@ const MetricsCell = ({ results = {}, loadingOperation }) => {
         return (
           <div 
             key={op} 
-            className="group relative inline-flex items-center px-2 py-0.5 rounded-[4px] border border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-600 transition-all hover:border-slate-300 shadow-sm animate-fade-in"
+            className="group relative inline-flex items-center px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50/80 text-[10px] font-mono font-medium text-slate-700 transition-colors hover:border-slate-300"
             title={METRIC_TOOLTIPS[op]}
           >
-            <span className="text-slate-400 mr-1.5">{METRIC_LABELS[op]}</span>
+            <span className="text-slate-400 mr-1">{METRIC_LABELS[op]}:</span>
             {isComputing ? (
-              <span className="flex items-center text-blue-600">
-                <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <span className="flex items-center text-sky-600">
+                <svg className="animate-spin h-2.5 w-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -52,35 +52,36 @@ const MetricsCell = ({ results = {}, loadingOperation }) => {
             ) : (
               <>
                 {opResult?.json?.version === 'v2' && opResult.json.status === 'success' && opResult.json.result.type === 'correlation' && (
-                  <span className="text-slate-900 font-mono" title={`Strong pairs: ${opResult.json.result.summary.strong_pairs.length}`}>
-                    {opResult.json.result.summary.strong_pairs.length} Strong
+                  <span className="text-slate-900 font-semibold" title={`Strong pairs: ${opResult.json.result.summary.strong_pairs.length}`}>
+                    {opResult.json.result.summary.strong_pairs.length} pairs
                   </span>
                 )}
                 {opResult?.json?.version === 'v2' && opResult.json.status === 'success' && opResult.json.result.type === 'anomaly' && (
-                  <span className="text-red-600 font-mono font-bold" title={`Detected ${opResult.json.result.count} anomalies`}>
+                  <span className="text-rose-600 font-semibold" title={`Detected ${opResult.json.result.count} anomalies`}>
                     {opResult.json.result.percentage}%
                   </span>
                 )}
                 {opResult?.json?.version === 'v2' && opResult.json.status === 'failed' && (
-                   <span className="text-red-500 font-mono font-bold" title={`${opResult.json.error_code}: ${opResult.json.message}`}>ERR</span>
+                  <span className="text-rose-500 font-bold" title={`${opResult.json.error_code}: ${opResult.json.message}`}>ERR</span>
                 )}
                 {/* Legacy V1 Support */}
                 {opResult?.json?.type === 'correlation' && opResult?.json?.version !== 'v2' && (
-                  <span className="text-slate-900 font-mono" title={opResult.json.message}>
-                    {opResult.json.correlation?.toFixed(4)}
+                  <span className="text-slate-900 font-semibold" title={opResult.json.message}>
+                    {opResult.json.correlation?.toFixed(3)}
                   </span>
                 )}
                 {opResult?.json?.type === 'anomaly_detection' && opResult?.json?.version !== 'v2' && (
-                  <span className="text-red-600 font-mono font-bold" title={opResult.json.message}>
+                  <span className="text-rose-600 font-semibold" title={opResult.json.message}>
                     {opResult.json.anomalies}/{opResult.json.total_rows}
                   </span>
                 )}
                 {opResult?.json?.type === 'error' && opResult?.json?.version !== 'v2' && (
-                   <span className="text-red-500 font-mono font-bold" title={opResult.json.message}>ERR</span>
+                  <span className="text-rose-500 font-bold" title={opResult.json.message}>ERR</span>
                 )}
-                {!opResult?.json && (
-                  <span className="text-slate-900 font-mono">
-                    {typeof opResult?.value === 'number' ? opResult.value.toFixed(4) : opResult?.value}
+                {/* Fallback to simple float result if present */}
+                {opResult?.value !== undefined && opResult?.value !== null && !opResult?.json && (
+                  <span className="text-slate-900 font-semibold">
+                    {typeof opResult.value === 'number' ? opResult.value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : opResult.value}
                   </span>
                 )}
               </>

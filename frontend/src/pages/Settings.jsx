@@ -21,82 +21,102 @@ const Settings = () => {
   }, []);
 
   if (loading) {
-    return <div className="animate-pulse py-12 text-slate-400 font-bold text-center">Syncing Configuration...</div>;
+    return <div className="py-12 text-slate-400 font-mono text-xs text-center">Syncing workspace configuration...</div>;
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center">
-          <svg className="w-8 h-8 mr-4 text-slate-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="pb-4 border-b border-slate-200/90">
+        <div className="flex items-center space-x-2">
+          <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+            SYSTEM::CONFIG
+          </span>
+          <span className="text-xs font-mono text-slate-400">ORGANIZATIONAL POLICIES & CONTROLS</span>
+        </div>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">
           Workspace Configuration
         </h1>
-        <p className="mt-1 text-sm text-slate-500 font-medium ml-12">Manage platform-wide security primitives and organizational compute policies.</p>
+        <p className="text-xs text-slate-500 font-medium">
+          Platform-wide security primitives, zero-trust governance parameters, and session management.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-8">
-          <Card className="p-8 border-slate-200">
-            <h3 className="text-xs font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">Profile Architecture</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-6 space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-semibold text-slate-900">Authenticated Identity Context</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Active cryptographic role and principal identifier.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-2">Display Alias</label>
-                <div className="text-sm font-bold text-slate-900">{profile?.username || 'N/A'}</div>
+                <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">Display Alias</label>
+                <div className="text-xs font-semibold text-slate-900 font-mono">{profile?.username || 'N/A'}</div>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-2">Authenticated Entity</label>
-                <div className="text-sm font-mono text-slate-500">ID::{profile?.id?.toString().padStart(4, '0')}</div>
+                <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">Principal Entity ID</label>
+                <div className="text-xs font-mono text-slate-600">ID::{profile?.id?.toString().padStart(4, '0')}</div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">Assigned Role</label>
+                <div className="text-xs font-mono text-sky-600 font-semibold">{profile?.role}</div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">Email Endpoint</label>
+                <div className="text-xs font-mono text-slate-600">{profile?.email}</div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-8 border-slate-200 shadow-sm">
-            <h3 className="text-xs font-bold text-slate-900 mb-8 pb-4 border-b border-slate-100">Security Primitives</h3>
-            <div className="space-y-6">
-               <div className="flex items-center justify-between">
-                 <div>
-                   <span className="block text-sm font-bold text-slate-900">Multi-Factor Authentication</span>
-                   <span className="block text-xs text-slate-500 mt-1 font-medium">Verify login attempts via TOTP secondary layer.</span>
-                 </div>
-                 <span className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 leading-none">Healthy</span>
-               </div>
-               <div className="flex items-center justify-between">
-                 <div>
-                   <span className="block text-sm font-bold text-slate-900">Real-time Session Monitoring</span>
-                   <span className="block text-xs text-slate-500 mt-1 font-medium">Active telemetry tracking for the current session.</span>
-                 </div>
-                 <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-600 rounded border border-indigo-100 leading-none">Active</span>
-               </div>
+          <Card className="p-6 space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-semibold text-slate-900">Security & Authentication Primitives</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Hardened platform defense mechanisms currently active.</p>
             </div>
-          </Card>
+            <div className="space-y-4 divide-y divide-slate-100">
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <span className="block text-xs font-semibold text-slate-900">TOTP Secondary Authentication</span>
+                  <span className="block text-[11px] text-slate-500 mt-0.5">Enforces 6-digit OTP verification upon authentication.</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
+                  ENFORCED
+                </span>
+              </div>
 
-          <Card className="p-8 border-dashed border-slate-200 bg-slate-50/20">
-             <div className="text-center py-6">
-                <span className="text-[10px] font-bold text-slate-400 block mb-2">Encryption Subsystem</span>
-                <p className="text-xs text-slate-500 font-medium">Advanced cryptographic key rotation and FHE parameter tuning is managed by the core orchestrator.</p>
-             </div>
+              <div className="flex items-center justify-between pt-4">
+                <div>
+                  <span className="block text-xs font-semibold text-slate-900">Distributed IP Throttling</span>
+                  <span className="block text-[11px] text-slate-500 mt-0.5">Strict rate limiters prevent credential stuffing and brute-force probing.</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-sky-50 text-sky-700 rounded border border-sky-200">
+                  REDIS-BACKED
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-4">
+                <div>
+                  <span className="block text-xs font-semibold text-slate-900">Cross-Device Token Invalidation</span>
+                  <span className="block text-[11px] text-slate-500 mt-0.5">Blacklists all outstanding JWT refresh tokens upon lockout or logout.</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
+                  ENABLED
+                </span>
+              </div>
+            </div>
           </Card>
         </div>
 
-        <div className="col-span-1 space-y-6">
-          <Card className="p-6 border-slate-200 bg-slate-900 text-white">
-            <h3 className="text-[10px] font-bold text-slate-400 mb-6">Compute Infrastructure</h3>
-            <div className="space-y-6">
-              <div className="flex justify-between items-center text-xs">
-                 <span className="text-slate-400">Node Status</span>
-                 <span className="font-bold flex items-center text-emerald-400">
-                   <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
-                   Operational
-                 </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                 <span className="text-slate-400">Uptime</span>
-                 <span className="font-mono text-emerald-100">Live</span>
-              </div>
-              <div className="flex justify-between items-center text-xs pt-4 border-t border-slate-800">
-                 <span className="text-slate-400">Environment</span>
-                 <span className="font-mono text-[10px]">Production</span>
-              </div>
+        {/* Right Info Rail */}
+        <div className="space-y-6">
+          <Card className="p-5 border-slate-200 bg-slate-50/60">
+            <h4 className="text-xs font-semibold text-slate-900 mb-2">Cryptographic Key Management</h4>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              CKKS evaluation keys and Galois keys are maintained in the encrypted vault. Polynomial parameters are sealed at N=8192 with scale 2^40.
+            </p>
+            <div className="mt-4 pt-3 border-t border-slate-200/80 text-[10px] font-mono text-slate-400">
+              STATUS: SEAL_CONTEXT_VALIDATED
             </div>
           </Card>
         </div>

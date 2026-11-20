@@ -35,100 +35,176 @@ const AccessControl = () => {
     }
   };
 
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+  const approvedCount = requests.filter(r => r.status === 'APPROVED').length;
+  const rejectedCount = requests.filter(r => r.status === 'REJECTED' || r.status === 'REVOKED').length;
+
   return (
     <div className="space-y-6">
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+      
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-200/90 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Entity Access Governance</h1>
-          <p className="mt-1 text-sm text-slate-500 font-medium">Manage incoming research requests and cryptographic grant lifecycles.</p>
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+              POLICY::ZERO-TRUST
+            </span>
+            <span className="text-xs font-mono text-slate-400">INBOUND RESEARCH GRANTS</span>
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">
+            Access Governance & Enclave Grants
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Review inbound applications from verified researchers and grant time-bounded evaluation rights.
+          </p>
         </div>
+
+        <button
+          onClick={fetchRequests}
+          className="inline-flex items-center px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded shadow-sm transition-colors"
+        >
+          <svg className="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh Grants
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-bold text-slate-400">Active Requests</span>
-            <div className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-full">
-              {requests.filter(r => r.status === 'PENDING').length}
-            </div>
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Pending Decisions</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Pending Approvals</h3>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Researchers awaiting verification to compute on your data assets.</p>
-        </Card>
-        
-        <Card className="p-6 border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-bold text-slate-400">Trust Index</span>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-amber-600">
+              {loading ? '—' : pendingCount}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">awaiting review</span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Verified Entities</h3>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">Total unique researchers currently holding active FHE evaluation grants.</p>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Escalation SLA</span>
+            <span className="font-mono text-slate-600">Manual Approval</span>
+          </div>
         </Card>
 
-        <Card className="p-6 border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-bold text-slate-400">Audit State</span>
-            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Active Grants</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Policy Compliance</h3>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">All active grants strictly adhere to your organization's zero-trust baseline.</p>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-emerald-600">
+              {loading ? '—' : approvedCount}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">authorized</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Grant Duration</span>
+            <span className="font-mono text-slate-600">Time-Bounded (30d)</span>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Closed / Revoked</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-slate-700">
+              {loading ? '—' : rejectedCount}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">archived</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Audit Trail</span>
+            <span className="font-mono text-slate-600">Immutable</span>
+          </div>
         </Card>
       </div>
 
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-900">Inbound Request Queue</h3>
-          <span className="text-[10px] font-mono text-slate-400">Real-time Synchronization</span>
+      {/* Requests Table */}
+      <Card className="overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-semibold text-slate-900">Inbound Grant Applications</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">Researchers requesting compute access to your encrypted datasets.</p>
+          </div>
+          <span className="text-[10px] font-mono text-slate-500">
+            {requests.length} records
+          </span>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50/30">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50 text-slate-500 text-[10px] font-mono uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Researcher</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Target Dataset</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Rationale</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-400">Status</th>
-                <th className="px-6 py-3 text-right text-[10px] font-bold text-slate-400">Actions</th>
+                <th className="px-5 py-2.5 text-left font-semibold">Researcher Entity</th>
+                <th className="px-5 py-2.5 text-left font-semibold">Target Dataset</th>
+                <th className="px-5 py-2.5 text-left font-semibold">Research Justification</th>
+                <th className="px-5 py-2.5 text-left font-semibold">Status</th>
+                <th className="px-5 py-2.5 text-right font-semibold">Governance Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="bg-white divide-y divide-slate-100 text-xs">
               {loading ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">Fetching Registry...</td></tr>
+                <tr>
+                  <td colSpan="5" className="px-5 py-8 text-center text-slate-400 font-mono text-xs">
+                    Loading grant applications...
+                  </td>
+                </tr>
               ) : requests.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-xs text-slate-400 font-bold">No active requests found</td></tr>
+                <tr>
+                  <td colSpan="5" className="px-5 py-8 text-center text-slate-400">
+                    No access requests currently pending for your datasets.
+                  </td>
+                </tr>
               ) : (
-                requests.map(req => (
-                  <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-xs font-bold text-slate-900">{req.researcher_email}</div>
+                requests.map((req) => (
+                  <tr key={req.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-5 py-3 whitespace-nowrap">
+                      <div className="font-medium text-slate-900">{req.researcher_email || req.researcher}</div>
+                      <div className="text-[10px] font-mono text-slate-400">REQ::{req.id.slice(0, 8)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-xs font-medium text-slate-600">{req.dataset_details?.name}</div>
+                    <td className="px-5 py-3 whitespace-nowrap">
+                      <div className="font-medium text-slate-900">{req.dataset_name || `Dataset #${req.dataset}`}</div>
+                      <div className="text-[10px] font-mono text-slate-400">ID::{req.dataset}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-[10px] text-slate-500 font-medium line-clamp-1 max-w-xs">{req.reason}</div>
+                    <td className="px-5 py-3">
+                      <div className="text-slate-600 text-xs max-w-sm truncate" title={req.reason}>
+                        {req.reason}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-3 whitespace-nowrap">
                       <StatusBadge status={req.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {req.status === 'PENDING' && (
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
+                    <td className="px-5 py-3 whitespace-nowrap text-right">
+                      {req.status === 'PENDING' ? (
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
                             onClick={() => handleAction(req.id, 'approve')}
-                            className="px-3 py-1 bg-slate-900 text-white text-[9px] font-bold rounded-md hover:bg-black transition-all"
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded text-xs font-medium transition-colors"
                           >
-                            Approve
+                            Authorize
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleAction(req.id, 'reject')}
-                            className="px-3 py-1 border border-slate-200 text-slate-600 text-[9px] font-bold rounded-md hover:bg-slate-50 transition-all"
+                            className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded text-xs font-medium transition-colors"
                           >
-                            Reject
+                            Decline
                           </button>
                         </div>
+                      ) : req.status === 'APPROVED' ? (
+                        <button
+                          onClick={() => handleAction(req.id, 'reject')}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 rounded text-xs font-medium transition-colors border border-slate-200"
+                        >
+                          Revoke Grant
+                        </button>
+                      ) : (
+                        <span className="text-[11px] font-mono text-slate-400">Decision Finalized</span>
                       )}
                     </td>
                   </tr>
@@ -143,4 +219,3 @@ const AccessControl = () => {
 };
 
 export default AccessControl;
-
