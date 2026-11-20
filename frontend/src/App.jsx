@@ -44,7 +44,7 @@ function App() {
             <Route index element={<RoleRouter />} />
           </Route>
 
-          {/* Authentication Routes */}
+          {/* Dedicated Independent Authentication Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />

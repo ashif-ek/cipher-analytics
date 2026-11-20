@@ -169,7 +169,7 @@ const DashboardOverview = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Enclave Sessions</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-slate-900">

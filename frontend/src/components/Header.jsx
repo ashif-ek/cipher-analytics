@@ -61,7 +61,7 @@ const Header = ({ breadcrumbs = [] }) => {
       <div className="flex items-center space-x-3.5">
         {/* Real-time Enclave Status Pill */}
         <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-100/80 border border-slate-200 text-[10px] font-mono text-slate-600">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
           <span>ENCLAVE: ACTIVE</span>
         </div>
 
