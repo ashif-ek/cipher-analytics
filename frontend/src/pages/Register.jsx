@@ -70,7 +70,7 @@ const Register = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const { confirmPassword, terms, ...registerData } = data;
+      const { confirmPassword: _confirmPassword, terms: _terms, ...registerData } = data;
       await client.post('accounts/register/', registerData);
       setToast({ message: 'Identity initialized. Awaiting verification...', type: 'success' });
       

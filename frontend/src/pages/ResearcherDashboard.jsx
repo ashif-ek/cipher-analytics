@@ -13,7 +13,7 @@ export default function ResearcherDashboard() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState("");
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = React.useCallback(async () => {
     try {
       setLoading(true);
       const [datasetsRes, requestsRes] = await Promise.all([
@@ -30,15 +30,45 @@ export default function ResearcherDashboard() {
 
       setDatasets(augmentedDatasets);
       setRequests(requestsRes.data);
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to load researcher workspace data. Ensure you have Researcher privileges.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchDashboardData();
+    let ignore = false;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [datasetsRes, requestsRes] = await Promise.all([
+          api.get("research/datasets/"),
+          api.get("research/requests/")
+        ]);
+        if (!ignore) {
+          const augmentedDatasets = datasetsRes.data.map(ds => ({
+            ...ds,
+            has_access: requestsRes.data.some(r => r.dataset === ds.id && r.status === 'APPROVED'),
+            request_pending: requestsRes.data.some(r => r.dataset === ds.id && r.status === 'PENDING')
+          }));
+          setDatasets(augmentedDatasets);
+          setRequests(requestsRes.data);
+        }
+      } catch (_err) {
+        if (!ignore) {
+          setError("Failed to load researcher workspace data. Ensure you have Researcher privileges.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleRequestAccess = async (dataset) => {
