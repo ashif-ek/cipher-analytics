@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import client from '../api/client';
 import useWebSockets from '../hooks/useWebSockets';
 import Card from '../components/ui/Card';
+import StatusBadge from '../components/ui/StatusBadge';
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState({
@@ -14,7 +15,7 @@ const DashboardOverview = () => {
   });
   const [recentLogs, setRecentLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const lastEventTimestamps = useRef(new Map()); // Ref to track latest timestamps: "model:id" -> timestamp
+  const lastEventTimestamps = useRef(new Map());
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -48,7 +49,7 @@ const DashboardOverview = () => {
         researchReady: research,
         liveSessions: activeUsers
       });
-      setRecentLogs(logs.slice(0, 5));
+      setRecentLogs(logs.slice(0, 6));
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
     } finally {
@@ -56,25 +57,16 @@ const DashboardOverview = () => {
     }
   }, []);
 
-  // Real-time updates via WebSockets
   useWebSockets(useCallback((message) => {
-    // Schema check: supports both DATASET_STATUS_UPDATED and COMPUTATION_STATUS_UPDATED
     if (message.type === 'DATASET_STATUS_UPDATED' || message.type === 'COMPUTATION_STATUS_UPDATED') {
        const { payload, metadata } = message;
        const eventKey = `${payload.model}:${payload.id}`;
        const eventTime = new Date(metadata.timestamp).getTime();
        
-       // Stale event protection
        const lastTime = lastEventTimestamps.current.get(eventKey) || 0;
-       if (eventTime <= lastTime) {
-         console.warn(`Ignoring stale or duplicate event for ${eventKey}. Received: ${eventTime}, Last: ${lastTime}`);
-         return;
-       }
+       if (eventTime <= lastTime) return;
        
        lastEventTimestamps.current.set(eventKey, eventTime);
-       console.log(`Verified event [${metadata.event_id}] received from ${metadata.source}:`, payload);
-       
-       // Trigger data refresh
        fetchDashboardData();
     }
   }, [fetchDashboardData]));
@@ -83,184 +75,246 @@ const DashboardOverview = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  if (loading) {
-    return (
-      <div className="animate-pulse space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-slate-200 rounded-xl"></div>)}
-        </div>
-        <div className="h-64 bg-slate-200 rounded-xl"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="py-2">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+    <div className="space-y-6">
+      {/* Platform Banner Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200/90 gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center">
-            Command Center
-            <span className="ml-3 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-[2px] text-[10px] uppercase tracking-widest leading-none">Online</span>
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
+              CLUSTER::READY
+            </span>
+            <span className="text-xs font-mono text-slate-400">CKKS-RLWE-8192</span>
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">
+            Zero-Trust Research Console
           </h1>
-          <p className="mt-0.5 text-xs text-slate-500 font-medium">Overview of your data and system activity.</p>
+          <p className="text-xs text-slate-500 font-medium">
+            Active telemetry for encrypted datasets, FHE execution pipelines, and security audits.
+          </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Link to="/upload" className="inline-flex items-center px-3 py-1.5 border border-transparent text-[11px] font-bold rounded-[4px] shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all">
-            <svg className="-ml-0.5 mr-2 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+
+        <div className="flex items-center space-x-2">
+          <Link
+            to="/upload"
+            className="inline-flex items-center px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded shadow-sm transition-colors"
+          >
+            <svg className="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            Ingest Data
+            Ingest Dataset
+          </Link>
+          <Link
+            to="/datasets"
+            className="inline-flex items-center px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded shadow-sm transition-colors"
+          >
+            Data Catalog
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="p-5 border-slate-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-            <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Total Datasets</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
           </div>
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cryptographic Assets</dt>
-          <dd className="flex items-baseline">
-            <span className="text-2xl font-bold text-slate-900">{stats.total}</span>
-            <span className="ml-2 text-[10px] font-bold text-slate-400">TOTAL ASSETS</span>
-          </dd>
-          <div className="mt-4 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-             <div className="h-full bg-blue-500" style={{ width: '75%' }}></div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-slate-900">
+              {loading ? '—' : stats.total}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">cataloged</span>
           </div>
-        </Card>
-        
-        <Card className="p-5 border-slate-200 shadow-sm group">
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Discoverable Topology</dt>
-          <dd className="flex items-baseline">
-            <span className="text-2xl font-bold text-slate-900">{stats.shared}</span>
-            <span className="ml-2 text-[10px] font-bold text-slate-400">DISCOVERABLE</span>
-          </dd>
-          <div className="mt-4 flex items-center text-[10px] font-bold text-blue-600">
-            <svg className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            Cross-Unit Permissions
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Encrypted Blobs</span>
+            <span className="font-mono text-slate-600">{stats.total} bin</span>
           </div>
         </Card>
 
-        <Card className="p-5 border-slate-200 shadow-sm group">
-          <dt className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ready Enclaves</dt>
-          <dd className="flex items-baseline">
-            <span className="text-2xl font-bold text-slate-900">{stats.researchReady}</span>
-            <span className="ml-2 text-[10px] font-bold text-slate-400">ANALYSIS READY</span>
-          </dd>
-          <div className="mt-4 flex items-center text-[10px] font-bold text-slate-500">
-            <svg className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-            High-Performance Pipeline
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Research Discoverable</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-emerald-600">
+              {loading ? '—' : stats.shared}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">governed</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Granular Grants</span>
+            <span className="font-mono text-slate-600">STRICT / AGG</span>
           </div>
         </Card>
 
-        <Card className="p-5 bg-slate-900 border-slate-800 shadow-lg text-white">
-          <dt className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Enclave Health</dt>
-          <dd className="text-2xl font-bold">OPERATIONAL</dd>
-          <div className="mt-4 flex items-center text-[10px] font-bold text-emerald-400">
-            <svg className="h-3 w-3 mr-1.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            Security Mesh Verification: 100%
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Private Vaults</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-purple-600">
+              {loading ? '—' : stats.private}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">isolated</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Owner Access Only</span>
+            <span className="font-mono text-slate-600">Strict AES/SEAL</span>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Enclave Sessions</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-slate-900">
+              {loading ? '—' : stats.liveSessions}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">verified</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Redis Pub/Sub</span>
+            <span className="font-mono text-emerald-600">SYNCED</span>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Content Two-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Column: Architectural Security Matrix */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="p-0 border-slate-200 shadow-sm overflow-hidden">
-             <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight italic">Operational Workflows</h3>
-               <span className="text-[9px] font-bold text-slate-400 uppercase">Interactive Elements</span>
-             </div>
-             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/upload" className="flex items-center p-4 border border-slate-200 rounded-[4px] hover:bg-slate-50 hover:border-slate-400 transition-all group shadow-[0_1px_2px_0_rgba(0,0,0,0.03)] focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                <div className="w-10 h-10 bg-slate-50 rounded-[4px] flex items-center justify-center text-slate-400 mr-4 group-hover:bg-blue-600 group-hover:text-white transition-all border border-slate-100 group-hover:border-blue-700">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" /></svg>
-                </div>
-                <div>
-                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">INGEST PAYLOAD</span>
-                  <span className="text-[10px] text-slate-400 font-medium">Add new encrypted datasets</span>
-                </div>
-              </Link>
-              
-              <Link to="/audit-logs" className="flex items-center p-4 border border-slate-200 rounded-[4px] hover:bg-slate-50 hover:border-slate-400 transition-all group shadow-[0_1px_2px_0_rgba(0,0,0,0.03)] focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                <div className="w-10 h-10 bg-slate-50 rounded-[4px] flex items-center justify-center text-slate-400 mr-4 group-hover:bg-slate-900 group-hover:text-white transition-all border border-slate-100 group-hover:border-black">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                </div>
-                <div>
-                  <span className="text-[11px] font-bold text-slate-900 block leading-tight">AUDIT TRAIL</span>
-                  <span className="text-[10px] text-slate-400 font-medium">View platform activity history</span>
-                </div>
-              </Link>
+          <Card className="overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-900">Cryptographic Subsystem Status</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">Parameters governing the homomorphic computation engine.</p>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 px-2 py-0.5 rounded bg-white border border-slate-200">
+                SEAL 4.0 / TenSEAL
+              </span>
+            </div>
+
+            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 rounded border border-slate-200 bg-slate-50/50 space-y-1">
+                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Scheme & Security Level</span>
+                <div className="text-xs font-semibold text-slate-800">CKKS (Heuristic 128-bit Classical)</div>
+                <div className="text-[11px] text-slate-500">Ring Learning With Errors (RLWE) mathematical hardness guarantee.</div>
+              </div>
+
+              <div className="p-3 rounded border border-slate-200 bg-slate-50/50 space-y-1">
+                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Batching & Vectorization</span>
+                <div className="text-xs font-semibold text-slate-800">SIMD Packing: 4,096 Slots</div>
+                <div className="text-[11px] text-slate-500">Polynomial degree N=8192 allows simultaneous 4K floating-point evaluations.</div>
+              </div>
+
+              <div className="p-3 rounded border border-slate-200 bg-slate-50/50 space-y-1">
+                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Task Queues (Celery/Redis)</span>
+                <div className="text-xs font-semibold text-slate-800 font-mono">queue_fhe • queue_ml • default</div>
+                <div className="text-[11px] text-slate-500">Dedicated CPU worker binding protects latency-sensitive API traffic.</div>
+              </div>
+
+              <div className="p-3 rounded border border-slate-200 bg-slate-50/50 space-y-1">
+                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Privacy Defense Layer</span>
+                <div className="text-xs font-semibold text-slate-800">k-Anonymity Guard (n ≥ 5)</div>
+                <div className="text-[11px] text-slate-500">Cardinality threshold & query fingerprinting prevents inference reconstruction.</div>
+              </div>
             </div>
           </Card>
 
-          <Card className="p-0 border-slate-200 shadow-sm overflow-hidden">
-             <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-               <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight italic">Cryptographic Infrastructure Network</h3>
-               <span className="text-[9px] font-bold text-emerald-500 uppercase">3 Active Nodes</span>
-             </div>
-             <div className="p-6">
-               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                 {[
-                   { name: 'Alpha Enclave (US-EAST)', status: 'Syncing', load: '12%', color: 'bg-emerald-500' },
-                   { name: 'Beta Enclave (EU-WEST)', status: 'Compute', load: '87%', color: 'bg-blue-500' },
-                   { name: 'Gamma Enclave (AP-SOUTHEAST)', status: 'Standby', load: '2%', color: 'bg-slate-400' }
-                 ].map((node, i) => (
-                   <div key={i} className="p-4 border border-slate-100 rounded-[4px] bg-white shadow-sm flex flex-col justify-between">
-                     <div className="flex items-center justify-between mb-3">
-                       <span className="text-[10px] font-bold text-slate-900">{node.name}</span>
-                       <span className="flex h-2 w-2 relative">
-                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${node.color}`}></span>
-                         <span className={`relative inline-flex rounded-full h-2 w-2 ${node.color}`}></span>
-                       </span>
-                     </div>
-                     <div className="flex items-center justify-between mt-auto">
-                       <span className="text-[9px] font-bold text-slate-400 uppercase">{node.status}</span>
-                       <span className="text-[10px] font-mono text-slate-900">{node.load} LOAD</span>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             </div>
-          </Card>
-        </div>
+          {/* Quick Actions Guide */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link 
+              to="/upload" 
+              className="p-4 rounded-md border border-slate-200 bg-white hover:border-slate-300 transition-all shadow-[0_1px_2px_0_rgba(15,23,42,0.04)] group"
+            >
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-8 h-8 rounded bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 border border-sky-100">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-slate-900 group-hover:text-sky-600 transition-colors">
+                  Ingest New Dataset →
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-snug">
+                Upload CSV files up to 15MB. Triggers profiling, adaptive imputation, and chunked CKKS binary serialization.
+              </p>
+            </Link>
 
-        <Card className="p-0 border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <h3 className="text-[11px] font-bold text-slate-900 uppercase">Live Event Stream</h3>
-            <span className="text-[9px] font-bold text-slate-400">RECENT {recentLogs.length} TRACES</span>
-          </div>
-          <div className="flex-1 overflow-y-auto max-h-[400px]">
-            <ul className="divide-y divide-slate-100">
-              {recentLogs.map((log) => (
-                <li key={log.id} className="px-5 py-3 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-start space-x-3">
-                    <div className={`mt-0.5 flex-shrink-0 h-1.5 w-1.5 rounded-full ${
-                      log.action.includes('LOGIN') ? 'bg-emerald-400' : 
-                      log.action.includes('DELETE') ? 'bg-red-400' : 'bg-blue-400'
-                    }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-bold text-slate-900 truncate uppercase leading-none">{log.action}</p>
-                        <span className="text-[9px] font-mono text-slate-400 font-bold">
-                          {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[10px] text-slate-500 font-mono font-medium truncate">{log.user_email || 'daemon@system.local'}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-              {recentLogs.length === 0 && (
-                <li className="px-5 py-12 text-center text-[11px] text-slate-400 font-bold italic">NO TRACES RECORDED</li>
-              )}
-            </ul>
-          </div>
-          <div className="p-3 bg-slate-50/50 border-t border-slate-100">
-            <Link to="/audit-logs" className="w-full inline-flex justify-center items-center px-4 py-2 border border-slate-200 text-[11px] font-bold rounded-[4px] text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-sm">
-              Launch Data Explorer
+            <Link 
+              to="/access-control" 
+              className="p-4 rounded-md border border-slate-200 bg-white hover:border-slate-300 transition-all shadow-[0_1px_2px_0_rgba(15,23,42,0.04)] group"
+            >
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-8 h-8 rounded bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
+                  Review Access Grants →
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-snug">
+                Inspect outbound and inbound research requests, grant time-bounded evaluation permissions, or revoke access.
+              </p>
             </Link>
           </div>
-        </Card>
+        </div>
+
+        {/* Right Column: Immutable Activity Feed */}
+        <div className="space-y-6">
+          <Card className="overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-900">Recent Audit Events</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">Immutable write-only log records</p>
+              </div>
+              <Link to="/audit-logs" className="text-[11px] font-medium text-sky-600 hover:text-sky-700">
+                View All
+              </Link>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {loading ? (
+                <div className="p-6 text-center text-xs font-mono text-slate-400">
+                  Loading telemetry...
+                </div>
+              ) : recentLogs.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">
+                  No recent audit events captured.
+                </div>
+              ) : (
+                recentLogs.map((log) => (
+                  <div key={log.id} className="p-3.5 hover:bg-slate-50/60 transition-colors">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-mono font-semibold text-slate-800">
+                        {log.action}
+                      </span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+                      <span className="truncate max-w-[150px] font-mono">
+                        {log.user_email || 'System Worker'}
+                      </span>
+                      <span className="font-mono text-[9px] text-slate-400">
+                        {log.ip_address || '127.0.0.1'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

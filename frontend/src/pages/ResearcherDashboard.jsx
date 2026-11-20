@@ -31,7 +31,7 @@ export default function ResearcherDashboard() {
       setDatasets(augmentedDatasets);
       setRequests(requestsRes.data);
     } catch (err) {
-      setError("Failed to load dashboard data. Ensure you have Researcher access.");
+      setError("Failed to load researcher workspace data. Ensure you have Researcher privileges.");
     } finally {
       setLoading(false);
     }
@@ -41,13 +41,14 @@ export default function ResearcherDashboard() {
     fetchDashboardData();
   }, []);
 
-  const handleRequestAccess = async (datasetId) => {
+  const handleRequestAccess = async (dataset) => {
+    const datasetId = dataset?.id || dataset;
     try {
       await api.post(`research/requests/`, {
         dataset: datasetId,
-        reason: `Standard cryptographic evaluation requested for dataset ID: ${datasetId}`
+        reason: `Cryptographic research evaluation requested for dataset ID: ${datasetId}`
       });
-      setToast("Governance access request submitted.");
+      setToast("Governance access request dispatched successfully.");
       fetchDashboardData();
     } catch (err) {
       alert("Error submitting request: " + (err.response?.data?.detail || err.message));
@@ -55,65 +56,127 @@ export default function ResearcherDashboard() {
   };
 
   if (error) return (
-    <div className="p-12 text-center">
-      <div className="text-red-500 font-bold mb-2">AUTH_ERROR</div>
-      <div className="text-slate-500 text-sm">{error}</div>
+    <div className="p-12 text-center max-w-md mx-auto">
+      <div className="text-xs font-mono font-bold text-rose-500 mb-1">AUTH_ACCESS_DENIED</div>
+      <div className="text-slate-600 text-xs">{error}</div>
     </div>
   );
 
+  const approvedCount = requests.filter(r => r.status === 'APPROVED').length;
+  const pendingCount = requests.filter(r => r.status === 'PENDING').length;
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6">
       {toast && <Toast message={toast} onClose={() => setToast("")} />}
       
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200/90 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Researcher Workspace</h1>
-          <p className="text-slate-500 font-medium mt-1 text-sm">Securely interact with governed datasets via FHE orchestration.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100 flex items-center">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-            Identity: Verified
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              IDENTITY::VERIFIED
+            </span>
+            <span className="text-xs font-mono text-slate-400">RESEARCHER CONSOLE</span>
           </div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">
+            Governed Research Enclave
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Discover datasets, submit cryptographic access briefs, and run zero-knowledge evaluations.
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Link
+            to="/research-requests"
+            className="inline-flex items-center px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded shadow-sm transition-colors"
+          >
+            My Access Requests ({pendingCount} pending)
+          </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-bold text-slate-400 block mb-4">Available Assets</span>
-            <h3 className="text-2xl font-bold text-slate-900">{datasets.length}</h3>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Datasets open for research collaboration.</p>
+      {/* Researcher KPI Tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Discoverable Assets</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-slate-900">
+              {loading ? '—' : datasets.length}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">available</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Access Mode</span>
+            <span className="font-mono text-slate-600">Encrypted Catalog</span>
+          </div>
         </Card>
-        <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-bold text-slate-400 block mb-4">Active Grants</span>
-            <h3 className="text-2xl font-bold text-emerald-600">{datasets.filter(d => d.has_access).length}</h3>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Approved cryptographic evaluation contexts.</p>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Granted Access Rights</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-emerald-600">
+              {loading ? '—' : approvedCount}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">active grants</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Compute Rights</span>
+            <span className="font-mono text-emerald-600">FHE / ML UNLOCKED</span>
+          </div>
         </Card>
-        <Card className="p-6 border-slate-200">
-            <span className="text-[10px] font-bold text-slate-400 block mb-4">Pending Requests</span>
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-amber-500">{datasets.filter(d => d.request_pending).length}</h3>
-              <Link 
-                to="/research-requests" 
-                className="text-[10px] font-bold text-slate-900 hover:underline"
-              >
-                View History →
-              </Link>
-            </div>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Awaiting Data Owner verification.</p>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Pending Grants</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-amber-600">
+              {loading ? '—' : pendingCount}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">in review</span>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+            <span>Governance State</span>
+            <span className="font-mono text-slate-600">Awaiting Data Owner</span>
+          </div>
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-2">
-            <h2 className="text-xs font-bold text-slate-900">Governed Dataset Registry</h2>
+      {/* Discoverable Datasets Table */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+            Available Discoverable Catalogs
+          </h2>
+          <span className="text-[11px] text-slate-400 font-mono">
+            Direct computation available for authorized assets
+          </span>
         </div>
-        <DatasetTable 
-          datasets={datasets} 
-          loading={loading} 
+
+        <DatasetTable
+          datasets={datasets}
+          loading={loading}
           onRefresh={fetchDashboardData}
           onRequestAccess={handleRequestAccess}
           userRole="RESEARCHER"
+          searchQuery=""
+          setSearchQuery={() => {}}
+          statusFilter="ALL"
+          setStatusFilter={() => {}}
+          visibilityFilter="ALL"
+          setVisibilityFilter={() => {}}
+          sortField="created_at"
+          setSortField={() => {}}
+          sortDirection="desc"
+          setSortDirection={() => {}}
         />
       </div>
     </div>
