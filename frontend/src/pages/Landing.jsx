@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import EnclaveDiagram from '../components/landing/EnclaveDiagram';
 import { 
   ShieldCheck, 
   Cpu, 
@@ -66,43 +67,53 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* 2. Hero Section: Core Value Proposition */}
-      <section className="py-20 lg:py-24 border-b border-slate-200 bg-white">
+      {/* 2. Hero Section: Core Value Proposition & Enclave Architecture */}
+      <section className="py-16 lg:py-20 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-              <span>ENGINEERING SPECIFICATION • PRODUCTION PLATFORM</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            
+            {/* Left Narrative Column */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
+                <span>ENGINEERING SPECIFICATION • PRODUCTION PLATFORM</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 leading-[1.14]">
+                Analytics executed over encrypted data. Plaintext never materialized.
+              </h1>
+
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl font-normal">
+                Cipher Analytics enables institutions to compute statistical distributions, linear correlations, and anomaly scores across confidential records without ever decrypting underlying data in memory or on disk.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  to="/register"
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-medium rounded transition-colors shadow-sm flex items-center space-x-2"
+                >
+                  <span>Initialize Research Enclave</span>
+                  <ArrowRight className="w-4 h-4 text-slate-400" />
+                </Link>
+
+                <Link
+                  to="/login"
+                  className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-mono font-medium rounded transition-colors"
+                >
+                  Sign In to Console
+                </Link>
+              </div>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]">
-              Analytics executed over encrypted data. Plaintext never materialized.
-            </h1>
-
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-normal">
-              Cipher Analytics enables institutions to compute statistical distributions, linear correlations, and anomaly scores across confidential records without ever decrypting underlying data in memory or on disk.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                to="/register"
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-medium rounded transition-colors shadow-sm flex items-center space-x-2"
-              >
-                <span>Initialize Research Enclave</span>
-                <ArrowRight className="w-4 h-4 text-slate-400" />
-              </Link>
-
-              <Link
-                to="/login"
-                className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-mono font-medium rounded transition-colors"
-              >
-                Sign In to Console
-              </Link>
+            {/* Right Interactive Enclave Architecture Component */}
+            <div className="lg:col-span-5">
+              <EnclaveDiagram />
             </div>
+
           </div>
 
           {/* Core Technical Metric Band */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-16 mt-16 border-t border-slate-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 mt-12 border-t border-slate-200">
             <div>
               <div className="text-xs font-mono uppercase text-slate-500 font-semibold">Cryptographic Scheme</div>
               <div className="text-lg font-bold font-mono text-slate-900 mt-1">CKKS (RLWE)</div>
