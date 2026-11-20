@@ -10,16 +10,12 @@ const VerifyOTP = () => {
   
   const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState('');
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [message, setMessage] = useState(() => 
+    initialEmail ? { type: '', text: '' } : { type: 'error', text: 'Email parameter missing.' }
+  );
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!email) {
-      setMessage({ type: 'error', text: 'Email parameter missing.' });
-    }
-  }, [email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -10,7 +10,7 @@ const DatasetTable = ({
   searchQuery, setSearchQuery,
   statusFilter, setStatusFilter,
   visibilityFilter, setVisibilityFilter,
-  policyFilter, setPolicyFilter,
+  policyFilter: _policyFilter, setPolicyFilter: _setPolicyFilter,
   sortField, setSortField,
   sortDirection, setSortDirection
 }) => {
@@ -21,7 +21,9 @@ const DatasetTable = ({
       if (token) {
         userRole = jwtDecode(token).role;
       }
-    } catch(e) {}
+    } catch (_e) {
+      // Ignored decoding error fallback
+    }
   }
   const isResearcher = userRole === 'RESEARCHER';
   
