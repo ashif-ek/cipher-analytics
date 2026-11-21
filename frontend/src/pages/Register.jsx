@@ -9,7 +9,7 @@ import AuthLayout, { useAuth } from '../components/auth/AuthLayout';
 import InputField from '../components/auth/InputField';
 import PasswordField from '../components/auth/PasswordField';
 import FormFooter from '../components/auth/FormFooter';
-import { Database, LineChart, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Database, LineChart, ArrowRight } from 'lucide-react';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -58,10 +58,10 @@ const Register = () => {
 
   const getRequirements = (pass) => {
     return [
-      { text: 'At least 8 characters', met: pass.length >= 8 },
-      { text: 'Upper & lowercase letters', met: /[A-Z]/.test(pass) && /[a-z]/.test(pass) },
-      { text: 'At least one number (0-9)', met: /[0-9]/.test(pass) },
-      { text: 'At least one symbol (!@#$...)', met: /[^A-Za-z0-9]/.test(pass) },
+      { text: '8+ chars', met: pass.length >= 8 },
+      { text: 'Upper & lower', met: /[A-Z]/.test(pass) && /[a-z]/.test(pass) },
+      { text: 'Numeric (0-9)', met: /[0-9]/.test(pass) },
+      { text: 'Symbol (!@#$)', met: /[^A-Za-z0-9]/.test(pass) },
     ];
   };
 
@@ -90,10 +90,11 @@ const Register = () => {
 
   return (
     <AuthLayout 
+      mode="register"
       title="Create Enclave Identity" 
       subtitle="Register an institutional Data Owner or certified Researcher account."
       badge="ORGANIZATION ONBOARDING"
-      maxWidth="max-w-[560px]"
+      maxWidth="max-w-[480px]"
     >
       {toast.message && (
         <Toast 
@@ -103,51 +104,51 @@ const Register = () => {
         />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
         
         {/* Step 1: Institutional Role Selection */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-700 tracking-tight block">
-            Select Institutional Role
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-semibold text-slate-700 tracking-tight block">
+            Institutional Role
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => register('role').onChange({ target: { name: 'role', value: 'DATA_OWNER' }})}
-              className={`p-3.5 border rounded-md text-left transition-all ${
+              className={`p-2.5 border rounded-md text-left transition-all ${
                 selectedRole === 'DATA_OWNER' 
                   ? 'border-slate-900 bg-slate-900 text-white shadow-sm ring-1 ring-slate-900' 
                   : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <Database className={`w-4 h-4 ${selectedRole === 'DATA_OWNER' ? 'text-white' : 'text-slate-600'}`} />
+              <div className="flex items-center space-x-1.5">
+                <Database className={`w-3.5 h-3.5 ${selectedRole === 'DATA_OWNER' ? 'text-white' : 'text-slate-600'}`} />
                 <span className="text-xs font-bold tracking-tight">Data Owner</span>
               </div>
-              <p className={`text-[11px] mt-1.5 leading-snug ${
+              <p className={`text-[10px] mt-1 leading-snug line-clamp-2 ${
                 selectedRole === 'DATA_OWNER' ? 'text-slate-300' : 'text-slate-500'
               }`}>
-                Ingest, encrypt with TenSEAL, and govern research grants.
+                Ingest & encrypt with TenSEAL. Keep full custody.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => register('role').onChange({ target: { name: 'role', value: 'RESEARCHER' }})}
-              className={`p-3.5 border rounded-md text-left transition-all ${
+              className={`p-2.5 border rounded-md text-left transition-all ${
                 selectedRole === 'RESEARCHER' 
                   ? 'border-slate-900 bg-slate-900 text-white shadow-sm ring-1 ring-slate-900' 
                   : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <LineChart className={`w-4 h-4 ${selectedRole === 'RESEARCHER' ? 'text-white' : 'text-slate-600'}`} />
-                <span className="text-xs font-bold tracking-tight">Certified Researcher</span>
+              <div className="flex items-center space-x-1.5">
+                <LineChart className={`w-3.5 h-3.5 ${selectedRole === 'RESEARCHER' ? 'text-white' : 'text-slate-600'}`} />
+                <span className="text-xs font-bold tracking-tight">Researcher</span>
               </div>
-              <p className={`text-[11px] mt-1.5 leading-snug ${
+              <p className={`text-[10px] mt-1 leading-snug line-clamp-2 ${
                 selectedRole === 'RESEARCHER' ? 'text-slate-300' : 'text-slate-500'
               }`}>
-                Submit FHE queries and compute statistics across cohorts.
+                Submit FHE queries across encrypted cohorts.
               </p>
             </button>
             <input type="hidden" {...register('role')} />
@@ -155,7 +156,7 @@ const Register = () => {
         </div>
 
         {/* Step 2: Account Identity Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <InputField
             label="Enclave Handle"
             placeholder="e.g. jdoe_lab"
@@ -173,8 +174,8 @@ const Register = () => {
         </div>
 
         {/* Step 3: Security & Passphrase */}
-        <div className="space-y-3 pt-1">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <PasswordField
               label="Password"
               placeholder="••••••••••••"
@@ -192,22 +193,22 @@ const Register = () => {
             />
           </div>
 
-          {/* Cryptographic Password Strength Meter */}
-          <div className="p-3 rounded bg-slate-50 border border-slate-200 space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-mono">
+          {/* Compact Cryptographic Password Strength Meter */}
+          <div className="p-2.5 rounded bg-slate-50 border border-slate-200/90 space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="text-slate-500">ENTROPY VALIDATION:</span>
               <span className={`font-semibold ${
                 metCount === 4 ? 'text-emerald-700' : metCount >= 2 ? 'text-amber-700' : 'text-slate-500'
               }`}>
-                {metCount === 4 ? 'STRONG PASSKEY' : metCount >= 2 ? 'ACCEPTABLE' : 'MINIMUM CRITERIA REQUIRED'}
+                {metCount === 4 ? 'STRONG PASSKEY' : metCount >= 2 ? 'ACCEPTABLE' : 'CRITERIA REQUIRED'}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+            <div className="grid grid-cols-4 gap-1 text-[10px]">
               {requirements.map((req, idx) => (
-                <div key={idx} className="flex items-center space-x-1.5 text-slate-600">
-                  <span className={`w-1.5 h-1.5 rounded-full ${req.met ? 'bg-emerald-600' : 'bg-slate-300'}`}></span>
-                  <span className={req.met ? 'text-slate-900 font-medium' : 'text-slate-500'}>{req.text}</span>
+                <div key={idx} className="flex items-center space-x-1 text-slate-600 truncate">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${req.met ? 'bg-emerald-600' : 'bg-slate-300'}`}></span>
+                  <span className={`truncate ${req.met ? 'text-slate-900 font-medium' : 'text-slate-400'}`}>{req.text}</span>
                 </div>
               ))}
             </div>
@@ -215,16 +216,16 @@ const Register = () => {
         </div>
 
         {/* Step 4: Policy & Consent */}
-        <div className="pt-2">
-          <div className="flex items-start space-x-3">
+        <div className="pt-0.5">
+          <div className="flex items-start space-x-2.5">
             <input
               type="checkbox"
               id="terms"
-              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/10 cursor-pointer shrink-0"
+              className="mt-0.5 w-3.5 h-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900/10 cursor-pointer shrink-0"
               {...register('terms')}
             />
-            <label htmlFor="terms" className="text-xs text-slate-600 cursor-pointer leading-relaxed select-none">
-              I acknowledge and agree to the 
+            <label htmlFor="terms" className="text-[11px] text-slate-600 cursor-pointer leading-tight select-none">
+              I agree to the 
               <button 
                 type="button" 
                 onClick={() => openLegal('Terms of Service', 'terms')}
@@ -243,7 +244,7 @@ const Register = () => {
             </label>
           </div>
           {errors.terms && (
-            <p className="text-xs text-rose-600 font-medium mt-1 px-1">{errors.terms.message}</p>
+            <p className="text-[11px] text-rose-600 font-medium mt-0.5 px-1">{errors.terms.message}</p>
           )}
         </div>
 
@@ -251,7 +252,7 @@ const Register = () => {
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-3 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2 mt-2"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-2.5 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2"
         >
           {loading ? (
             <span>Provisioning Enclave Account...</span>
