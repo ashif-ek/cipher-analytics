@@ -9,7 +9,7 @@ import AuthLayout from '../components/auth/AuthLayout';
 import InputField from '../components/auth/InputField';
 import PasswordField from '../components/auth/PasswordField';
 import FormFooter from '../components/auth/FormFooter';
-import { ArrowRight, Lock } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email address is required').email('Invalid email address format'),
@@ -72,10 +72,11 @@ const Login = () => {
 
   return (
     <AuthLayout 
+      mode="login"
       title="Sign In to Enclave" 
       subtitle="Enter your verified corporate credentials to access the analytical console."
       badge="IDENTITY VERIFICATION"
-      maxWidth="max-w-[440px]"
+      maxWidth="max-w-[420px]"
     >
       {toast.message && (
         <Toast 
@@ -85,7 +86,7 @@ const Login = () => {
         />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <InputField
           label="Corporate Email"
           placeholder="researcher@institute.org"
@@ -94,7 +95,7 @@ const Login = () => {
           {...register('email')}
         />
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <PasswordField
             label="Password"
             placeholder="••••••••••••"
@@ -102,7 +103,7 @@ const Login = () => {
             error={errors.password?.message}
             {...register('password')}
           />
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-end pt-0.5">
             <button 
               type="button" 
               className="text-[11px] font-mono text-slate-500 hover:text-slate-900 transition-colors"
@@ -112,7 +113,7 @@ const Login = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2.5 py-1">
+        <div className="flex items-center space-x-2.5 py-0.5">
           <input
             type="checkbox"
             id="rememberMe"
@@ -127,7 +128,7 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-3 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-2.5 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2"
         >
           {loading ? (
             <span>Verifying Credentials...</span>
@@ -141,11 +142,7 @@ const Login = () => {
 
         <FormFooter 
           secondaryText="Don't have an enclave account?" 
-          secondaryAction={{ text: 'Request registration', to: '/register' }}
-          links={[
-            { text: 'Privacy Policy', to: '#', type: 'privacy' },
-            { text: 'Terms of Service', to: '#', type: 'terms' }
-          ]}
+          secondaryAction={{ text: 'Register new identity', to: '/register' }}
         />
       </form>
     </AuthLayout>
