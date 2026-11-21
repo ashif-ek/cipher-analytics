@@ -9,9 +9,10 @@ import AuthLayout from '../components/auth/AuthLayout';
 import InputField from '../components/auth/InputField';
 import PasswordField from '../components/auth/PasswordField';
 import FormFooter from '../components/auth/FormFooter';
+import { ArrowRight, Lock } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email protocol'),
+  email: z.string().min(1, 'Email address is required').email('Invalid email address format'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
 });
@@ -56,12 +57,12 @@ const Login = () => {
       }, 1500);
     } catch (err) {
       if (err.response?.data?.detail === "Verify your email first") {
-        setToast({ message: 'Identity verification required.', type: 'error' });
+        setToast({ message: 'Identity verification required. Redirecting to OTP...', type: 'error' });
         setTimeout(() => {
           navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
         }, 2000);
       } else {
-        // Industry standard: Do not reveal if email exists or password is wrong
+        // Industry standard: Do not reveal whether email exists or password failed
         setToast({ message: 'Invalid credentials or unauthorized access.', type: 'error' });
       }
     } finally {
@@ -71,8 +72,10 @@ const Login = () => {
 
   return (
     <AuthLayout 
-      title="Sign In" 
-      subtitle="Welcome back. Please enter your details."
+      title="Sign In to Enclave" 
+      subtitle="Enter your verified corporate credentials to access the analytical console."
+      badge="IDENTITY VERIFICATION"
+      maxWidth="max-w-[440px]"
     >
       {toast.message && (
         <Toast 
@@ -82,25 +85,27 @@ const Login = () => {
         />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <InputField
-          label="Email address"
-          placeholder="name@company.com"
+          label="Corporate Email"
+          placeholder="researcher@institute.org"
+          autoComplete="email"
           error={errors.email?.message}
           {...register('email')}
         />
 
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           <PasswordField
             label="Password"
-            placeholder="••••••••"
+            placeholder="••••••••••••"
+            autoComplete="current-password"
             error={errors.password?.message}
             {...register('password')}
           />
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-1">
             <button 
               type="button" 
-              className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+              className="text-[11px] font-mono text-slate-500 hover:text-slate-900 transition-colors"
             >
               Forgot password?
             </button>
@@ -111,25 +116,32 @@ const Login = () => {
           <input
             type="checkbox"
             id="rememberMe"
-            className="w-4 h-4 border-slate-300 rounded text-slate-900 focus:ring-slate-900/10 cursor-pointer"
+            className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/10 cursor-pointer"
             {...register('rememberMe')}
           />
-          <label htmlFor="rememberMe" className="text-sm font-medium text-slate-600 cursor-pointer select-none">
-            Remember me for 30 days
+          <label htmlFor="rememberMe" className="text-xs font-medium text-slate-600 cursor-pointer select-none">
+            Keep enclave session active for 30 days
           </label>
         </div>
 
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 text-white text-sm font-semibold py-3 px-4 rounded-md hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] mt-2"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-3 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? (
+            <span>Verifying Credentials...</span>
+          ) : (
+            <>
+              <span>Authenticate & Enter Console</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+            </>
+          )}
         </button>
 
         <FormFooter 
-          secondaryText="Don't have an account?" 
-          secondaryAction={{ text: 'Create an account', to: '/register' }}
+          secondaryText="Don't have an enclave account?" 
+          secondaryAction={{ text: 'Request registration', to: '/register' }}
           links={[
             { text: 'Privacy Policy', to: '#', type: 'privacy' },
             { text: 'Terms of Service', to: '#', type: 'terms' }
