@@ -62,7 +62,6 @@ const Login = () => {
           navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
         }, 2000);
       } else {
-        // Industry standard: Do not reveal whether email exists or password failed
         setToast({ message: 'Invalid credentials or unauthorized access.', type: 'error' });
       }
     } finally {
@@ -73,10 +72,10 @@ const Login = () => {
   return (
     <AuthLayout 
       mode="login"
-      title="Sign In to Enclave" 
-      subtitle="Enter your verified corporate credentials to access the analytical console."
-      badge="IDENTITY VERIFICATION"
-      maxWidth="max-w-[420px]"
+      title="Sign in" 
+      subtitle="Enter your corporate credentials to access your workspace."
+      badge="Workspace Sign In"
+      maxWidth="max-w-[400px]"
     >
       {toast.message && (
         <Toast 
@@ -88,7 +87,7 @@ const Login = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <InputField
-          label="Corporate Email"
+          label="Corporate email"
           placeholder="researcher@institute.org"
           autoComplete="email"
           error={errors.email?.message}
@@ -106,7 +105,7 @@ const Login = () => {
           <div className="flex justify-end pt-0.5">
             <button 
               type="button" 
-              className="text-[11px] font-mono text-slate-500 hover:text-slate-900 transition-colors"
+              className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
             >
               Forgot password?
             </button>
@@ -121,28 +120,28 @@ const Login = () => {
             {...register('rememberMe')}
           />
           <label htmlFor="rememberMe" className="text-xs font-medium text-slate-600 cursor-pointer select-none">
-            Keep enclave session active for 30 days
+            Keep session active for 30 days
           </label>
         </div>
 
         <button
           type="submit"
           disabled={loading || !isValid}
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold py-2.5 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99] flex items-center justify-center space-x-2"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xs active:scale-[0.99] flex items-center justify-center space-x-2"
         >
           {loading ? (
-            <span>Verifying Credentials...</span>
+            <span>Signing in...</span>
           ) : (
             <>
-              <span>Authenticate & Enter Console</span>
+              <span>Sign in</span>
               <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </>
           )}
         </button>
 
         <FormFooter 
-          secondaryText="Don't have an enclave account?" 
-          secondaryAction={{ text: 'Register new identity', to: '/register' }}
+          secondaryText="Don't have an account?" 
+          secondaryAction={{ text: 'Create an account', to: '/register' }}
         />
       </form>
     </AuthLayout>
