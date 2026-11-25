@@ -2,23 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import EnclaveDiagram from '../components/landing/EnclaveDiagram';
 import { 
+  ArrowRight, 
   ShieldCheck, 
   Cpu, 
   Lock, 
   Database, 
-  ArrowRight, 
-  CheckCircle2, 
-  Layers, 
   Activity, 
-  Server, 
-  FileCode, 
-  Workflow, 
-  BarChart3,
-  Key,
-  Binary,
-  GitBranch,
-  ShieldAlert,
-  Sliders,
+  Network,
   Scale
 } from 'lucide-react';
 
@@ -31,161 +21,161 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded bg-slate-900 text-white flex items-center justify-center font-mono font-bold text-sm shadow-sm">
+              <div className="w-8 h-8 rounded bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                 C
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-bold tracking-tight text-slate-900 font-mono">CIPHER ANALYTICS</span>
-                <span className="text-[9px] font-mono tracking-widest text-slate-500 uppercase -mt-0.5">Homomorphic Privacy Enclave</span>
+                <span className="text-base font-semibold tracking-tight text-slate-900">Cipher Analytics</span>
+                <span className="text-[11px] text-slate-500 font-normal">Privacy-Preserving Computation</span>
               </div>
             </Link>
 
-            <nav className="hidden md:flex items-center space-x-6 text-xs font-mono text-slate-600">
-              <a href="#core-problem" className="hover:text-slate-900 transition-colors">01. Problem</a>
-              <a href="#fhe-mechanics" className="hover:text-slate-900 transition-colors">02. FHE Core</a>
-              <a href="#operations" className="hover:text-slate-900 transition-colors">03. Analytical Operations</a>
-              <a href="#architecture" className="hover:text-slate-900 transition-colors">04. Architecture</a>
-              <a href="#governance" className="hover:text-slate-900 transition-colors">05. Zero-Trust</a>
-              <a href="#applications" className="hover:text-slate-900 transition-colors">06. Applications</a>
+            <nav className="hidden md:flex items-center space-x-6 text-xs text-slate-600 font-medium">
+              <a href="#core-problem" className="hover:text-slate-900 transition-colors">Overview</a>
+              <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How It Works</a>
+              <a href="#capabilities" className="hover:text-slate-900 transition-colors">Capabilities</a>
+              <a href="#architecture" className="hover:text-slate-900 transition-colors">Architecture</a>
+              <a href="#governance" className="hover:text-slate-900 transition-colors">Governance</a>
+              <a href="#applications" className="hover:text-slate-900 transition-colors">Applications</a>
             </nav>
           </div>
 
           <div className="flex items-center space-x-3">
             <Link 
               to="/login"
-              className="text-xs font-mono px-3.5 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+              className="text-xs px-3.5 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors font-medium"
             >
-              Log in
+              Sign in
             </Link>
             <Link 
               to="/register"
-              className="text-xs font-mono px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded transition-colors shadow-sm font-medium"
+              className="text-xs px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md transition-colors shadow-xs font-medium"
             >
-              Get Started
+              Get started
             </Link>
           </div>
         </div>
       </header>
 
-      {/* 2. Hero Section: Core Value Proposition & Enclave Architecture */}
+      {/* 2. Hero Section: Core Value Proposition */}
       <section className="py-16 lg:py-20 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
             {/* Left Narrative Column */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 font-mono text-xs">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-                <span>ENGINEERING SPECIFICATION • PRODUCTION PLATFORM</span>
+                <span>Privacy-Preserving Enterprise Analytics</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 leading-[1.14]">
-                Analytics executed over encrypted data. Plaintext never materialized.
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 leading-[1.15]">
+                Analytics executed over encrypted data. Plaintext never exposed.
               </h1>
 
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl font-normal">
-                Cipher Analytics enables institutions to compute statistical distributions, linear correlations, and anomaly scores across confidential records without ever decrypting underlying data in memory or on disk.
+                Cipher Analytics enables institutions to compute statistical distributions, linear correlations, and anomaly models across confidential records without ever decrypting underlying data on the server.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Link
                   to="/register"
-                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-medium rounded transition-colors shadow-sm flex items-center space-x-2"
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-md transition-colors shadow-xs flex items-center space-x-2"
                 >
-                  <span>Initialize Research Enclave</span>
+                  <span>Get started</span>
                   <ArrowRight className="w-4 h-4 text-slate-400" />
                 </Link>
 
                 <Link
                   to="/login"
-                  className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-mono font-medium rounded transition-colors"
+                  className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-medium rounded-md transition-colors"
                 >
-                  Sign In to Console
+                  Sign in
                 </Link>
               </div>
             </div>
 
-            {/* Right Interactive Enclave Architecture Component */}
+            {/* Right Interactive Architecture Component */}
             <div className="lg:col-span-5">
               <EnclaveDiagram />
             </div>
 
           </div>
 
-          {/* Core Technical Metric Band */}
+          {/* Metric Band */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 mt-12 border-t border-slate-200">
             <div>
-              <div className="text-xs font-mono uppercase text-slate-500 font-semibold">Cryptographic Scheme</div>
-              <div className="text-lg font-bold font-mono text-slate-900 mt-1">CKKS (RLWE)</div>
-              <p className="text-xs text-slate-500 mt-0.5">Cheon-Kim-Kim-Song fixed-point arithmetic</p>
+              <div className="text-xs uppercase text-slate-500 font-semibold">Security Standard</div>
+              <div className="text-lg font-bold text-slate-900 mt-1">Zero Key Custody</div>
+              <p className="text-xs text-slate-500 mt-0.5">Private keys remain on client devices</p>
             </div>
 
             <div>
-              <div className="text-xs font-mono uppercase text-slate-500 font-semibold">Polynomial Modulus</div>
-              <div className="text-lg font-bold font-mono text-slate-900 mt-1">N = 8,192</div>
-              <p className="text-xs text-slate-500 mt-0.5">240-bit coefficient modulus chain</p>
+              <div className="text-xs uppercase text-slate-500 font-semibold">Compute Model</div>
+              <div className="text-lg font-bold text-slate-900 mt-1">Homomorphic Execution</div>
+              <p className="text-xs text-slate-500 mt-0.5">Calculations execute directly on ciphertexts</p>
             </div>
 
             <div>
-              <div className="text-xs font-mono uppercase text-slate-500 font-semibold">SIMD Vector Slots</div>
-              <div className="text-lg font-bold font-mono text-slate-900 mt-1">4,096 Values</div>
-              <p className="text-xs text-slate-500 mt-0.5">Packed parallel floating-point evaluation</p>
+              <div className="text-xs uppercase text-slate-500 font-semibold">Vector Capacity</div>
+              <div className="text-lg font-bold text-slate-900 mt-1">Parallel SIMD Slots</div>
+              <p className="text-xs text-slate-500 mt-0.5">Fast batch evaluation across encrypted features</p>
             </div>
 
             <div>
-              <div className="text-xs font-mono uppercase text-slate-500 font-semibold">Key Custody Model</div>
-              <div className="text-lg font-bold font-mono text-slate-900 mt-1">Client-Isolated</div>
-              <p className="text-xs text-slate-500 mt-0.5">Private keys never enter worker infrastructure</p>
+              <div className="text-xs uppercase text-slate-500 font-semibold">Privacy Defense</div>
+              <div className="text-lg font-bold text-slate-900 mt-1">k-Anonymity Protection</div>
+              <p className="text-xs text-slate-500 mt-0.5">Automated protection against inference attacks</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. The Core Problem: The Plaintext Dilemma */}
+      {/* 3. The Core Problem */}
       <section id="core-problem" className="py-20 border-b border-slate-200 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             <div className="lg:col-span-5 space-y-4">
-              <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">01. THE COMPUTATION PARADOX</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">The Privacy Challenge</div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
                 Traditional data pipelines require decrypting data to analyze it.
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Standard TLS protects data in transit, and AES-256 protects data at rest. However, the moment an analytical algorithm or query runs, ciphertext must be decrypted into plaintext memory. This creates a catastrophic attack vector in multi-tenant cloud environments and cross-institutional research.
+                Standard encryption protects data in transit and at rest. However, when an analytical query runs, data is typically decrypted into plaintext memory. This creates security exposure in shared cloud infrastructure and across institutional boundaries.
               </p>
             </div>
 
             <div className="lg:col-span-7">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-2">
-                  <div className="text-xs font-mono uppercase font-bold text-red-600">Conventional Approach</div>
+                  <div className="text-xs uppercase font-bold text-rose-600">Conventional Approach</div>
                   <h3 className="text-sm font-bold text-slate-900">Decryption in RAM</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Servers must hold the decryption key. A single hypervisor breach, memory dump, or malicious administrator exposes every raw patient or financial record.
+                    Servers must hold the decryption key. A single hypervisor breach, memory dump, or compromised credential exposes raw records.
                   </p>
                 </div>
 
                 <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-2">
-                  <div className="text-xs font-mono uppercase font-bold text-slate-900">Cipher Analytics Approach</div>
-                  <h3 className="text-sm font-bold text-slate-900">Encrypted In-Memory Execution</h3>
+                  <div className="text-xs uppercase font-bold text-slate-900">Cipher Analytics</div>
+                  <h3 className="text-sm font-bold text-slate-900">Encrypted Execution</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Compute nodes manipulate encrypted polynomial structures. Memory dumps contain only high-entropy pseudorandom ring elements with zero information leakage.
+                    Servers only process encrypted structures. Even with root memory access, attackers cannot reconstruct the underlying plaintext numbers.
                   </p>
                 </div>
 
                 <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-2">
-                  <div className="text-xs font-mono uppercase font-bold text-red-600">Conventional Approach</div>
-                  <h3 className="text-sm font-bold text-slate-900">Coarse Access Grants</h3>
+                  <div className="text-xs uppercase font-bold text-rose-600">Conventional Approach</div>
+                  <h3 className="text-sm font-bold text-slate-900">Broad Access Grants</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Organizations must either share raw databases with external analysts or manually synthesize degraded, lossy extracts.
+                    Organizations must either share raw databases with external analysts or manually synthesize lossy summary files.
                   </p>
                 </div>
 
                 <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-2">
-                  <div className="text-xs font-mono uppercase font-bold text-slate-900">Cipher Analytics Approach</div>
-                  <h3 className="text-sm font-bold text-slate-900">Granular Zero-Trust Verification</h3>
+                  <div className="text-xs uppercase font-bold text-slate-900">Cipher Analytics</div>
+                  <h3 className="text-sm font-bold text-slate-900">Verified Governance</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Rigorous mathematical boundaries: k-anonymity (n &ge; 5) guards, sliding-window query limits, and differential privacy noise controls.
+                    Granular zero-trust policies enforce minimum cohort size requirements and strict grant approvals before queries can execute.
                   </p>
                 </div>
               </div>
@@ -194,16 +184,16 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* 4. Plaintext-to-Ciphertext-to-Computation Lifecycle Diagram */}
-      <section id="fhe-mechanics" className="py-20 border-b border-slate-200 bg-white">
+      {/* 4. How It Works: The 4-Stage Lifecycle */}
+      <section id="how-it-works" className="py-20 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">02. CRYPTOGRAPHIC LIFECYCLE</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">How It Works</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Plaintext to Ciphertext to Encrypted Result: The 4-Stage Lifecycle
+              The End-to-End Processing Lifecycle
             </h2>
             <p className="text-sm text-slate-600">
-              How Cipher Analytics executes verifiable mathematical computations without data exposure.
+              How Cipher Analytics executes verified computations without ever handling plaintext on the server.
             </p>
           </div>
 
@@ -211,72 +201,60 @@ const Landing = () => {
             {/* Step 1 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-slate-400">STAGE 01</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">CLIENT</span>
+                <span className="text-xs font-bold text-slate-400">Step 01</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">Client</span>
               </div>
-              <h3 className="text-sm font-bold text-slate-900">SIMD Vector Encoding</h3>
+              <h3 className="text-sm font-bold text-slate-900">Vector Formatting</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Raw real-valued floating-point vectors are packed into complex polynomial slots using the canonical CKKS embedding map:
+                Raw real-valued vectors are grouped and formatted client-side into structured slots, preserving analytical precision.
               </p>
-              <div className="p-2.5 rounded bg-white border border-slate-200 font-mono text-[11px] text-slate-800">
-                m &isin; &real;<sup>4096</sup> &rarr; m(X) &isin; &Zopf;[X]/(X<sup>8192</sup> + 1)
-              </div>
-              <div className="text-[11px] text-slate-500">
-                Data scaled by factor &Delta; = 2<sup>40</sup> to preserve precision.
+              <div className="p-2.5 rounded bg-white border border-slate-200 text-xs text-slate-700">
+                Data prepared locally before any network dispatch.
               </div>
             </div>
 
             {/* Step 2 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-slate-400">STAGE 02</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">CLIENT</span>
+                <span className="text-xs font-bold text-slate-400">Step 02</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">Client</span>
               </div>
-              <h3 className="text-sm font-bold text-slate-900">RLWE Encryption</h3>
+              <h3 className="text-sm font-bold text-slate-900">Local Encryption</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Plaintext polynomials are masked with Ring Learning With Errors secrets. Public evaluation keys are generated; secret key remains strictly client-side:
+                Vectors are encrypted on the client workstation using local keys. The secret key stays strictly in the data owner's control.
               </p>
-              <div className="p-2.5 rounded bg-white border border-slate-200 font-mono text-[11px] text-slate-800">
-                c = (c<sub>0</sub>, c<sub>1</sub>) &isin; R<sub>q</sub> &times; R<sub>q</sub>
-              </div>
-              <div className="text-[11px] text-slate-500">
-                TenSEAL context serialized with Galois evaluation keys.
+              <div className="p-2.5 rounded bg-white border border-slate-200 text-xs text-slate-700">
+                Only public evaluation context is shared with workers.
               </div>
             </div>
 
             {/* Step 3 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-slate-400">STAGE 03</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-white">ENCLAVE</span>
+                <span className="text-xs font-bold text-slate-400">Step 03</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-white">Enclave</span>
               </div>
-              <h3 className="text-sm font-bold text-slate-900">Homomorphic Execution</h3>
+              <h3 className="text-sm font-bold text-slate-900">Encrypted Execution</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Celery workers perform polynomial additions, scalar products, cyclic rotations, and scale relinearization without decrypting:
+                Distributed workers evaluate additions, multiplications, and statistical aggregations directly over ciphertexts.
               </p>
-              <div className="p-2.5 rounded bg-white border border-slate-200 font-mono text-[11px] text-slate-800">
-                c<sub>res</sub> = c<sub>1</sub> &oplus; c<sub>2</sub>, &nbsp; c<sub>prod</sub> = c<sub>1</sub> &otimes; c<sub>2</sub>
-              </div>
-              <div className="text-[11px] text-slate-500">
-                Rescaling: &Delta;<sup>2</sup> &rarr; &Delta; via modulus switching.
+              <div className="p-2.5 rounded bg-white border border-slate-200 text-xs text-slate-700">
+                Operations execute with zero decryption in memory.
               </div>
             </div>
 
             {/* Step 4 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-slate-400">STAGE 04</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">CLIENT</span>
+                <span className="text-xs font-bold text-slate-400">Step 04</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">Client</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900">Authorized Decryption</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                The resulting ciphertext scalar or vector is returned to the authorized caller who applies their local private key:
+                The resulting ciphertext is returned to the authorized researcher, who decrypts the result locally using their private credentials.
               </p>
-              <div className="p-2.5 rounded bg-white border border-slate-200 font-mono text-[11px] text-slate-800">
-                Dec(c<sub>res</sub>, s) &asymp; m<sub>1</sub> + m<sub>2</sub> + e
-              </div>
-              <div className="text-[11px] text-slate-500">
-                Absolute error bounded by noise floor: ||e|| &lt; 2<sup>-32</sup>.
+              <div className="p-2.5 rounded bg-white border border-slate-200 text-xs text-slate-700">
+                Accurate answers delivered without privacy compromise.
               </div>
             </div>
           </div>
@@ -284,15 +262,15 @@ const Landing = () => {
       </section>
 
       {/* 5. Supported Analytical Operations */}
-      <section id="operations" className="py-20 border-b border-slate-200 bg-slate-50/70">
+      <section id="capabilities" className="py-20 border-b border-slate-200 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">03. IMPLEMENTED ANALYTICAL CAPABILITIES</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Analytical Capabilities</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Verified Mathematical Operations in Current Production
+              Core Operations Supported on Encrypted Data
             </h2>
             <p className="text-sm text-slate-600">
-              These algorithms are actively implemented in the TenSEAL execution engine and scheduled across Celery worker queues.
+              Run real-world statistical and machine learning queries directly over encrypted cohorts.
             </p>
           </div>
 
@@ -300,146 +278,141 @@ const Landing = () => {
             {/* Op 1: Homomorphic Vector Sum */}
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 font-mono">1. Homomorphic Vector Sum</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                  PRODUCTION
+                <h3 className="text-base font-bold text-slate-900">1. Vector Sum &amp; Aggregation</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  Supported
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Calculates the total aggregate of all SIMD slots in an encrypted vector using binary Galois automorphism rotations and vector-vector ciphertext additions.
+                Calculates totals and aggregate counts across encrypted feature vectors while keeping individual observations completely confidential.
               </p>
-              <div className="p-3 bg-slate-50 rounded border border-slate-200 font-mono text-xs space-y-1">
-                <div className="text-slate-500 text-[10px]">MATHEMATICAL FORMULA:</div>
-                <div className="text-slate-900 font-semibold">E(&sum; x<sub>i</sub>) = &sum;<sub>i=1</sub><sup>n</sup> Enc(x<sub>i</sub>)</div>
-                <div className="text-[11px] text-slate-500">Complexity: O(log<sub>2</sub> n) cyclic Galois rotations</div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs space-y-1">
+                <div className="text-slate-500 text-[11px] font-medium">Use Case:</div>
+                <div className="text-slate-900">Federated metric aggregation across multiple regional datasets</div>
               </div>
             </div>
 
-            {/* Op 2: Mean & Second-Order Moments */}
+            {/* Op 2: Mean & Variance */}
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 font-mono">2. Central Moments & Variance</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                  PRODUCTION
+                <h3 className="text-base font-bold text-slate-900">2. Mean &amp; Variance Statistics</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  Supported
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Evaluates distribution statistics over ciphertext tensors by combining homomorphic sum, scalar multiplication by 1/n, and quadratic deviation estimation.
+                Evaluates distribution statistics, standard deviations, and higher-order moments without revealing patient or customer data points.
               </p>
-              <div className="p-3 bg-slate-50 rounded border border-slate-200 font-mono text-xs space-y-1">
-                <div className="text-slate-500 text-[10px]">MATHEMATICAL FORMULA:</div>
-                <div className="text-slate-900 font-semibold">E(&mu;) = (1/n) &middot; E(&sum; x<sub>i</sub>), &nbsp; E(&sigma;<sup>2</sup>) = E(x<sup>2</sup>) - &mu;<sup>2</sup></div>
-                <div className="text-[11px] text-slate-500">Requires 1 ciphertext-ciphertext multiplication and rescaling</div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs space-y-1">
+                <div className="text-slate-500 text-[11px] font-medium">Use Case:</div>
+                <div className="text-slate-900">Benchmarking patient biometric indicators across hospitals</div>
               </div>
             </div>
 
             {/* Op 3: Pearson Correlation */}
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 font-mono">3. Multi-Variate Pearson Correlation</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                  PRODUCTION
+                <h3 className="text-base font-bold text-slate-900">3. Multi-Variate Correlation</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  Supported
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Determines the linear statistical dependency between two encrypted feature vectors X and Y without revealing individual observations to the coordinator.
+                Measures linear statistical dependencies between paired variables across institutions without either side exposing raw feature columns.
               </p>
-              <div className="p-3 bg-slate-50 rounded border border-slate-200 font-mono text-xs space-y-1">
-                <div className="text-slate-500 text-[10px]">MATHEMATICAL FORMULA:</div>
-                <div className="text-slate-900 font-semibold">Cov(X, Y) = E(X &middot; Y) - E(X) &middot; E(Y)</div>
-                <div className="text-[11px] text-slate-500">Evaluates cross-feature interaction in encrypted domain</div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs space-y-1">
+                <div className="text-slate-500 text-[11px] font-medium">Use Case:</div>
+                <div className="text-slate-900">Cross-institutional genomic regression and clinical outcome studies</div>
               </div>
             </div>
 
             {/* Op 4: Isolation Forest Anomaly Detection */}
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 font-mono">4. Anomaly Isolation Forest</h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                  PRODUCTION
+                <h3 className="text-base font-bold text-slate-900">4. Anomaly Detection (Isolation Forest)</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  Supported
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Generates polynomial-depth isolation trees over multi-dimensional feature records to compute outlier path lengths under encrypted bounds.
+                Identifies outliers and suspicious transaction patterns across multi-dimensional feature records while maintaining data confidentiality.
               </p>
-              <div className="p-3 bg-slate-50 rounded border border-slate-200 font-mono text-xs space-y-1">
-                <div className="text-slate-500 text-[10px]">MATHEMATICAL FORMULA:</div>
-                <div className="text-slate-900 font-semibold">s(x, n) = 2<sup>-E(h(x)) / c(n)</sup> &rarr; Polynomial fit</div>
-                <div className="text-[11px] text-slate-500">Evaluated in Celery queue_ml worker partition</div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs space-y-1">
+                <div className="text-slate-500 text-[11px] font-medium">Use Case:</div>
+                <div className="text-slate-900">Syndicated fraud detection across consortium financial networks</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 6. Technical Architecture & Technology Stack */}
+      {/* 6. Technical Architecture */}
       <section id="architecture" className="py-20 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">04. SYSTEM ARCHITECTURE & TECH STACK</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">System Architecture</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Production Architecture Built for Hardware Isolation
+              Engineered for Isolation and High Availability
             </h2>
             <p className="text-sm text-slate-600">
-              Every layer of the stack is chosen to isolate CPU-intensive cryptographic execution from web presentation and database storage.
+              A decoupled architecture separating presentation, orchestration, and compute workloads.
             </p>
           </div>
 
-          {/* Architecture Layer Breakdown */}
           <div className="space-y-4">
-            {/* Layer 1: Frontend Client */}
+            {/* Layer 1 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 md:max-w-xl">
-                <div className="text-xs font-mono font-bold text-slate-500 uppercase">LAYER 01 &bull; CLIENT WORKSPACE</div>
-                <h3 className="text-sm font-bold text-slate-900">React 18 &bull; Vite &bull; Tailwind CSS &bull; WebSockets</h3>
+                <div className="text-xs font-semibold text-slate-500 uppercase">Layer 01 &bull; Client Console</div>
+                <h3 className="text-sm font-bold text-slate-900">React &bull; Vite &bull; Tailwind CSS &bull; WebSockets</h3>
                 <p className="text-xs text-slate-600">
-                  Single-page client application with interactive dataset catalog, real-time WebSocket telemetry via Daphne ASGI channels, and differential privacy sliders.
+                  Interactive dataset browser, role-based workflows, live WebSocket progress updates, and data visualization.
                 </p>
               </div>
-              <div className="text-xs font-mono px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0">
-                BROWSER ENGINE
+              <div className="text-xs px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0 font-medium">
+                Browser Interface
               </div>
             </div>
 
-            {/* Layer 2: API Gateway & Coordination */}
+            {/* Layer 2 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 md:max-w-xl">
-                <div className="text-xs font-mono font-bold text-slate-500 uppercase">LAYER 02 &bull; API &amp; COORDINATION</div>
-                <h3 className="text-sm font-bold text-slate-900">Django 5 &bull; Django REST Framework &bull; Daphne (ASGI)</h3>
+                <div className="text-xs font-semibold text-slate-500 uppercase">Layer 02 &bull; API &amp; Orchestration</div>
+                <h3 className="text-sm font-bold text-slate-900">Django &bull; Django REST Framework &bull; Daphne ASGI</h3>
                 <p className="text-xs text-slate-600">
-                  Handles JWT authentication, role-based access governance, schema validation, rate-limiting, and WebSocket connection multiplexing.
+                  Authentication, role permissions, policy verification, grant governance, and real-time WebSocket channel routing.
                 </p>
               </div>
-              <div className="text-xs font-mono px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0">
-                ASGI ORCHESTRATION
+              <div className="text-xs px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0 font-medium">
+                API Gateway
               </div>
             </div>
 
-            {/* Layer 3: Celery Computation Enclave */}
+            {/* Layer 3 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 md:max-w-xl">
-                <div className="text-xs font-mono font-bold text-slate-500 uppercase">LAYER 03 &bull; FHE COMPUTATION WORKERS</div>
-                <h3 className="text-sm font-bold text-slate-900">Celery Distributed Workers &bull; Redis 7 Broker &bull; TenSEAL C++ Core</h3>
+                <div className="text-xs font-semibold text-slate-500 uppercase">Layer 03 &bull; Distributed Workers</div>
+                <h3 className="text-sm font-bold text-slate-900">Celery Workers &bull; Redis Broker &bull; Encrypted Compute Kernel</h3>
                 <p className="text-xs text-slate-600">
-                  Hardware-isolated worker queues: <code className="bg-slate-200 px-1 py-0.5 rounded text-[11px]">queue_fhe</code> for arithmetic polynomial evaluations and <code className="bg-slate-200 px-1 py-0.5 rounded text-[11px]">queue_ml</code> for tree algorithms.
+                  Asynchronous workers handle intensive mathematical computations in isolated queues without blocking user operations.
                 </p>
               </div>
-              <div className="text-xs font-mono px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0">
-                CONTAINER ENCLAVES
+              <div className="text-xs px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0 font-medium">
+                Worker Pool
               </div>
             </div>
 
-            {/* Layer 4: Storage & Ledger */}
+            {/* Layer 4 */}
             <div className="p-5 border border-slate-200 rounded-lg bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 md:max-w-xl">
-                <div className="text-xs font-mono font-bold text-slate-500 uppercase">LAYER 04 &bull; PERSISTENCE &amp; AUDIT LEDGER</div>
-                <h3 className="text-sm font-bold text-slate-900">PostgreSQL 16 &bull; Multi-Tenant Schemas &bull; Immutable Audit Logs</h3>
+                <div className="text-xs font-semibold text-slate-500 uppercase">Layer 04 &bull; Storage &amp; Audit Log</div>
+                <h3 className="text-sm font-bold text-slate-900">PostgreSQL &bull; Multi-Tenant Schemas &bull; Immutable Receipts</h3>
                 <p className="text-xs text-slate-600">
-                  Stores serialized encrypted context payloads, dataset metadata, and tamper-evident query verification hashes. Never stores unencrypted numerical values.
+                  Stores serialized encrypted context payloads, dataset metadata, and tamper-evident audit logs. Raw values are never stored.
                 </p>
               </div>
-              <div className="text-xs font-mono px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0">
-                ZERO-PLAINTEXT DB
+              <div className="text-xs px-3 py-1.5 rounded bg-white border border-slate-200 text-slate-700 shrink-0 font-medium">
+                Encrypted Storage
               </div>
             </div>
           </div>
@@ -450,133 +423,133 @@ const Landing = () => {
       <section id="governance" className="py-20 border-b border-slate-200 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">05. ZERO-TRUST GOVERNANCE</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Governance &amp; Access</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Orthogonal Policy Enforcement Before Enclave Dispatch
+              Clear Policy Enforcement Before Queries Execute
             </h2>
             <p className="text-sm text-slate-600">
-              Homomorphic encryption protects in-memory execution; multi-tier access policy ensures queries cannot be submitted without verifiable authorization.
+              Homomorphic encryption protects calculations in memory; multi-tier governance ensures only authorized queries are dispatched.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
-              <div className="text-xs font-mono font-bold text-slate-900 uppercase">POLICY TIER 01</div>
-              <h3 className="text-sm font-bold text-slate-900">STRICT Consent</h3>
+              <div className="text-xs font-bold text-slate-900 uppercase">Policy Tier 01</div>
+              <h3 className="text-sm font-bold text-slate-900">Strict Consent</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Requires the Data Owner to explicitly review and grant each researcher inquiry. Grants are bound to a specific dataset ID and an expiring session token.
+                Requires the Data Owner to review and approve each researcher grant request before any query can be executed.
               </p>
-              <div className="text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100">
-                Use Case: Sensitive Clinical &amp; Genomic Trials
+              <div className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                Ideal for clinical trials and confidential records.
               </div>
             </div>
 
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
-              <div className="text-xs font-mono font-bold text-slate-900 uppercase">POLICY TIER 02</div>
-              <h3 className="text-sm font-bold text-slate-900">AGGREGATED Privacy</h3>
+              <div className="text-xs font-bold text-slate-900 uppercase">Policy Tier 02</div>
+              <h3 className="text-sm font-bold text-slate-900">Aggregated Privacy</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Permits automatic execution of statistical queries provided the cohort size passes the k-anonymity gate (n &ge; 5) and privacy budget (&epsilon;) is not exhausted.
+                Permits statistical queries automatically, provided cohort sizes pass minimum k-anonymity privacy thresholds.
               </p>
-              <div className="text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100">
-                Use Case: Cross-Bank Fraud &amp; Financial Risk
+              <div className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                Ideal for cross-organization risk and fraud detection.
               </div>
             </div>
 
             <div className="p-6 bg-white border border-slate-200 rounded-lg space-y-3">
-              <div className="text-xs font-mono font-bold text-slate-900 uppercase">POLICY TIER 03</div>
-              <h3 className="text-sm font-bold text-slate-900">WHITELIST Pre-Authorization</h3>
+              <div className="text-xs font-bold text-slate-900 uppercase">Policy Tier 03</div>
+              <h3 className="text-sm font-bold text-slate-900">Partner Whitelist</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Grants instant evaluation capability to authenticated researchers from verified partner institutions with contractual data agreements.
+                Grants instant calculation capabilities to pre-approved researcher organizations under established institutional agreements.
               </p>
-              <div className="text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-100">
-                Use Case: Collaborative Academic Consortia
+              <div className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                Ideal for recurring academic and research partnerships.
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 8. Practical Applications & Industry Use Cases */}
+      {/* 8. Practical Applications */}
       <section id="applications" className="py-20 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">06. PRACTICAL APPLICATIONS</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Applications</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Where Encrypted Computation Solves Real Industry Deadlocks
+              Where Encrypted Computation Solves Data-Sharing Barriers
             </h2>
             <p className="text-sm text-slate-600">
-              Enabling multi-party statistical insights where legal and competitive barriers previously prevented any data sharing.
+              Enabling multi-party collaboration where regulatory compliance previously prevented sharing.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-6 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
-              <div className="text-xs font-mono text-slate-500 font-semibold uppercase">Healthcare &amp; Genomics</div>
-              <h3 className="text-base font-bold text-slate-900">Cross-Hospital Cohort Biomarker Discovery</h3>
+              <div className="text-xs text-slate-500 font-semibold uppercase">Healthcare &amp; Clinical Research</div>
+              <h3 className="text-base font-bold text-slate-900">Multi-Hospital Medical Research</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Hospitals cannot pool patient oncological phenotypes due to HIPAA and GDPR restrictions. With Cipher Analytics, research universities compute correlation matrices and genomic regressions across encrypted patient vectors without raw health record exposure.
+                Hospitals cannot pool patient data due to HIPAA and GDPR restrictions. With Cipher Analytics, research teams compute clinical correlations and regressions across encrypted records without exposing raw patient data.
               </p>
             </div>
 
             <div className="p-6 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
-              <div className="text-xs font-mono text-slate-500 font-semibold uppercase">Financial Networks</div>
-              <h3 className="text-base font-bold text-slate-900">Anti-Money Laundering &amp; Syndicated Fraud Detection</h3>
+              <div className="text-xs text-slate-500 font-semibold uppercase">Financial Services</div>
+              <h3 className="text-base font-bold text-slate-900">Consortium Fraud Detection</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Competing financial institutions are legally barred from sharing customer transaction histories. Cipher Analytics allows banks to compute federated anomaly scores and correlation indices over encrypted financial tensors, detecting cross-institution laundering networks.
+                Competing financial institutions are barred from sharing customer transactions. Cipher Analytics allows banks to compute anomaly scores over encrypted records to identify money laundering patterns.
               </p>
             </div>
 
             <div className="p-6 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
-              <div className="text-xs font-mono text-slate-500 font-semibold uppercase">Public Sector &amp; Defense</div>
-              <h3 className="text-base font-bold text-slate-900">Multi-Agency Threat Intelligence Pooling</h3>
+              <div className="text-xs text-slate-500 font-semibold uppercase">Public Sector</div>
+              <h3 className="text-base font-bold text-slate-900">Cross-Agency Analytics</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Jurisdictional data silos prevent joint operations between municipal, federal, and international agencies. Encrypted vector addition allows joint telemetry analysis without compromising sensitive investigative sources.
+                Jurisdictional data silos prevent joint operations. Encrypted analysis allows combined telemetry and statistical evaluation without sharing confidential operational files.
               </p>
             </div>
 
             <div className="p-6 border border-slate-200 rounded-lg bg-slate-50 space-y-2">
-              <div className="text-xs font-mono text-slate-500 font-semibold uppercase">Commercial Supply Chain</div>
-              <h3 className="text-base font-bold text-slate-900">Supplier Yield Optimization Without Margin Disclosure</h3>
+              <div className="text-xs text-slate-500 font-semibold uppercase">Supply Chain</div>
+              <h3 className="text-base font-bold text-slate-900">Supplier Quality Optimization</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Manufacturers and third-party vendors can compute aggregate defect rates and lead-time distributions across their supply base without any participant revealing proprietary production margins or shipment volumes.
+                Manufacturers and vendors can compute aggregate defect rates and lead-time distributions across suppliers without any vendor revealing proprietary margins or production quantities.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 9. Technical Considerations & Cryptographic Realities */}
+      {/* 9. Technical Considerations */}
       <section className="py-20 border-b border-slate-200 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-8 space-y-2">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">07. TECHNICAL REALITIES &amp; BOUNDARIES</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Engineering Standards</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Engineering Transparency: Limitations of FHE
+              Clear Engineering Trade-Offs
             </h2>
             <p className="text-sm text-slate-600">
-              Fully Homomorphic Encryption provides absolute mathematical confidentiality, but comes with specific engineering trade-offs that Cipher Analytics addresses.
+              Homomorphic computation provides verified confidentiality with intentional engineering considerations.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="p-5 bg-white border border-slate-200 rounded-lg space-y-2">
-              <div className="text-xs font-mono font-bold text-slate-900">Computational Overhead</div>
+              <div className="text-xs font-bold text-slate-900">Compute Workload</div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Homomorphic operations require 10&times; to 100&times; more CPU cycles than plaintext evaluation. We mitigate this through hardware-partitioned Celery worker queues and AVX2-optimized C++ TenSEAL kernels.
+                Encrypted operations require more processing than raw calculations. Cipher Analytics delegates these workloads to dedicated background worker queues.
               </p>
             </div>
 
             <div className="p-5 bg-white border border-slate-200 rounded-lg space-y-2">
-              <div className="text-xs font-mono font-bold text-slate-900">Polynomial Depth Budget</div>
+              <div className="text-xs font-bold text-slate-900">Calculation Depth</div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Each ciphertext multiplication consumes a level in the modulus chain. Cipher Analytics implements automated scale relinearization and modulus switching to manage noise accumulation.
+                Sequential multiplications introduce noise accumulation. Automated scaling and relinearization maintain precision throughout deep operations.
               </p>
             </div>
 
             <div className="p-5 bg-white border border-slate-200 rounded-lg space-y-2">
-              <div className="text-xs font-mono font-bold text-slate-900">Non-Linear Operations</div>
+              <div className="text-xs font-bold text-slate-900">Non-Linear Operations</div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Exact comparisons and non-linear step functions cannot be evaluated directly in CKKS. Algorithms such as Anomaly Isolation Forests are formulated using Chebyshev polynomial approximations.
+                Certain discrete comparisons are adapted into high-accuracy polynomial approximations to support algorithms like isolation forests.
               </p>
             </div>
           </div>
@@ -586,31 +559,31 @@ const Landing = () => {
       {/* 10. Call to Action Section */}
       <section className="py-20 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-10 lg:p-14 rounded-xl border border-slate-300 bg-slate-950 text-white space-y-6">
+          <div className="p-10 lg:p-14 rounded-xl border border-slate-200 bg-slate-900 text-white space-y-6">
             <div className="max-w-2xl space-y-3">
-              <div className="text-xs font-mono text-slate-400 uppercase tracking-wider font-semibold">
-                SYSTEM DEPLOYMENT
+              <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                Get Started
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                Ready to deploy zero-trust computation?
+                Ready to explore encrypted analytics?
               </h2>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Create an account as a Data Owner to ingest and encrypt datasets, or as a Researcher to request analytical computation grants.
+                Create an account as a Data Owner to upload and encrypt datasets, or as a Researcher to request analytical computation grants.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link
                 to="/register"
-                className="px-6 py-3 bg-white hover:bg-slate-100 text-slate-950 text-xs font-mono font-bold rounded transition-colors shadow-sm"
+                className="px-6 py-3 bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold rounded-md transition-colors shadow-xs"
               >
-                Create Data Owner Account
+                Create an account
               </Link>
               <Link
                 to="/login"
-                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-mono font-bold rounded transition-colors"
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold rounded-md transition-colors"
               >
-                Sign In to Console
+                Sign in to console
               </Link>
             </div>
           </div>
@@ -618,7 +591,7 @@ const Landing = () => {
       </section>
 
       {/* 11. Professional Enterprise Footer */}
-      <footer className="bg-white text-slate-600 py-12 border-t border-slate-200 font-mono text-xs">
+      <footer className="bg-white text-slate-600 py-12 border-t border-slate-200 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-200">
             <div className="space-y-3 md:col-span-1">
@@ -626,52 +599,51 @@ const Landing = () => {
                 <div className="w-6 h-6 rounded bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
                   C
                 </div>
-                <span className="font-bold text-slate-900 tracking-tight text-sm">CIPHER ANALYTICS</span>
+                <span className="font-semibold text-slate-900 tracking-tight text-sm">Cipher Analytics</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
-                Privacy-preserving analytics platform utilizing Fully Homomorphic Encryption (FHE) and zero-trust data governance.
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Privacy-preserving analytics platform enabling secure computation without sharing raw data.
               </p>
             </div>
 
             <div>
-              <div className="font-bold text-slate-900 uppercase text-[11px] mb-3">Core Platform</div>
-              <ul className="space-y-2 text-[11px] text-slate-500">
-                <li><Link to="/login" className="hover:text-slate-900">Research Console</Link></li>
-                <li><Link to="/login" className="hover:text-slate-900">Dataset Registry</Link></li>
-                <li><Link to="/login" className="hover:text-slate-900">Analytical Briefs</Link></li>
-                <li><Link to="/login" className="hover:text-slate-900">Audit Ledger</Link></li>
+              <div className="font-semibold text-slate-900 text-xs mb-3">Platform</div>
+              <ul className="space-y-2 text-xs text-slate-500">
+                <li><Link to="/login" className="hover:text-slate-900">Console</Link></li>
+                <li><Link to="/login" className="hover:text-slate-900">Dataset catalog</Link></li>
+                <li><Link to="/login" className="hover:text-slate-900">Analytical queries</Link></li>
+                <li><Link to="/login" className="hover:text-slate-900">Audit logs</Link></li>
               </ul>
             </div>
 
             <div>
-              <div className="font-bold text-slate-900 uppercase text-[11px] mb-3">Cryptographic Engine</div>
-              <ul className="space-y-2 text-[11px] text-slate-500">
-                <li>Scheme: CKKS-RLWE-8192</li>
-                <li>Slots: 4,096 Vector Batch</li>
-                <li>Precision: &Delta; = 2<sup>40</sup></li>
-                <li>Task Topology: Celery Partition</li>
+              <div className="font-semibold text-slate-900 text-xs mb-3">Technology</div>
+              <ul className="space-y-2 text-xs text-slate-500">
+                <li>Homomorphic computation</li>
+                <li>Client-side key generation</li>
+                <li>Isolated worker queues</li>
+                <li>Real-time WebSocket telemetry</li>
               </ul>
             </div>
 
             <div>
-              <div className="font-bold text-slate-900 uppercase text-[11px] mb-3">Access &amp; Compliance</div>
-              <ul className="space-y-2 text-[11px] text-slate-500">
-                <li>FIPS 140-3 Cryptographic Standards</li>
-                <li>Zero-Knowledge Client Keygen</li>
-                <li>k-Anonymity Defense (n &ge; 5)</li>
-                <li><Link to="/register" className="hover:text-slate-900">Register New Organization</Link></li>
+              <div className="font-semibold text-slate-900 text-xs mb-3">Security &amp; Access</div>
+              <ul className="space-y-2 text-xs text-slate-500">
+                <li>Zero key custody model</li>
+                <li>k-Anonymity safeguards</li>
+                <li>Role-based access control</li>
+                <li><Link to="/register" className="hover:text-slate-900">Register account</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-4">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
             <div>
               &copy; {new Date().getFullYear()} Cipher Analytics Inc. All rights reserved.
             </div>
-            <div className="flex items-center space-x-6">
-              <span>SECURITY: FHE VERIFIED</span>
-              <span>TRANSPORT: TLS 1.3</span>
-              <span>STATE: STABLE</span>
+            <div className="flex items-center space-x-6 text-slate-500">
+              <span>Zero-knowledge client keys</span>
+              <span>Encrypted transmission</span>
             </div>
           </div>
         </div>
