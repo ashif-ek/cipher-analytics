@@ -57,7 +57,7 @@ six==1.17.0
 sqlparse==0.5.5
 stevedore==5.7.0
 tenseal==0.3.16
-types-PyYAML==6.0.12.20250915
+types-PyYAML==6.0.12.20261113
 typing_extensions==4.15.0
 tzdata==2025.3
 uritemplate==4.2.0
