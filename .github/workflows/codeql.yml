@@ -1,0 +1,91 @@
+
+# ==========================================================
+# Cipher Analytics - CodeQL Advanced Security
+# Static Application Security Testing (SAST)
+# Languages: Python, JavaScript, TypeScript
+# ==========================================================
+
+name: "CodeQL Advanced Security"
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    # Every Tuesday at 06:59 AM IST (01:29 UTC)
+    - cron: "29 1 * * 2"
+
+  workflow_dispatch:
+
+# Prevent duplicate scans and cancel outdated runs.
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege permissions.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
+
+          - language: python
+            build-mode: none
+
+    steps:
+      # ----------------------------------------------------
+      # 1. Checkout source code
+      # ----------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # ----------------------------------------------------
+      # 2. Initialize CodeQL
+      # ----------------------------------------------------
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended
+
+      # ----------------------------------------------------
+      # 3. Perform security analysis
+      # ----------------------------------------------------
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: true
+
+      # ----------------------------------------------------
+      # 4. Security scan summary
+      # ----------------------------------------------------
+      - name: Security scan completed
+        if: success()
+        run: echo "CodeQL analysis completed for ${{ matrix.language }}."
